@@ -4,6 +4,14 @@
 > 📘 **Exam notes:** the full AWS SAA-C03 notes stay on the `main` branch.  
 > ✅ **Facts checked:** limits and quotas verified against AWS docs on 2026-10-31.
 
+## 📑 Contents
+
+- [📚 Files](#-files)
+- [🧭 Suggested order](#-suggested-order)
+- [🤝 Found a Mistake? Want to Contribute?](#-found-a-mistake-want-to-contribute)
+
+---
+
 These notes keep only what helps in a design round. 🎯 Each service is explained the same way:
 
 | | Every service answers |
