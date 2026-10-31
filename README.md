@@ -2,6 +2,18 @@
 
 AWS Certified Solutions Architect Associate Certification SAA-C03
 
+## 📑 Contents
+
+- [🏗️ New: AWS for System Design Interviews](#️-new-aws-for-system-design-interviews)
+- [📝 About These Notes](#-about-these-notes)
+- [📚 Course Content](#-course-content)
+- [📝 Study Guide](#-study-guide)
+- [🎓 Exam Information](#-exam-information)
+- [📚 Additional Resources](#-additional-resources)
+- [🤝 Found a Mistake? Want to Contribute?](#-found-a-mistake-want-to-contribute)
+
+---
+
 ## 🏗️ New: AWS for System Design Interviews
 
 > 🌿 **Branch:** [`system_design`](https://github.com/vikas9dev/aws/tree/system_design) — AWS notes for senior backend **system-design rounds**.  
