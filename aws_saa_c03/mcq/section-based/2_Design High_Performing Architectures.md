@@ -28,7 +28,7 @@ A transit gateway attachment is both a source and a destination of packets. You 
 - One or more AWS Direct Connect gateways
 - One or more transit gateway peering connections
 
-If you attach a transit gateway peering connection, the transit gateway must be in a different Region.
+A transit gateway peering connection can join transit gateways in the same Region (intra-Region, since Dec 2021) or in different Regions (inter-Region).
 
 <img src="https://media.tutorialsdojo.com/transit-gateway-Inter-Region-Peering.jpg"
      alt="Transit Gateway inter-Region peering diagram"
@@ -45,7 +45,7 @@ This meets the requirement of connecting **hundreds of VPCs**, **multiple region
 
 “Set up an AWS Direct Connect Gateway with public VIFs and use LAG…”
 
-* ❌ **Direct Connect Gateway only supports Private VIF**, not public VIF.
+* ❌ **Direct Connect Gateway works only with private VIFs and transit VIFs**, not public VIFs.
 * ❌ **LAG** (Link Aggregation Group) is irrelevant here — it only aggregates DX connections.
 * ❌ Does **not** solve the requirement of inter-region VPC-to-VPC connectivity.
 
@@ -517,7 +517,7 @@ Perfect match for **1000 Linux servers** requiring shared, scalable storage. �
 
 Amazon FSx provides fully managed third-party file systems. Amazon FSx provides you with the native compatibility of third-party file systems with feature sets for workloads such as Windows-based storage, high-performance computing (HPC), machine learning, and electronic design automation (EDA). You don’t have to worry about managing file servers and storage, as Amazon FSx automates time-consuming administration tasks such as hardware provisioning, software configuration, patching, and backups. Amazon FSx integrates the file systems with cloud-native AWS services, making them even more useful for a broader set of workloads.
 
-Amazon FSx provides you with two file systems to choose from: Amazon FSx for Windows File Server for Windows-based applications and Amazon FSx for Lustre for compute-intensive workloads.
+Amazon FSx provides you with four file systems to choose from: Amazon FSx for Windows File Server for Windows-based applications, Amazon FSx for Lustre for compute-intensive workloads, Amazon FSx for NetApp ONTAP and Amazon FSx for OpenZFS. (Older material lists only the first two.)
 
 For Windows-based applications, Amazon FSx provides fully managed Windows file servers with features and performance optimized for “lift-and-shift” business-critical application workloads including home directories (user shares), media workflows, and ERP applications. It is accessible from Windows and Linux instances via the SMB protocol. If you have Linux-based applications, Amazon EFS is a cloud-native fully managed file system that provides simple, scalable, elastic file storage accessible from Linux instances via the NFS protocol.
 

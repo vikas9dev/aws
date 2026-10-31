@@ -212,7 +212,7 @@ The best combo: **Fargate + Amazon EFS** for fully serverless, persistent, share
   
 Note: **Amazon S3 can't be mounted as a file system**.
 
-**AWS EFS (Elastic File System) is region-scoped**. Each EFS file system exists **within a single AWS region** and has a **unique file system ID**. You can **mount it on EC2 instances or Lambda functions** within the same region. To use it across regions, you would need to **replicate it** using **EFS Replication**, which copies data to another region.
+**AWS EFS (Elastic File System) is region-scoped**. Each EFS file system exists **within a single AWS region** and has a **unique file system ID**. You can **mount it on EC2 instances or Lambda functions** within the same region. Clients in another region can still mount it over inter-region VPC peering or a transit gateway (using the mount target IP address). To keep a copy of the data in another region, use **EFS Replication**, which copies data to another region.
 
 ### Use Cases for EFS with ECS
 
@@ -808,6 +808,8 @@ After the cluster is created, you need to provision compute capacity. There are 
 
 ## 12. AWS App Runner Service
 
+> ⚠️ **Note (2026):** AWS App Runner stopped accepting new customers on 30 Apr 2026. Existing customers can still use it, but AWS adds no new features. For new work AWS recommends **Amazon ECS Express Mode**. Older exam questions may still use App Runner as the answer.
+
 The AWS App Runner service is a fully managed service designed to simplify the deployment of web applications and APIs at scale. 🚀 It allows anyone to deploy to AWS without requiring in-depth knowledge of infrastructure, containers, or source code.
 
 Here's how it works:
@@ -883,7 +885,7 @@ This note outlines how to deploy a simple HTTPD server using AWS App Runner.
     *   vCPU: Select the number of vCPUs.
     *   Memory: Select the amount of memory (in GB).
 
-    📝 **Note:** The minimum allocation is typically 1 vCPU and 2 GB of memory.
+    📝 **Note:** The default is 1 vCPU and 2 GB of memory. The smallest size is 0.25 vCPU and 0.5 GB (added in Apr 2023).
 
 3.  **Environment Variables:** Pass any necessary environment variables to your container.
 
@@ -944,6 +946,8 @@ This note outlines how to deploy a simple HTTPD server using AWS App Runner.
 ---
 
 ## 14. AWS App2Container (A2C)
+
+> ⚠️ **Note (2026):** App2Container stopped accepting new customers on 7 Nov 2025. Existing customers can still use it. AWS recommends **AWS Transform** for new modernization projects.
 
 AWS App2Container (A2C) is a command-line interface (CLI) tool designed to migrate and modernize Java and .NET web applications into Docker containers. 🐳
 

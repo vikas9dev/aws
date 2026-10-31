@@ -95,7 +95,7 @@ fields @timestamp, @message, @logStream
 ### Alarm Types
 - **Threshold**: Simple threshold
 - **Anomaly Detection**: ML-based detection
-- **Composite**: Multiple metrics
+- **Composite**: Combines the states of other alarms (AND / OR)
 
 ---
 

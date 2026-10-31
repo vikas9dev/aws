@@ -413,7 +413,7 @@ The corresponding JSON for this policy would be:
 
 ```json
 {
-  "Version": "2025-10-17",
+  "Version": "2012-10-17",
   "Statement": [
     {
       "Sid": "VisualEditor0",
@@ -482,7 +482,7 @@ AWS offers several MFA device options:
 1.  **Virtual MFA Device:** 📱
     - Uses apps like Google Authenticator (works on one phone at a time) or Authy.
     - Authy supports multiple tokens on a single device, allowing you to manage multiple accounts (root, IAM users, etc.) easily.
-2.  **Universal 2nd Factor (U2F) Security Key:** 🔑
+2.  **Universal 2nd Factor (U2F) Security Key:** 🔑 (AWS now calls this a **FIDO security key or passkey**; passkeys are supported since Jun 2024)
     - A physical device, such as a YubiKey by Yubico (a third-party provider).
     - Easy to carry on a key fob.
     - Supports multiple root and IAM users with a single key.
@@ -535,6 +535,7 @@ MFA adds an extra layer of security to your root account, which is the most priv
 1.  Click on your **account name** and then **Security Credentials**. Make sure you are logged in as the root user.
 2.  Locate the section for **MFA**.
 3.  ⚠️ **Warning:** Losing access to your MFA device can lock you out of your account. If you're concerned about losing your device, consider the risks carefully before proceeding. You can delete the MFA device after activating it.
+    - 📝 **Note (2026):** MFA on the root user is no longer optional. Since Jun 2025 AWS enforces root-user MFA for all account types. To avoid lock-out, register a second MFA device (you can have up to eight).
 4.  Click on **Assign MFA device**.
 5.  Enter a **name** for your MFA device (e.g., "My iPhone").
 6.  Select the **type of MFA device**:

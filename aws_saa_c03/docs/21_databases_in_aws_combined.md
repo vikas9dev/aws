@@ -117,6 +117,8 @@ Immutable and cryptographically verifiable **transaction logs**.
 
 - **Amazon QLDB** (Quantum Ledger Database)
 
+⚠️ **Note (2026):** AWS ended support for QLDB on 31 Jul 2025. AWS suggests Amazon Aurora PostgreSQL for new ledger-style workloads. Older exam questions may still use QLDB as the answer.
+
 📝 **Note:**  
 Use when you need an **auditable**, tamper-evident log of data changes.
 
@@ -125,6 +127,8 @@ Use when you need an **auditable**, tamper-evident log of data changes.
 Optimized for **time-stamped** data like metrics, logs, and events.
 
 - **Amazon Timestream**
+
+⚠️ **Note (2026):** Timestream for LiveAnalytics is closed to new customers since 20 Jun 2025. Timestream for InfluxDB is still open.
 
 📌 **Example:**  
 Best for IoT, DevOps, and real-time monitoring use cases.
@@ -280,7 +284,7 @@ Amazon ElastiCache is a **fully managed in-memory data store** service that supp
 ### 🛠️ ElastiCache Features
 
 - Supports **Redis** and **Memcached**.
-- **Provisioning** is required (you must choose an ElastiCache instance type e.g. `cache.m6g.large`).
+- **Provisioning** is required for node-based clusters (you must choose an ElastiCache instance type e.g. `cache.m6g.large`). **ElastiCache Serverless** (Nov 2023) needs no instance type.
 - **Redis-specific features**:
   - **Clustering** and **Sharding**
   - **Multi-AZ** support
@@ -290,7 +294,7 @@ Amazon ElastiCache is a **fully managed in-memory data store** service that supp
   - Integrates with **IAM** and **Security Groups**
   - **KMS encryption at rest**
 - **Backup & Maintenance**:
-  - Snapshots and **point-in-time restore**
+  - Snapshots (backup and restore into a new cache) — ElastiCache has **no** point-in-time restore
   - Scheduled maintenance like in RDS
 
 ### ⚠️ Important Exam Tip
@@ -384,7 +388,7 @@ DynamoDB supports **event-driven architectures**:
 
 1. **Point-in-Time Recovery (Automated Backups)**
    - Must be enabled
-   - Restore to any point in the last **35 days**
+   - Restore to any point in the recovery period: **1–35 days**, you choose (default 35; configurable since Jan 2025)
    - Can restore to a **new table**
 
 2. **On-Demand Backups**
@@ -423,7 +427,7 @@ Amazon **S3** is a highly durable, scalable, and secure **key-value store for ob
 - **Serverless** architecture with **infinite scaling**
 - Designed to store **big objects** (not optimized for many small files)
 - Supports **versioning** to maintain object history
-- Maximum object size is **5 TB**
+- Maximum object size is **50 TB** (raised from 5 TB in Dec 2025 — older exam questions may still say 5 TB). A single PUT is still limited to 5 GB
 
 ### 🧱 Storage Tiers
 
@@ -438,7 +442,7 @@ Amazon **S3** is a highly durable, scalable, and secure **key-value store for ob
 
 - **IAM** security for access control
 - **Bucket Policies** for fine-grained control
-- **ACLs (Access Control Lists)**
+- **ACLs (Access Control Lists)** — disabled by default on new buckets since Apr 2023 (Object Ownership = bucket owner enforced)
 - **Access Points** to manage shared access
 - **MFA Delete** for protected deletion operations
 - **Access Logs** to monitor usage
@@ -458,7 +462,7 @@ Amazon **S3** is a highly durable, scalable, and secure **key-value store for ob
 - **SSE-C**: Server-side with customer-provided keys
 - **Client-side encryption**
 - **TLS**: For data encryption **in transit**
-- Default encryption can be set per bucket
+- Default encryption is set per bucket. Since Jan 2023, every new object is encrypted with **SSE-S3 by default**
 
 ⚠️ **Warning:** Always use encryption when handling sensitive data.
 
@@ -474,7 +478,7 @@ Amazon **S3** is a highly durable, scalable, and secure **key-value store for ob
 
 - **Multi-part Upload**: Upload large files in parallel chunks
 - **S3 Transfer Acceleration**: Speed up cross-region uploads
-- **S3 Select**: Retrieve specific data from within objects
+- **S3 Select**: Retrieve specific data from within objects (closed to new customers since 25 Jul 2024; use Athena instead)
 
 ### ⚙️ Automation & Integration
 
@@ -508,7 +512,7 @@ DocumentDB is AWS's answer to a cloud-native version of MongoDB, similar to how 
 DocumentDB is:
 
 *   A NoSQL database 💾
-*   Based on MongoDB technology ⚙️
+*   Not built on MongoDB code — it works with the MongoDB API ⚙️
 *   Compatible with MongoDB 👍
 
 MongoDB is used for:
@@ -663,6 +667,8 @@ Use Cases:
 
 Amazon Timestream is a fully managed, fast, scalable, and serverless time series database. It's designed specifically for time-series data, offering performance and cost advantages over relational databases for this type of data.
 
+⚠️ **Note (2026):** Timestream for LiveAnalytics (the serverless engine described here) is closed to new customers since 20 Jun 2025. New customers use Timestream for InfluxDB.
+
 What is a time series? It's essentially a series of data points, each associated with a specific timestamp. 📌 **Example:** A graph showing data points plotted against years.
 
 ![Timestream](img/Timestream.png)
@@ -748,6 +754,8 @@ For the exam, focus on understanding what Timestream is at a high level. 💡 **
 **Correct Answer:**
 
 **Amazon QLDB (Quantum Ledger Database)** ✅ *(Correct)*
+
+> ⚠️ Note (2026): AWS ended support for QLDB on 31 Jul 2025. Keep this answer for older exam questions. In a real design today, AWS suggests Aurora PostgreSQL.
 
 </details>
 

@@ -67,7 +67,7 @@
 ### Redshift Architecture
 - **Leader Node**: Query coordination
 - **Compute Nodes**: Data storage & processing
-- **Node Types**: Dense Compute, Dense Storage
+- **Node Types**: RA3 (managed storage) and the newer Graviton-based RG. Dense Storage (DS2) is no longer available and Dense Compute (DC2) is deprecated (Apr 2025); older material lists Dense Compute and Dense Storage
 
 ### Redshift Spectrum
 - **Query S3 data** directly
@@ -85,7 +85,7 @@
 - **No infrastructure** to manage
 
 ### Athena Features
-- ✅ **Standard SQL** (Presto)
+- ✅ **Standard SQL** (Presto; engine version 3 is based on Trino)
 - ✅ **Query S3** (CSV, JSON, Parquet, ORC)
 - ✅ **Results** stored in S3
 - ✅ **Integration** with QuickSight
@@ -111,9 +111,9 @@
 - ✅ **Embedded analytics**
 
 ### QuickSight Pricing
-- **Author**: $18/month
-- **Reader**: $5/month
-- **SPICE**: 10 GB free, then $0.25/GB/month
+- **Author**: $24/month (Enterprise; older material says $18)
+- **Reader**: $3/month (Enterprise; older material says $5)
+- **SPICE**: 10 GB per author included, then $0.38/GB/month (Enterprise; $0.25/GB in Standard)
 
 ---
 
@@ -158,7 +158,7 @@
 
 ### Kinesis Data Analytics
 - **Real-time analytics** on streaming data
-- **SQL queries** on streams
+- **SQL queries** on streams — ⚠️ Kinesis Data Analytics for SQL was discontinued on 27 Jan 2026. Use Amazon Managed Service for Apache Flink (or Flink Studio for SQL). Older exam questions may still name it.
 - **Use cases**: Real-time dashboards, alerts
 
 ### Kinesis Video Streams

@@ -63,11 +63,11 @@ How it works:
 * **If the bucket has default SSE-S3 encryption enabled (default for new buckets since Jan 5, 2023)**:
   → **Object will still be encrypted automatically** with SSE-S3.
 
-* **If default encryption is not set (older buckets)**:
-  → **Object will be stored unencrypted** unless you specify the header.
+* **Older buckets (created before Jan 5, 2023)**:
+  → Since Jan 5, 2023, S3 applies SSE-S3 as the base level of encryption to **every** bucket. So all **new** uploads are encrypted, even without the header. Only objects uploaded **before** that date may still be unencrypted (use S3 Batch Operations to encrypt them).
 
 **Best Practice:**
-Either send the header or enable default encryption on the bucket to ensure all objects are encrypted.
+Send the header only when you want a type other than the bucket default (for example SSE-KMS).
 
 To check default encryption:
 
@@ -115,7 +115,7 @@ To read the file, you need access to both the object and the underlying KMS key.
 ![AWS S3 Server-Side Encryption with KMS Keys](img/AWS_S3_Server-Side_Encryption_with_KMS_Keys.png)
 
 ⚠️ **Warning:** SSE-KMS has limitations. 
-- Each API call to KMS counts towards KMS quotas (API calls per second) (5500, 10000, 30000 req/s based on region). 
+- Each API call to KMS counts towards KMS quotas (API calls per second) (10,000, 20,000 or 100,000 req/s for symmetric keys, based on region — older material says 5,500 / 10,000 / 30,000). 
 - When you upload, it calls the GenerateDataKey KMS API. 
 - When you download, it calls the Decrypt KMS API.
 - If you have a very high throughput S3 bucket with everything encrypted using KMS keys, you may encounter throttling. 
@@ -269,6 +269,7 @@ Let's explore encryption options in Amazon S3. We'll cover setting up default en
 ### SSE-C and Client-Side Encryption 🚫
 
 *   📝 **Note:** SSE-C (Server-Side Encryption with Customer-Provided Keys) is not available through the AWS Management Console. You can only use it via the AWS CLI or SDKs.
+*   📝 **Note (2026):** Since April 2026, SSE-C is **blocked by default** on all new general purpose buckets (and on existing buckets in accounts that had no SSE-C objects). To use SSE-C, you must first allow it in the bucket's default encryption settings (`BlockedEncryptionTypes` = `NONE`).
 *   For client-side encryption, you encrypt the data before uploading it to S3 and decrypt it after downloading. **You don't need to explicitly tell AWS that the data is client-side encrypted.**
 
 ### Summary ✅
@@ -877,6 +878,8 @@ Let's explore S3 Glacier Vault Lock and S3 Object Lock, both designed to ensure 
 
 ### S3 Glacier Vault Lock 🔒
 
+📝 **Note (2026):** Vault Lock belongs to the original vault-based **Amazon Glacier** service. That service stopped accepting new customers on Dec 15, 2025. New archives should use the S3 Glacier storage classes, with **S3 Object Lock** for WORM.
+
 The primary goal of S3 Glacier Vault Lock is to lock your Glacier Vault to adhere to a **WORM** (Write Once Read Many) model.
 
 *   You place an object into your S3 Glacier Vault.
@@ -1032,6 +1035,8 @@ By implementing these security measures, you can ensure secure and controlled ac
 ---
 
 ## 15. S3 Object Lambda
+
+📝 **Note (2026):** S3 Object Lambda is closed to new customers since Nov 7, 2025 (only existing customers can use it). AWS suggests invoking Lambda through CloudFront, API Gateway or function URLs instead. It may still appear in older exam questions.
 
 Another use case for S3 access points is with S3 Object Lambda. The core idea is to modify an object in an S3 bucket through a Lambda function just before it's retrieved by an application. This avoids duplicating buckets for different versions of the same object.
 

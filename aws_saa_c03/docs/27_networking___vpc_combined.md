@@ -99,7 +99,7 @@ CIDRs define IP ranges. Let's explore some simple examples:
 
 *   `/32` represents a single IP address.
 *   `0.0.0.0/0` represents all IP addresses.
-*   `192.168.0.0/26` represents a range of 64 IP addresses from `192.168.0.0` to `244.178.0.63`.
+*   `192.168.0.0/26` represents a range of 64 IP addresses from `192.168.0.0` to `192.168.0.63`.
 
 ### How CIDR Works ⚙️
 
@@ -132,7 +132,7 @@ Subnet masks determine which values can change from the base IP.
 | `/28`         | 16 (2^4)                    | `192.168.0.0` - `192.168.0.15`|
 | `/24`         | 256 (2^8)              | `192.168.0.0` - `192.168.0.255`|
 | `/16`         | 65,536 (2^16)          | `192.168.0.0` - `192.168.255.255`|
-| `/0`          | All IPs                | All IPv4 addresses (`0.0.0.0` - `244.178.44.111`)   |
+| `/0`          | All IPs                | All IPv4 addresses (`0.0.0.0` - `255.255.255.255`)   |
 
 ![Octets](./img/Octets.png)
 
@@ -271,7 +271,7 @@ So let's go ahead and create our first **VPC (Virtual Private Cloud)** in AWS.
 - **Minimum CIDR size**: `/28` → 16 IP addresses
 - **Maximum CIDR size**: `/16` → 65,536 IP addresses
 
-Since a VPC is a **private resource**, it can only use **private IPv4 address ranges**, such as:
+AWS recommends **private IPv4 address ranges** (RFC 1918) for a VPC. A publicly routable range is also allowed, but AWS never advertises it to the internet. The private ranges are:
 
 - `10.0.0.0/8`
 - `172.16.0.0/12`
@@ -911,6 +911,8 @@ NAT Gateways offer a significant improvement over NAT Instances. They are manage
 *   Each NAT Gateway handles traffic within its AZ.
 *   If an AZ goes down, the NAT Gateway in another AZ will continue to function.
 *   There's no need to connect AZs through route tables because if an AZ goes down, the EC2 instances in that AZ are also unavailable.
+
+> ⚠️ Note (2026): Since Nov 2025 a NAT Gateway can also run in **regional availability mode**. One regional NAT Gateway spreads across the AZs where you have workloads, and it does not need a public subnet. The per-AZ (zonal) NAT Gateway above is still the default, and older exam questions expect it.
 
 ### NAT Gateway vs. NAT Instance
 
@@ -1968,11 +1970,11 @@ This setup allows you to connect to multiple VPCs across multiple regions.
 ### Connection Types
 
 *   **Dedicated Connection:**
-    *   Capacities: 1 Gbps, 10 Gbps, or 100 Gbps.
+    *   Capacities: 1 Gbps, 10 Gbps, 100 Gbps, or 400 Gbps (400 Gbps is newer — older exam questions may list only 1/10/100 Gbps).
     *   Provides a physical Ethernet port dedicated to you.
     *   Request is made to AWS and completed by an AWS Direct Connect partner.
 *   **Hosted Connection:**
-    *   Capacities: 50 Mbps, 500 Mbps, up to 10 Gbps.
+    *   Capacities: 50 Mbps, 500 Mbps, up to 25 Gbps (raised from 10 Gbps — older exam questions may still say 10 Gbps).
     *   Connection requests are made via AWS Direct Connect Partners.
     *   Allows adding capacity on demand.
     *   Available at select locations.
@@ -2113,10 +2115,12 @@ You can create a second site-to-site VPN attachment to the Transit Gateway, resu
 
 VPN to VGW vs. VPN to Transit Gateway:
 
-*   VPN to Virtual Private Gateway (VGW): One connection to one VPC, limited to 1.5 Gbps. This connection consists of two tunnels.
+*   VPN to Virtual Private Gateway (VGW): One connection to one VPC, limited to 1.25 Gbps (the limit of one tunnel, because a VGW has no ECMP). This connection consists of two tunnels.
 *   VPN to Transit Gateway: One site-to-site VPN to many VPCs (due to transitive connectivity).  One site-to-site VPN connection provides 2.5 Gbps thanks to ECMP, utilizing both tunnels.
 
 You can add more site-to-site VPN connections (e.g., two or three) to the Transit Gateway to double or triple your throughput via ECMP. 📝 **Note:** This is a common exam topic.
+
+> ⚠️ Note (2026): Since late 2025, a VPN on a **Transit Gateway or Cloud WAN** can use **large bandwidth tunnels** of up to **5 Gbps** each (a standard tunnel is still 1.25 Gbps). A VPN on a VGW cannot. Exam questions still use 1.25 Gbps per tunnel.
 
 Keep in mind that using Transit Gateway incurs costs for each GB of data processed. This added cost should be considered when optimizing for performance.
 
@@ -2183,7 +2187,7 @@ Use Cases:
 
 IPv4 was initially designed to provide 4.3 billion addresses. However, it's becoming exhausted, necessitating a new IP scheme: IPv6.
 
-IPv6 is the successor to IPv4 and is designed to provide 3.4 x 10^38 unique IP addresses. That's a massive increase! **All IPv6 addresses in AWS are public and internet-routable** (no private range).
+IPv6 is the successor to IPv4 and is designed to provide 3.4 x 10^38 unique IP addresses. That's a massive increase! **Amazon-provided IPv6 addresses are public and internet-routable.** (AWS now also supports private IPv6 ranges — ULA or private GUA — but only through VPC IPAM. For the exam, think "IPv6 in AWS = public".)
 
 The format of an IPv6 address is `x.x.x.x.x.x.x.x` repeated 8 times, where `x` is a hexadecimal value ranging from `0000` to `ffff`.
 
@@ -2204,7 +2208,7 @@ Examples:
 
 ![IPv6 Support in VPC](./img/ipv6-support-in-vpc.png)
 
-**IPv4 can never be disabled for your VPC and subnets.**
+**IPv4 can never be disabled for your VPC** — a VPC always has an IPv4 CIDR block. (Since 2021 you can create **IPv6-only subnets** inside a dual-stack VPC, so this rule is now about the VPC, not every subnet.)
 
 We can enable IPv6 support in our VPCs. You can enable IPv6 to operate in dual-stack mode. This means that EC2 instances launched in your VPC will get at least a private internal IPv4 address and a public IPv6 address. They can communicate using either IPv4 or IPv6 to the internet through an internet gateway.
 
@@ -2212,7 +2216,7 @@ We can enable IPv6 support in our VPCs. You can enable IPv6 to operate in dual-s
 
 ### IPv6 Troubleshooting Exam Scenario
 
-⚠️ **Warning:** IPv4 cannot be disabled for your VPC and subnets.
+⚠️ **Warning:** IPv4 cannot be disabled for your VPC (only IPv6-only *subnets* are possible).
 
 If you have an IPv6-enabled VPC and cannot launch an EC2 instance in your subnets, it's likely *not* because you've run out of IPv6 addresses. The IPv6 address space is vast.
 
@@ -2456,7 +2460,7 @@ To completely remove a VPC, you need to delete its components in a specific orde
 3.  **Internet Gateway** 🚪: Detach the internet gateway from the VPC and then delete it.
 4.  **Egress-Only Internet Gateway** 📤: Delete the egress-only internet gateway.
 5.  **Elastic IPs** 📍:
-    *   ⚠️ **Warning:** Elastic IPs can incur charges if they are allocated but not associated with a running instance.
+    *   ⚠️ **Warning:** Since Feb 2024, AWS charges $0.005/hour for **every** public IPv4 address, including Elastic IPs that are attached to a running instance (before that, only idle Elastic IPs were charged).
     *   Release any Elastic IPs you allocated, especially those associated with your NAT gateway.
 6.  **VPC Endpoints** 🔌: Delete any VPC endpoints you created. These have a per-hour fee.
 7.  **NAT Gateway** 📡: Delete the NAT gateway and then release its associated Elastic IP.
@@ -2603,7 +2607,7 @@ Two main options:
 ### ClassicLink (Legacy) 🦕
 
 *   Connects EC2-Classic instances privately to your VPC.
-*   ⚠️ **Warning:** Being deprecated.
+*   ⚠️ **Warning:** Retired — EC2-Classic and ClassicLink were fully retired in Aug 2023.
 
 ### Transit Gateway 🚏
 
@@ -2649,6 +2653,7 @@ We'll start by examining costs within a single AWS region.
     *   If two EC2 instances in different AZs need to communicate, there are two options:
         1.  **Public IP or Elastic IP:** Using a public or elastic IP incurs a cost of $0.02 per gigabyte. 💸 This is because the traffic has to leave and re-enter the AWS network.
         2.  **Private IP:** Using a private IP costs half as much (i.e., $0.01 per gigabyte). 💸 This is because the internal AWS network is used to link the AZs.
+        *   ⚠️ Note (2026): AWS's price list says cross-AZ traffic is **$0.01/GB in each direction** (sent and received), so 1 GB between AZs really costs $0.02. Traffic to a public or Elastic IP in the same Region is also $0.01/GB in each direction. The "public = $0.02, private = $0.01" split is the course's simple model.
     *   💡 **Tip:**  **To reduce costs and improve network performance, prioritize using private IPs for communication between instances within the same region.**
 
 ### Inter-Region Costs
@@ -2663,7 +2668,7 @@ We'll start by examining costs within a single AWS region.
 *   💡 **Tip:** Use private IPs instead of public IPs for better savings and network performance. Avoid using public IPs for communication between instances in the same region and AZ.
 *   If you have a cluster requiring significant communication between EC2 instances, consider placing them in the same AZ for maximum cost savings. 💰
 *   ⚠️ **Warning:**  Placing all instances in a single AZ reduces high availability. If that AZ goes down, you'll have no failover. You must balance cost savings with high availability based on your application's requirements.
-*   📌 **Example:**  Consider an RDS database with a read replica for analytics. Creating the read replica in the same AZ avoids network costs for replication. Creating it in a different AZ incurs a cost of $0.01 per gigabyte of data transfer.
+*   📌 **Example:**  Consider an RDS database with a read replica for analytics. Replication between an RDS source and a read replica in the **same Region** (same AZ or different AZ) has **no data transfer charge**. Only a **cross-Region** read replica pays for replication traffic. (Your own app traffic to a replica in another AZ is still normal cross-AZ traffic.)
 
 ### Optimizing Networking Costs Through Architecture
 
@@ -2731,7 +2736,7 @@ We'll start by examining costs within a single AWS region.
     *   EC2 instances connect directly to the VPC Endpoint and then to S3.
     *   Costs:
         *   No cost for using the Gateway Endpoint itself. 💰
-        *   $0.01 per gigabyte of data transferred in and out of S3 for the same region. 💸
+        *   No data transfer charge between EC2 and S3 in the same region — a gateway endpoint has no per-GB charge. 💰
 
 *   💡 **Tip:** **Using a VPC Endpoint can be significantly cheaper than using a NAT Gateway for accessing S3.**
 *   The exam may test you on these cost differences.
@@ -2870,14 +2875,14 @@ AWS Direct Connect offers two types of connections:
 
 1. **Dedicated Connections**
 
-   * Available at **1 Gbps, 10 Gbps, and 100 Gbps**.
+   * Available at **1 Gbps, 10 Gbps, 100 Gbps** (and now **400 Gbps**).
    * Provided directly by AWS.
    * Not suitable for 500 Mbps because the minimum is 1 Gbps.
 
 2. **Hosted Connections**
 
    * Provided by AWS Direct Connect partners.
-   * Bandwidth ranges from **50 Mbps up to 10 Gbps**.
+   * Bandwidth ranges from **50 Mbps up to 25 Gbps** (older material says 10 Gbps).
    * Ideal for lower speeds such as **500 Mbps**.
 
 ✅ Correct Answer: **Hosted**
@@ -2911,7 +2916,7 @@ You need to set up a dedicated connection between your on-premises corporate dat
 
 * **Site-to-Site VPN**: Connects on-premises to AWS over the **public Internet**. Although traffic is encrypted, it's still subject to Internet latency and fluctuations, so it does not meet the "must not travel through the Internet" requirement.
 
-* **AWS PrivateLink**: Provides private connectivity between VPCs and AWS services **within AWS**, but it does not extend to on-premises data centers.
+* **AWS PrivateLink**: Provides private connectivity between VPCs and AWS services **within AWS**. It does not connect an on-premises data center to AWS by itself (on-premises can reach an interface endpoint only over an existing Direct Connect or VPN).
 
 * **Amazon EventBridge**: A serverless event bus for application integration; not related to network connectivity.
 
@@ -2979,6 +2984,8 @@ You want to scale up an AWS Site-to-Site VPN connection throughput, established 
 * **Use Direct Connect Gateway**: This is used for **Direct Connect private connections**, not for scaling VPN throughput.
 
 ✅ Therefore, the correct solution is to **use Transit Gateway**.
+
+> ⚠️ Note (2026): A standard tunnel is still 1.25 Gbps. Since late 2025, a VPN on a Transit Gateway can also use 5 Gbps "large bandwidth" tunnels. The answer stays **Transit Gateway** — neither ECMP nor large tunnels work on a VGW.
 
 </details>
 

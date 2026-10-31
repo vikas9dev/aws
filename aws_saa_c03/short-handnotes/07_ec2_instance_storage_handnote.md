@@ -107,7 +107,7 @@
 
 #### gp3 (Newer)
 - **Baseline**: 3,000 IOPS, 125 MB/s
-- **Scalable**: Up to 16,000 IOPS, 1,000 MB/s
+- **Scalable**: Up to 80,000 IOPS, 2,000 MiB/s, 64 TiB (since Sep 2025; was 16,000 IOPS, 1,000 MB/s, 16 TiB)
 - ✅ **Independent**: IOPS and throughput scalable separately
 
 #### gp2 (Older)
@@ -127,6 +127,7 @@
 #### io2 Block Express
 - **Size**: 4 GB to 64 TB
 - **Max IOPS**: 256,000
+- **All io2 = Block Express** since Apr 2025 (99.999% durability, 4,000 MiB/s)
 - **Latency**: Sub-millisecond
 - **Ratio**: 1,000:1 IOPS to GB
 - ✅ **Multi-attach**: Supported
@@ -212,12 +213,12 @@
 
 ### Performance Modes
 1. **General Purpose** (Default): Low latency (web servers, CMS)
-2. **Max I/O**: High throughput, higher latency (big data, media)
+2. **Max I/O**: High throughput, higher latency (big data, media) — previous generation; AWS recommends General Purpose; not with Elastic or One Zone
 
 ### Throughput Modes
 1. **Bursting**: Baseline + burst (1 TB = 50 MBps + bursts to 100 MBps)
 2. **Provisioned**: Set specific throughput (decouples from storage)
-3. **Elastic**: Auto-scales (0-3 GBps reads, 0-1 GBps writes)
+3. **Elastic**: Auto-scales (up to 20–60 GiBps reads, 1–5 GiBps writes, by Region; older material says 3 / 1 GBps)
 
 ### Storage Classes
 1. **Standard**: Frequently accessed

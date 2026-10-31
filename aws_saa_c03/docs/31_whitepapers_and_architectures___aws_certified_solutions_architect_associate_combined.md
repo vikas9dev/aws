@@ -159,6 +159,8 @@ To access the full set of checks, you need a Business or Enterprise Support plan
 
 With a Business or Enterprise Support plan, you also gain programmatic access to Trusted Advisor through the AWS Support API. 💻
 
+> ⚠️ **Note (2026):** AWS changed its support plans. Developer, Business and Enterprise On-Ramp Support end on 1 Jan 2027 (Developer and Business closed to new sign-ups on 2 Dec 2025). Today the full set of checks and the API come with **Business Support+**, **Enterprise Support** or **Unified Operations**. Older exam questions may still say "Business or Enterprise".
+
 Trusted Advisor provides recommendations based on its findings. For example, it might highlight security issues like:
 
 *   S3 buckets allowing global access 🔓
@@ -179,7 +181,7 @@ Recommendation categories include:
 *   Security
 *   Service Limits
 
-With a basic support plan, you primarily have access to security checks. 🛡️
+With a basic support plan, you get all Service Limits checks plus a small set of core Security and Fault Tolerance checks. 🛡️
 
 These core security checks include:
 

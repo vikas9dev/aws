@@ -25,6 +25,8 @@ AWS Snowball is a highly secure and portable device designed for two primary use
 
 If you're dealing with petabytes of data for migration, Snowball is worth considering.
 
+📝 **Note (2026):** AWS Snowball Edge is closed to new customers since **Nov 7, 2025** (existing customers can still use it). AWS now suggests DataSync for online transfers, AWS Data Transfer Terminal for physical transfers, and AWS Outposts for edge compute. Snowcone was discontinued on Nov 12, 2024, and Snowmobile was retired in 2024. Older exam questions may still use all of them.
+
 ### Snowball Edge Devices 📦
 
 There are two main types of Snowball Edge devices:
@@ -279,7 +281,7 @@ It's a managed OpenZFS file system on AWS.
   - VMware Cloud on AWS
   - Amazon WorkSpaces & AppStream 2.0
   - Amazon EC2, ECS and EKS
-- High performance: Scales up to 1 million (1,000,000) IOPS with less than 0.5 millisecond latency.
+- High performance: Scales up to **2 million IOPS** (for cached data; up to 400,000 IOPS from disk) with latencies of a few hundred microseconds (older material says 1 million IOPS).
 - Supports snapshots, compression, and low cost.
 - **No** data de-duplication.
 - Support for point-in-time instantaneous cloning: Very helpful again to test new workloads.
@@ -383,7 +385,7 @@ There are several types of Storage Gateways, each designed for specific scenario
 2.  Volume Gateway
 3.  Tape Gateway
 
-> Note: FSx File Gateway was also there but it has been **discontinued by AWS**. You can assume it will not appear at the exam after June 2025.
+> Note: FSx File Gateway was also there, but it is **no longer available to new customers since Oct 28, 2024** (existing customers can still use it). You can assume it will not appear at the exam after June 2025.
 
 Let's examine each in detail.
 
@@ -443,6 +445,7 @@ The Tape Gateway interfaces with the cloud by storing tapes in Amazon S3 or Amaz
 From all the above gateway diagrams, we have seen that they run on-premises. The gateway typically runs within your corporate data center. If you lack virtual servers to run the gateway, you can use the Storage Gateway Hardware Appliance.
 
 *   It's a physical appliance that you can order on Amazon.
+*   📝 **Note (2026):** AWS stopped selling the Hardware Appliance on **May 12, 2025**. Existing appliances are supported until May 2028. New setups run the gateway as a VM (VMware, Hyper-V, KVM) or on EC2.
 *   Once installed, it can be configured as a File Gateway, Volume Gateway, or Tape Gateway.
 *   It provides sufficient CPU, memory, network, and SSD cache resources.
 
@@ -469,7 +472,7 @@ Here's a summary of the Storage Gateway service:
 
 Let's explore the different types of Storage Gateways available in AWS. 📝 **Note:** You don't need to know how to configure these for the exam, just the different types.
 
-We can create a gateway and see the four main options:
+We can create a gateway and see the three main options:
 
 *   Amazon S3 File Gateway
 *   Volume Gateway
@@ -483,7 +486,7 @@ When configuring, you have several platform options:
 
 *   On-premises virtualization platforms (VMware, Hyper-V, Linux KVM)
 *   Amazon EC2 (⚠️ **Warning:** This removes some of the caching benefits)
-*   Hardware appliance (ordered directly from AWS)
+*   Hardware appliance (ordered directly from AWS — no longer sold since May 12, 2025)
 
 The hardware appliance is particularly useful as you can hook it into your data center and run a file gateway.
 
@@ -566,7 +569,7 @@ AWS DataSync is a service used to synchronize data between various locations. It
 The main idea is to move large amounts of data to and from different places, including:
 
 *   On-premises locations - Agent needed
-*   Other cloud locations - Agent needed
+*   Other cloud locations - Agent needed (exception: since May 2025, Enhanced mode moves data between other-cloud object storage and Amazon S3 with no agent)
 *   Between AWS services (AWS to AWS - Different Storage service - no agent needed)
 
 To connect to on-premises servers or other cloud locations, DataSync uses protocols like NFS, SMB, and HDFS.
@@ -606,6 +609,8 @@ Consider the use case of synchronizing on-premises files (using SMB or NFS) to A
 The synchronization can be one-way (on-premises to AWS) or bi-directional (AWS back to on-premises).
 
 ### Using AWS Snowcone with DataSync
+
+📝 **Note (2026):** Snowcone was discontinued on Nov 12, 2024 (no new orders, support ended Nov 12, 2025). Keep this only for older exam questions.
 
 > Sometime in exam, will say wants to use DataSync but lacks sufficient network capacity in that case we can use AWS Snowcone.
 
@@ -652,7 +657,7 @@ AWS offers a wide array of storage options, each tailored for specific use cases
 ### Block Storage 💾
 
 *   **EBS Volumes:** Attach storage to a single EC2 instance at a time.
-    *   IO1 and IO2 volumes support multitask functionality.
+    *   IO1 and IO2 volumes support Multi-Attach (one volume attached to several instances in the same AZ).
     *   Different volume types exist, such as GP3 and IO2.
 *   **EC2 Instance Storage:** Provides high-performance, physical storage directly attached to your EC2 instance with very high IOPS. ⚠️ **Warning:** This is not network storage, it's a physical storage.
 
@@ -672,7 +677,7 @@ AWS offers a wide array of storage options, each tailored for specific use cases
     *   **Tape Gateway:** For backups in tape form.
 *   **AWS Transfer Family:** Provides FTP, FTPS, or SFTP interfaces on top of Amazon S3 or Amazon EFS.
 *   **DataSync:** Synchronizes data on a schedule from on-premises to AWS, or AWS to AWS.
-*   **Snow Family (Snowcone, Snowball, Snowmobile):** For physically moving large amounts of data when network capacity is limited. 🚚
+*   **Snow Family (Snowcone, Snowball, Snowmobile):** For physically moving large amounts of data when network capacity is limited. 🚚 (Snowcone discontinued Nov 2024, Snowmobile retired 2024, Snowball Edge closed to new customers Nov 2025.)
     *   📝 **Note:** Snowcone comes with a DataSync agent pre-installed.
 
 ### Databases 💽
@@ -687,6 +692,8 @@ AWS offers a wide array of storage options, each tailored for specific use cases
 ---
 
 ## 11. **AWS Snow Family — Differences**
+
+📝 **Note (2026):** This section is history for older exam questions. **Snowcone** was discontinued on Nov 12, 2024. **Snowmobile** was retired in 2024. **Snowball Edge** is closed to new customers since Nov 7, 2025, and its 80 TB Storage Optimized model was discontinued in Nov 2024.
 
 ### **1. AWS Snowcone**
 
@@ -722,8 +729,8 @@ Best for **edge computing**, **small-scale data transfer**, and **remote/harsh e
 
 * Comes in two variants:
 
-  * **Snowball Edge Storage Optimized** (~80 TB storage)
-  * **Snowball Edge Compute Optimized** (~42 TB + more vCPUs / GPU option)
+  * **Snowball Edge Storage Optimized** (**210 TB**; the older 80 TB model was discontinued in Nov 2024)
+  * **Snowball Edge Compute Optimized** (**28 TB** NVMe, 104 vCPUs; the older 42 TB / 52 vCPU and GPU models were discontinued in Nov 2024)
 * Rugged, suitcase-sized, used for:
 
   * **Massive data migration** into AWS
@@ -758,7 +765,7 @@ Best for **edge computing**, **small-scale data transfer**, and **remote/harsh e
 | Feature       | **Snowcone**                     | **Snowball Edge**                   | **Snowmobile**               |
 | ------------- | -------------------------------- | ----------------------------------- | ---------------------------- |
 | Size          | Very small device                | Rugged suitcase                     | 45-foot container            |
-| Capacity      | 8–14 TB                          | 40–80 TB                            | 100 PB                       |
+| Capacity      | 8–14 TB                          | 28–210 TB (older models: 40–80 TB)  | 100 PB                       |
 | Use Case      | IoT / edge / remote data capture | Large data migration + edge compute | Entire data center migration |
 | Compute       | Yes (light)                      | Yes (heavy)                         | No                           |
 | Transfer Type | Offline + Online (DataSync)      | Offline                             | Offline (truck)              |
@@ -787,7 +794,7 @@ You need to move hundreds of terabytes into Amazon S3, then process the data usi
 
 * **Use Snowcone**
 
-  * Lightweight edge device for smaller-scale transfers (up to **8 TB usable storage**).
+  * Lightweight edge device for smaller-scale transfers (**8 TB HDD or 14 TB SSD** usable storage). Discontinued in Nov 2024.
   * Not suitable when dealing with **hundreds of TBs**.
 
 * **Use AWS Data Migration**
@@ -797,7 +804,7 @@ You need to move hundreds of terabytes into Amazon S3, then process the data usi
 
 * **Use Snowball Edge** ✅
 
-  * Purpose-built for **large-scale data transfer (up to 80 TB per device)**.
+  * Purpose-built for **large-scale data transfer (up to 210 TB per device today; older models had 80 TB)**.
   * Comes with **on-board compute capabilities (EC2 & Lambda)**.
   * Enables **data preprocessing or transformation** before uploading to S3.
   * Much faster and cost-efficient compared to network transfer at 1 Gbit/s.
@@ -809,11 +816,13 @@ You need to move hundreds of terabytes into Amazon S3, then process the data usi
 | Option               | Best For                                    | Limitations                       |
 | -------------------- | ------------------------------------------- | --------------------------------- |
 | **Network Transfer** | Small to medium datasets                    | Very slow for 100s of TB          |
-| **Snowcone**         | Edge use cases, small (≤8 TB)               | Too small for this case           |
+| **Snowcone**         | Edge use cases, small (≤14 TB)              | Too small for this case           |
 | **AWS DMS**          | Database migrations                         | Not bulk file transfer            |
 | **Snowball Edge** ✅  | Bulk transfer (100s of TBs) + preprocessing | Requires physical device shipping |
 
 ⚡ **In this scenario:** Since you need to move **hundreds of TBs quickly** and possibly process it before uploading to S3, the best solution is **AWS Snowball Edge**.
+
+> ⚠️ Note (2026): Snowball Edge is closed to new customers since Nov 7, 2025. The exam answer is still Snowball Edge; in real life a new customer would look at DataSync or AWS Data Transfer Terminal.
 
 </details>
 
@@ -840,7 +849,7 @@ When transferring **large volumes of data (tens to hundreds of terabytes or more
 
 ##### 📦 What AWS Snowball Edge Does:
 
-* AWS ships you a **secure, ruggedized device** (50–80 TB per device).
+* AWS ships you a **secure, ruggedized device** (210 TB for the current Storage Optimized model; older models had 50–80 TB).
 * You copy your data locally onto the device using the **Snowball client or AWS OpsHub**.
 * You then **ship it back to AWS**, where AWS uploads your data directly into your **S3 bucket**.
 * Data is **encrypted** and the device **auto-erases** after ingestion for security.
@@ -862,6 +871,8 @@ This method **bypasses network bottlenecks** and significantly **reduces transfe
 * 🚫 **Problem:** Limited network bandwidth (takes 3 weeks)
 * ✅ **Solution:** Use **AWS Snowball Edge** for fast, secure offline transfer to AWS
 
+> ⚠️ Note (2026): Snowball Edge is closed to new customers since Nov 7, 2025. The exam answer is unchanged.
+
 </details>
 
 ---
@@ -882,7 +893,8 @@ You would like to have a distributed **POSIX-compliant file system** that will a
 * **EFS with Max. IO enabled**
 
   * Good for scalable workloads requiring shared access across many EC2 instances.
-  * However, it **cannot scale to millions of IOPS** — it's designed for general-purpose workloads, not HPC.
+  * However, it is designed for general-purpose shared workloads, not HPC. (AWS now recommends General Purpose mode over Max I/O.)
+  * 📝 Since Nov 2024, EFS in **General Purpose + Elastic throughput** mode can reach up to 2.5 million read IOPS (after a quota increase). But for HPC with POSIX and the "HPC" keyword, FSx for Lustre is still the exam answer.
 
 * **Amazon FSx for Lustre** ✅
 
@@ -993,7 +1005,7 @@ DataSync can **transfer terabytes to petabytes** of data **up to 10x faster** th
 In this case, since you're migrating **a large amount of data from S3 to EFS**, DataSync provides the following advantages:
 
 * ⚡ **High-speed transfer** (up to 10× faster than traditional tools like `rsync`).
-* 🔄 **Automated synchronization** — can be scheduled or run continuously.
+* 🔄 **Automated synchronization** — can be scheduled (hourly at most often) or run on demand. It is not continuous.
 * 🔒 **Secure transfers** — encryption in transit and at rest.
 * 🧩 **Native integration** with both **Amazon S3** and **Amazon EFS**.
 

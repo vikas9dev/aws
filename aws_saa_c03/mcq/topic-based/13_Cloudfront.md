@@ -31,6 +31,7 @@ If you want to serve private content through CloudFront and you're trying to dec
 
 🟢 **– You want to use an RTMP distribution.**
 Signed cookies aren't supported for RTMP distributions.
+> ⚠️ Note (2026): CloudFront removed RTMP distributions on Dec 31, 2020. Use HTTP streaming (HLS, DASH) on a normal distribution.
 
 🟢 **– You want to restrict access to individual files**, for example, an installation download for your application.
 
@@ -112,6 +113,8 @@ CloudFront is primarily a **Content Delivery Network (CDN)** service that speeds
 Blocking IP addresses using **NACLs** is not a very efficient method because a **quick change in IP address** would easily bypass this configuration.
 
 <span style="color:red"><strong>🔴 The option that says: Storing and privately serving the high-quality photos on Amazon WorkDocs instead is incorrect</strong></span> as **WorkDocs** is simply a fully managed, secure content creation, storage, and collaboration service. It is **not a suitable service for storing static content**. Amazon WorkDocs is more often used to easily create, edit, and share documents for collaboration and **not for serving object data like Amazon S3**.
+
+> ⚠️ Note (2026): Amazon WorkDocs reached end of support on Apr 25, 2025, so it is no longer a real option.
 
 </details>
 
@@ -281,7 +284,7 @@ To detect and mitigate **DDoS attacks**, you can use **AWS WAF** in addition to 
 
 By using **AWS WAF**, you can configure **web access control lists (Web ACLs)** on your CloudFront distributions or Application Load Balancers to filter and block requests based on request signatures. Each Web ACL consists of rules that you can configure to **string match or regex match** one or more request attributes, such as the **URI**, **query-string**, **HTTP method**, or **header key**. In addition, by using **AWS WAF's rate-based rules**, you can automatically **block the IP addresses of bad actors** when requests matching a rule **exceed a threshold** that you define. Requests from offending client IP addresses will receive **403 Forbidden** error responses and will remain blocked until request rates drop below the threshold. This is useful for mitigating **HTTP flood attacks disguised as regular web traffic**.
 
-It is recommended that you add **web ACLs with rate-based rules** as part of your **AWS Shield Advanced** protection. These rules can alert you to sudden spikes in traffic that might indicate a potential DDoS event. A **rate-based rule** counts the requests that arrive from any individual address in any five-minute period. If the number of requests exceeds the limit that you define, the rule can trigger an action such as sending you a notification.
+It is recommended that you add **web ACLs with rate-based rules** as part of your **AWS Shield Advanced** protection. These rules can alert you to sudden spikes in traffic that might indicate a potential DDoS event. A **rate-based rule** counts the requests that arrive from any individual address in a time window you choose: 1, 2, 5 or 10 minutes (it used to be fixed at five minutes). If the number of requests exceeds the limit that you define, the rule can trigger an action such as sending you a notification.
 
 ### ✅ **Correct Answer**
 

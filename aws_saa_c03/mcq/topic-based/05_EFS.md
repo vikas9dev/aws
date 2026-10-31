@@ -57,7 +57,7 @@ It's designed for **high durability**, **availability**, and **virtually unlimit
 ⚠️ **Limitation:**
 
 * **Not suitable** for rapidly changing data
-* Lacks **file locking** and **strong consistency semantics** for frequent updates
+* Lacks **file locking** and in-place file updates (S3 has been strongly consistent since Dec 2020, but it is object storage, not a file system)
 
 ### ✅ **Correct Answer**
 
@@ -72,7 +72,7 @@ It's designed for **high durability**, **availability**, and **virtually unlimit
 
 <span style="color:red"><strong>🚫 Amazon S3:</strong></span>  
 Although it provides **high scalability and availability**, it is **not designed** for **rapidly changing data**.
-It lacks **strong consistency and file locking**, which makes it **less suitable** for concurrent write-heavy workloads.
+It lacks **file locking** and a file-system interface, which makes it **less suitable** for concurrent write-heavy workloads. (S3 has been strongly consistent since Dec 2020.)
 
 <span style="color:red"><strong>🚫 Amazon EBS:</strong></span>  
 Provides **low-latency block storage** for a **single instance only**.

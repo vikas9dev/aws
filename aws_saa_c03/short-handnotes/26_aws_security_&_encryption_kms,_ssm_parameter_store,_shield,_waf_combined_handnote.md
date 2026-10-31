@@ -40,7 +40,7 @@
 ### Key Rotation
 - **AWS Managed**: Auto-rotated every 1 year
 - **Customer Managed**: Auto-rotation (1 year default, configurable 90-2560 days) OR on-demand
-- **Imported Keys**: Manual rotation only
+- **Imported Keys**: No auto-rotation; on-demand rotation (after importing new material) or manual
 - ⚠️ **Key Point**: Old key versions retained for decryption - rotation NEVER breaks decryption
 - Decryption fails ONLY if key is disabled/deleted
 
@@ -143,12 +143,12 @@ aws ssm get-parameters-by-path --path /my-app/dev --recursive --with-decryption
 ### Features
 - Provision & manage TLS/SSL certificates
 - **Public certificates: FREE**
-- Automatic renewal (60 days before expiry)
+- Automatic renewal (45 days before expiry for the 198-day certs issued since Feb 2026; was 60 days)
 - Integrations: ELB, CloudFront, API Gateway
 
 ### ⚠️ Important Limitations
 - **Cannot use with EC2 directly** (public certs)
-- **Public certs cannot be extracted** from ACM
+- **Normal public certs cannot be extracted** from ACM (since Jun 2025, paid *exportable* public certs can)
 
 ### Certificate Request Process
 1. List domain names (FQDN, wildcard `*.example.com`)
@@ -188,8 +188,8 @@ aws ssm get-parameters-by-path --path /my-app/dev --recursive --with-decryption
 - **HTTP headers/body/URI**: SQL injection, XSS protection
 - **Size constraints**: Limit request size (e.g., 2MB)
 - **Geo match**: Allow/block countries
-- **Rate-based rules**: DDoS protection (e.g., 10 req/sec per IP)
-- **Max capacity**: 1,500 per Web ACL
+- **Rate-based rules**: DDoS protection (e.g., max 1,000 requests per IP in 5 min; window 1/2/5/10 min, min limit 10)
+- **Max capacity**: 5,000 WCUs per Web ACL (1,500 included in base price; older questions say 1,500)
 
 ### Web ACL Scope
 - Regional (ALB, API Gateway) - per region
@@ -298,7 +298,7 @@ aws ssm get-parameters-by-path --path /my-app/dev --recursive --with-decryption
 - **Continuous monitoring** of EC2 instances, container images, and Lambda functions
 
 ### Scans
-- **EC2 instances**: Network reachability, OS vulnerabilities (via SSM agent)
+- **EC2 instances**: Network reachability, OS vulnerabilities (via SSM agent, or agentless with EBS snapshots)
 - **ECR container images**: Vulnerability scanning on push
 - **Lambda functions**: Code vulnerabilities, package dependencies
 
@@ -335,7 +335,7 @@ aws ssm get-parameters-by-path --path /my-app/dev --recursive --with-decryption
 ## 📋 EXAM KEY POINTS
 
 ### KMS
-- ✅ Key rotation: 1 year (auto), old keys retained for decryption
+- ✅ Key rotation: 1 year (auto, default; configurable 90–2,560 days), old keys retained for decryption
 - ✅ Region-scoped, cross-region requires re-encryption
 - ✅ Multi-region keys: Global DynamoDB/Aurora + client-side encryption
 - ✅ Cross-account AMI sharing: Modify launch permissions + share KMS key
@@ -359,7 +359,7 @@ aws ssm get-parameters-by-path --path /my-app/dev --recursive --with-decryption
 
 ### WAF
 - ✅ Layer 7 only (NOT NLB)
-- ✅ Max 1,500 capacity per Web ACL
+- ✅ 1,500 WCUs in base price; max 5,000 per Web ACL
 - ✅ Fixed IP: Global Accelerator + ALB + WAF
 
 ### Shield

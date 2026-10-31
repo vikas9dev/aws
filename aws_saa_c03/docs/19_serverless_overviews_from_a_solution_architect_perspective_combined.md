@@ -342,7 +342,7 @@ Before heading into the exam, it's crucial to understand the limitations of AWS 
 
 These limits govern the resources available to your Lambda function during runtime.
 
-*   **Memory Allocation:** 128 MB to 10 GB 🧠, in 64 MB increments. Increasing memory also increases vCPU allocation.
+*   **Memory Allocation:** 128 MB to 10 GB (10,240 MB) 🧠, in **1 MB** increments (the step was 64 MB before Dec 2020 — older exam questions may still say 64 MB). Increasing memory also increases vCPU allocation.
 *   **Maximum Execution Time:** 900 seconds (15 minutes) ⏱️.
     *   Anything exceeding this is not suitable for Lambda.
 *   **Environment Variables:** Maximum of 4 KB 🔑.
@@ -351,7 +351,7 @@ These limits govern the resources available to your Lambda function during runti
 *   **Concurrent Executions:** 1000 🚦. This limit can be increased by request.
     *   💡 **Tip:** Utilize reserved concurrency early on for better control.
 
-For **AWS Lambda**, the **memory allocation** is set in **64 MB increments** — not 1 MB. ✅ So you can pick values like `128 MB, 192 MB, 256 MB, …` all the way up to **10,240 MB (10 GB)**. ❌ You cannot pick values like `129 MB` or `130 MB`. 💡 When you increase memory, Lambda also proportionally increases the amount of vCPU available. For example, giving more memory means your function may run faster because it gets more CPU.
+For **AWS Lambda**, the **memory allocation** is set in **1 MB increments** (it was 64 MB increments before Dec 2020). ✅ So you can pick any value from `128 MB` up to **10,240 MB (10 GB)**, for example `129 MB` or `130 MB`. 💡 When you increase memory, Lambda also proportionally increases the amount of vCPU available. For example, giving more memory means your function may run faster because it gets more CPU.
 
 ### Deployment Limits 📦
 
@@ -516,7 +516,7 @@ When setting provisioned concurrency, consider the associated costs. ⚠️ **Wa
 
 ## 8. Lambda SnapStart
 
-Lambda SnapStart is a feature designed to significantly improve your Lambda function performance, potentially up to 10x, for Java, Python, and .NET runtimes. The best part? It comes at no extra cost! 🚀
+Lambda SnapStart is a feature designed to significantly improve your Lambda function performance, potentially up to 10x, for Java, Python, and .NET runtimes. For Java it comes at no extra cost. For Python and .NET (added Nov 2024), you pay for caching the snapshot and for each restore. 🚀
 
 The core idea is to enable Lambda functions to execute much faster. Let's examine what happens when SnapStart is *disabled*.
 
@@ -606,7 +606,7 @@ Lambda@Edge provides more flexibility.
 
 These functions are written in NodeJS or Python and scale to thousands of requests per second. They can modify all CloudFront requests and responses:
 
-*   **Viewer Request:** Before CloudFront forwards a request to the origin.
+*   **Viewer Request:** After CloudFront receives a request from a viewer.
 *   **Origin Request:** Before CloudFront forwards a request to the origin.
 *   **Origin Response:** After CloudFront receives the response from the origin.
 *   **Viewer Response:** Before CloudFront forwards the response back to the viewer.
@@ -620,9 +620,9 @@ You author your function in the `us-east-1` region (the same region where you ma
 | **Runtime Support**              | JavaScript                                       | Node.js, Python                                |
 | **# of Requests**                | **Millions** of requests per second              | **Thousands** of requests per second           |
 | **CloudFront Triggers**          | - Viewer Request/Response                        | - Viewer Request/Response<br>- Origin Request/Response |
-| **Max. Execution Time**          | < 1 ms                                           | 5 – 10 seconds                                 |
+| **Max. Execution Time**          | < 1 ms                                           | 30 seconds (all events; older material says 5 s viewer / 30 s origin) |
 | **Max. Memory**                  | 2 MB                                             | 128 MB up to 10 GB                             |
-| **Total Package Size**           | 10 KB                                            | 1 MB – 50 MB                                   |
+| **Total Package Size**           | 10 KB                                            | 50 MB (all events; older material says 1 MB for viewer events) |
 | **Network Access, File System**  | No                                               | Yes                                            |
 | **Access to the Request Body**   | No                                               | Yes                                            |
 | **Pricing**                      | Free tier available, 1/6th price of @Edge        | No free tier, charged per request & duration   |
@@ -640,7 +640,7 @@ These operations must be executed in less than one millisecond.
 
 ### Use Cases: Lambda@Edge
 
-Lambda@Edge, with its longer execution time (up to 10 seconds), adjustable CPU and memory, allows for more complex operations.
+Lambda@Edge, with its longer execution time (up to 30 seconds), adjustable CPU and memory, allows for more complex operations.
 
 *   You can load third-party libraries, such as the AWS SDK, to access other AWS services.
 *   You have network access to external services for data processing.
@@ -701,6 +701,7 @@ This integration is supported by:
 
 *   RDS for PostgreSQL
 *   Aurora MySQL
+*   Aurora PostgreSQL (version 11.9 and higher, using the `aws_lambda` extension)
 
 Here's how it works:
 
@@ -807,7 +808,7 @@ A DynamoDB table's primary key can consist of:
 
 You need to choose a capacity mode for managing read and write operations on your DynamoDB table. There are two modes:
 
-1.  **Provisioned Mode (Default):**
+1.  **Provisioned Mode:** (older material calls this the default; since Nov 2024 AWS calls on-demand the default and recommended mode)
 
     *   You specify the number of reads and writes per second you expect.
     *   You pay for provisioned Read Capacity Units (RCU) and Write Capacity Units (WCU).
@@ -819,7 +820,7 @@ You need to choose a capacity mode for managing read and write operations on you
     *   Read and write capacity scales automatically with your workload.
     *   No capacity planning is required.
     *   You pay for each read and write operation you perform.
-    *   More expensive than provisioned mode but ideal for unpredictable workloads or those with sudden spikes. 💥
+    *   More expensive per request than well-used provisioned mode (AWS cut on-demand prices by 50% in Nov 2024), but ideal for unpredictable workloads or those with sudden spikes. 💥
     *   No concept of RCU and WCU.
 
 💡 **Tip:** Choose the right capacity mode based on your workload's characteristics.
@@ -855,7 +856,7 @@ For read and write capacity settings, you have two options:
 
 *   Pay for the actual reads and writes your application performs.
 *   Great for applications with unpredictable workloads.
-*   ⚠️ **Warning:** Can be two to three times more expensive than provisioned capacity.
+*   ⚠️ **Warning:** Older material says it can be two to three times more expensive than provisioned capacity. Since AWS cut on-demand prices by 50% in Nov 2024, AWS says most workloads cost less on on-demand. Provisioned is still cheaper for steady, well-used tables.
 *   💡 **Tip:** The exam will test you on when to use on-demand vs provisioned.
 
 #### Provisioned
@@ -975,7 +976,7 @@ A global table is replicated across multiple regions (e.g., US-East-1 and AP-Sou
 *   There is two-way replication between the tables.
 *   Applications can read and write to the table in any region (Active-Active replication).
 *   The goal is to provide low-latency access to DynamoDB in multiple regions.
-*   To enable global tables, you must first enable DynamoDB Streams because it is underlying infrastructure to replicate table across regions.
+*   Global tables (eventual-consistency mode) use DynamoDB Streams to replicate the table across regions. In the current version (2019.11.21), DynamoDB turns Streams on for the replicas by default. Older material says you must enable Streams first (that was the 2017 legacy version). The strong-consistency mode (MRSC, Jun 2025) does not use Streams.
 
 ### d. Time To Live (TTL) ⏳
 
@@ -1002,7 +1003,7 @@ Backup options:
 
 1.  **Continuous Backups with Point-in-Time Recovery (PITR):**
     *   Optionally enabled.
-    *   Allows recovery to any point in time within the last 35 days.
+    *   Allows recovery to any point in time within the recovery period. The period is configurable from 1 to 35 days (default 35).
     *   Recovery creates a new table.
 2.  **On-Demand Backups:**
     *   Retained until explicitly deleted.
@@ -1227,7 +1228,7 @@ Now, let's integrate this Lambda function with our API Gateway.
 3.  Paste the ARN into the Lambda function integration settings.
 4.  Select **Lambda Proxy Integration** to pass the full request to Lambda and interpret the response.
 
-⚠️ **Warning:** API Gateway has a limited timeout of 29 seconds, regardless of the Lambda function's timeout setting.
+⚠️ **Warning:** API Gateway has a default integration timeout of 29 seconds, regardless of the Lambda function's timeout setting. Since Jun 2024, you can request a higher limit for Regional and private REST APIs (not edge-optimized); this may lower your account throttle quota.
 
 Click "Create Method". This will automatically grant API Gateway the right to invoke our Lambda function. You can verify this by checking the resource-based policy statement in the Lambda function's configuration > "Permissions".
 
@@ -1514,7 +1515,7 @@ The analytics team wants the data in DynamoDB **JSON format** and hosted in an *
 
 <summary>Explanation</summary>
 
-* **Export to S3** is a built-in DynamoDB feature that allows you to directly export data to **Amazon S3** in **JSON or Parquet** format.
+* **Export to S3** is a built-in DynamoDB feature that allows you to directly export data to **Amazon S3** in **DynamoDB JSON or Amazon Ion** format (Parquet is not an export format).
 * This method is **serverless** and **cost-effective**, because you only pay for the exported data and S3 storage. No extra infrastructure or custom code is required.
 * Other options:
 

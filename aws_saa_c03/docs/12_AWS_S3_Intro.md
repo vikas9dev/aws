@@ -81,7 +81,7 @@ Using the previous example `s3://my-bucket/my_folder/another_folder/my_file.txt`
 
 ### Object Values, Metadata, and Tags
 *   **Values:** The content of the file (the body).
-*   The maximum object size is 5 TB (5,000 GB).
+*   The maximum object size is **50 TB** (raised from 5 TB in Dec 2025 — older exam questions may still say 5 TB). One GET request returns at most 5 TB, so read bigger objects with byte-range GETs.
 *   If a file is larger than 5 GB, you must use the multi-part upload feature.
     *   For example, a 5 terabyte file must be uploaded in at least 1,000 parts of 5 gigabytes each.
 *   **Metadata:** Key-value pairs that describe the object, set by the system or the user.
@@ -817,14 +817,16 @@ The **S3 Express One Zone storage class** is unique compared to other S3 storage
 * Handles **hundreds of thousands of requests per second**.
 * Achieves **single-digit millisecond latency**.
 * Offers up to **10x the performance of S3 Standard**.
-* Costs are about **50% lower** compared to S3 Standard.
+* **Request** costs are lower than S3 Standard (about 50% lower at launch; GET requests even lower after the Apr 2025 price cut). But **storage** per GB costs more (about $0.11/GB-month vs $0.023 for S3 Standard in us-east-1). So it saves money only for request-heavy workloads.
 
 📌 **Code Example: Creating a directory bucket in AWS CLI**
 
 ```bash
-aws s3express create-bucket \
-  --bucket my-express-bucket \
-  --availability-zone us-east-1a
+# Directory bucket names must end with --<zone-id>--x-s3
+aws s3api create-bucket \
+  --bucket my-express-bucket--use1-az4--x-s3 \
+  --create-bucket-configuration 'Location={Type=AvailabilityZone,Name=use1-az4},Bucket={DataRedundancy=SingleAvailabilityZone,Type=Directory}' \
+  --region us-east-1
 ```
 
 ### ⚠️ Availability Trade-offs
@@ -856,12 +858,12 @@ It integrates seamlessly with services like **SageMaker, Athena, EMR, and Glue**
 | **Availability**                    | 99.99%                                            | Lower (due to single AZ risk)                                                                 |
 | **Performance**                     | High                                              | ⚡ Ultra-high (10x S3 Standard)                                                                |
 | **Latency**                         | Low                                               | 🚀 Single-digit ms latency                                                                    |
-| **Cost**                            | Standard pricing                                  | \~50% lower than S3 Standard                                                                  |
+| **Cost**                            | Standard pricing                                  | Lower request cost, but higher storage cost per GB than S3 Standard                           |
 | **Storage Type**                    | Standard bucket                                   | Directory bucket                                                                              |
 | **Best For**                        | General workloads needing durability & resilience | Latency-sensitive, compute-heavy workloads (AI/ML, HPC, financial modeling, media processing) |
 | **Integration**                     | Works with all AWS services                       | Optimized for SageMaker, Athena, EMR, Glue, etc.                                              |
 
-💡 **Tip:** Use **S3 Standard** when durability and availability are most important, but consider **S3 Express One Zone** when **performance and cost** outweigh the risks of single-AZ dependency.
+💡 **Tip:** Use **S3 Standard** when durability and availability are most important, but consider **S3 Express One Zone** when **performance and request cost** outweigh the risks of single-AZ dependency.
 
 ---
 
@@ -922,7 +924,7 @@ Amazon S3 Glacier offers multiple retrieval modes depending on cost and retrieva
   * **Standard:** 3–5 hours ⏳
   * **Bulk:** 5–12 hours 🕒
 
-* **Instant Retrieval (10 seconds)** is **NOT part of Glacier Flexible Retrieval**. Instead, it belongs to **S3 Glacier Instant Retrieval**, a **separate storage class** designed for data that requires immediate access but still needs cost efficiency.
+* **Instant (10 seconds)** is **NOT a Glacier Flexible Retrieval mode** — it is not a real retrieval mode at all. The similar name belongs to **S3 Glacier Instant Retrieval**, a **separate storage class** that returns data in **milliseconds** (not 10 seconds).
 
 ✅ Correct Answer: **Instant (10 seconds)**
 

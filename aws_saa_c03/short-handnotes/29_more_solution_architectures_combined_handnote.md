@@ -15,9 +15,9 @@
 
 ### SNS and Lambda
 - **Pattern**: SNS Topic → Lambda Function
-- **Retries**: Lambda retries 3 times
+- **Retries**: Lambda retries 2 times (3 attempts in total)
 - **DLQ**: Configure at Lambda level (not SNS)
-- **Default**: Failed messages discarded after 3 retries
+- **Default**: Failed messages discarded after the retries
 
 ### Fan-Out Pattern
 - **Problem**: Deliver to multiple SQS queues
@@ -34,7 +34,7 @@
 - **Use Case**: Generate thumbnails on upload
 
 ### Amazon EventBridge
-- **All S3 Events**: Sent automatically to EventBridge
+- **All S3 Events**: Sent to EventBridge once you turn on EventBridge notifications for the bucket (off by default)
 - **Routing**: Rules to 18+ AWS services
 - **Features**:
   - ✅ Advanced filtering (metadata, size, name)
@@ -121,7 +121,7 @@
 
 ### Data Transfer
 - **Direct Connect**: GB/s, private network
-- **Snowball/Snowmobile**: Petabytes, physical transport
+- **Snowball/Snowmobile**: Petabytes, physical transport (⚠️ Snowmobile retired 2024; Snowball Edge closed to new customers Nov 2025)
 - **DataSync**: File system sync (NFS, SMB)
 
 ### Compute & Networking
@@ -165,7 +165,7 @@
 1. **SQS + Lambda**: Use DLQ to prevent infinite loops
 2. **SNS + Lambda**: DLQ configured at Lambda level
 3. **Fan-Out**: SNS → Multiple SQS queues
-4. **EventBridge**: All S3 events sent automatically
+4. **EventBridge**: All S3 events (after you turn it on for the bucket)
 5. **Caching**: CloudFront (edge), API Gateway (regional), Application (Redis/DAX)
 6. **IP Blocking**: NACL → Security Group → WAF
 7. **CloudFront**: Client IP not visible, use WAF/Geo Restriction

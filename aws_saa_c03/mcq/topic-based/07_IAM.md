@@ -145,6 +145,7 @@ This scenario specifically requires **enterprise identity federation** with **Si
 
 - WorkDocs **does not integrate directly with S3**.
 - It is a content collaboration service, not a mechanism for controlling access to S3 buckets.
+- Amazon WorkDocs was also shut down on 25 Apr 2025, so it is not a valid choice today.
 
 <span style="color:red"><strong>### ❌ Creating matching IAM users for all 1200 corporate users</strong></span>
 

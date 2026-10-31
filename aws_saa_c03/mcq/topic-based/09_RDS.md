@@ -94,7 +94,7 @@ These two steps together ensure that **all DB traffic is encrypted and trusted e
 | Option                                       | Why It's Wrong                                                                                    |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | <span style="color:red"><strong>1. Configure SG to allow only port 443</strong></span>   | SG rules do not enforce SSL between EC2 and RDS. Port 443 is not used for RDS SQL Server traffic. |
-| <span style="color:red"><strong>2. Enable IAM DB Authentication</strong></span>          | IAM DB Auth is only supported for **MySQL and PostgreSQL**, not SQL Server.                       |
+| <span style="color:red"><strong>2. Enable IAM DB Authentication</strong></span>          | IAM DB Auth is only supported for **MariaDB, MySQL and PostgreSQL**, not SQL Server.                       |
 | <span style="color:red"><strong>4. Use TDE (Transparent Data Encryption)</strong></span> | TDE encrypts data **at rest**, not in transit, so it doesn't meet the requirement.                |
 
 ### 📝 **Summary**
@@ -155,7 +155,7 @@ To meet both:
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | <span style="color:red"><strong>Convert the schema using AWS SCT</strong></span>              | SCT is needed only for **heterogeneous** migrations (e.g., Oracle → PostgreSQL). Here, it's **Oracle-to-Oracle**, so no schema conversion is required. |
 | <span style="color:red"><strong>Migrate to non-cluster Aurora single instance</strong></span> | Not suitable for critical workloads that require **high availability**; a single instance has a single point of failure.                               |
-| <span style="color:red"><strong>Launch RDS Oracle with RMAN enabled</strong></span>           | RMAN is **not supported** in RDS. RDS uses automated backups, snapshots, and Multi-AZ instead.                                                         |
+| <span style="color:red"><strong>Launch RDS Oracle with RMAN enabled</strong></span>           | RMAN does not give high availability. On RDS you get only limited RMAN tasks (backups to disk through `rdsadmin.rdsadmin_rman_util`), and you can't use RMAN to restore an RDS instance. RDS uses automated backups, snapshots, and Multi-AZ instead.                                                         |
 
 ### 📝 **Summary**
 

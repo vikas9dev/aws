@@ -486,7 +486,7 @@ How it works:
 
 *   EC2 instances: The NLB can send TCP or UDP traffic directly to your EC2 instances.
 *   IP addresses: You can register IP addresses, which **must be private IPs**. 🔑
-*   Lambda functions: You can register Lambda functions.
+*   ⚠️ Not Lambda functions: NLB does not support Lambda targets. Only the ALB supports Lambda as a target.
 *   ALBs: You can register ALBs.
 
 Why use private IPs?
@@ -1235,7 +1235,7 @@ Choosing the right metric depends on your application. Here are some common opti
 ### Scaling Cooldown
 
 *   After a scaling activity (adding or removing instances), the ASG enters a cooldown period.
-*   The default cooldown period is five minutes (300 seconds).
+*   The default cooldown period is five minutes (300 seconds). It applies to **simple scaling** policies only. Target tracking and step scaling do not wait for it; they use the **instance warm-up** time instead.
 *   During the cooldown, the ASG will not launch or terminate additional instances.
 *   This allows metrics to stabilize and new instances to become effective.
 

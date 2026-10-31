@@ -93,7 +93,7 @@ Amazon SQS (Simple Queue Service) was launched in 2004, making it: One of the fi
     *   Maximum retention: 14 days
     *   Messages must be read and deleted within the retention period.
 *   **Low Latency:** ⚡️ Less than 10 milliseconds on publish and receive.
-*   **Message Size Limit:** 📏 Messages must be less than 1024 KB per message.
+*   **Message Size Limit:** 📏 Messages can be up to **1 MiB (1024 KB)** per message (raised from 256 KB in Aug 2025 — older exam questions may still say 256 KB). For larger payloads, use the SQS Extended Client Library with S3.
 *   **At Least Once Delivery:** ⚠️ Possible duplicate messages, it means that sometimes the same message might be sent multiple times (that's why it's called "at least once delivery"). You need to account for this in your application.
 *   **Best-Effort Ordering:** ⚠️ Messages may arrive out of order.
 
@@ -492,7 +492,7 @@ Message 4: Hello World 4
 
 8.  Delete the messages after verifying the order.
 
-If producer send the message with the same deduplication ID, the message will overwrite to the existing message. 
+If a producer sends a message with the same deduplication ID within 5 minutes, the new message does **not** overwrite the existing one. SQS accepts the call but does not deliver the duplicate. 
 
 In a FIFO queue, the message deduplication ID is used for deduplication of sent messages. If a message with a particular message deduplication ID is sent successfully, any messages sent with the same message deduplication ID are accepted successfully **but aren't delivered during the 5-minute deduplication interval**.
 
@@ -746,7 +746,7 @@ For mobile apps, you can use direct publish via the mobile apps SDK:
 
 This works with:
 
-*   Google GCM
+*   Firebase Cloud Messaging (FCM — replaced Google GCM, which Google shut down in 2019)
 *   Apple APNS
 *   Amazon ADM
 
@@ -835,7 +835,7 @@ The fan-out pattern can also be applied to FIFO (First-In, First-Out) topics in 
 SNS FIFO provides message ordering within the topic.
 
 *   Producers send messages in a specific order (e.g., 1, 2, 3, 4). 🔢
-*   Subscribers (currently only SQS FIFO queues) receive messages in the same order (1, 2, 3, 4). 📦
+*   Subscribers (SQS queues only — FIFO or standard) receive messages in the same order (1, 2, 3, 4) when they are SQS FIFO queues. 📦
 
 SNS FIFO offers the same features as SQS FIFO:
 
@@ -919,8 +919,8 @@ You'll then need to choose the topic type. There are two options:
 
 *   Strictly preserved message ordering.
 *   Exactly once message delivery.
-*   High throughput (up to 300 publishes per second).
-*   Only SQS queues can subscribe to FIFO SNS topics.
+*   High throughput: by default 3,000 messages per second per topic (300 per message group). With high-throughput mode (Jan 2025), the limit is per account, e.g. 30,000 per second in us-east-1. Older material says 300 per second.
+*   Only SQS queues (FIFO or standard) can subscribe to FIFO SNS topics.
 *   📝 **Note:** The topic name must end with `.fifo`. 📌 **Example:** `MyFirstTopic.fifo`.
 
 For this example, we'll use a standard topic.
@@ -1002,7 +1002,7 @@ Data is sent in real time to Kinesis Data Streams, allowing **consumer applicati
 *   Data retention: Data can be retained for up to 365 days.
 *   Reprocessing: You can reprocess or replay data due to its persistence.
 *   ⚠️ **Warning:** Once data is sent, you cannot delete it; you must wait for it to expire.
-*   Data size: Up to 1 MB of data can be sent. However, it's typically used for small, real-time data.
+*   Data size: Up to 1 MiB per record by default. Since Oct 2025 you can opt in to records up to 10 MiB (older exam questions say 1 MB). However, it's typically used for small, real-time data.
 *   Data ordering: Data is ordered if data points share the same Partition ID. This indicates a temporal relationship.
 *   Security: KMS encryption at rest and HTTPS encryption in flight.
 
@@ -1052,7 +1052,7 @@ Pricing is per shard, at $0.015 per hour, plus the cost of PUT requests to send 
 
 1.  Name the stream: `DemoStream`.
 2.  Define the data stream capacity. There are two modes:
-    *   **On-demand mode:** Automatically scales, with a maximum throughput of 200 MiB/s and 200,000 records/second (WRITE capacity), and a maximum READ capacity of 400 MiB/s per consumer (using enhanced Fan-Out). Pay-per-throughput pricing. ⚠️ **Warning:** No free tier.
+    *   **On-demand mode:** Automatically scales. Since Nov 2024 a stream can scale up to 10 GB/s write and 20 GB/s read in us-east-1, us-west-2 and eu-west-1; other Regions scale up to 200 MB/s write and 400 MB/s read by default (older material says 200 MiB/s write as the maximum everywhere). Pay-per-throughput pricing. ⚠️ **Warning:** No free tier.
     *   **Provisioned mode:** You provision shards. Use the Shard estimator tool to determine the number of shards needed based on records per second, record size, and number of consumers. ⚠️ **Warning:** No free tier.
 3.  For this demo, we'll use one shard (provisioned mode).
     *   One shard provides 1 MiB/s for writes and 2 MiB/s for reads.
@@ -1360,7 +1360,7 @@ These settings are important for optimizing performance and cost.
         *   If you choose 300 seconds, you'll wait 5 minutes to fill the buffer. If the buffer isn't full after 5 minutes, it will be flushed anyway.
         *   A lower buffer interval (e.g., 60 seconds) guarantees that the buffer will be flushed at least every 60 seconds.
         *   A longer buffer size (e.g., 900 seconds) means waiting 15 minutes before the buffer is flushed.
-    *   📌 **Example:** For the demo, a buffer interval of 60 seconds (the minimum) is chosen for speed.
+    *   📌 **Example:** For the demo, a buffer interval of 60 seconds is chosen for speed. (60 seconds was the minimum until Dec 2023; the minimum is now 0 seconds.)
 *   **Compression:** You can compress the records in the target (e.g., with GZIP, Snappy, Zip, or Hadoop-Compatible Snappy) to save space and reduce costs. Keep default (Not Enabled).
 *   **Encryption:** You can choose to encrypt your records. Keep default.
 

@@ -51,7 +51,7 @@ IPv4 allows for approximately 3.7 billion unique public addresses. Each number i
 - An Elastic IP is a static public IPv4 address that you own (as long as you don't delete it).
 - You can attach an Elastic IP to only one instance at a time.
 - Elastic IPs can be used to mask the failure of an instance by quickly moving the IP to another instance.
-- ⚠️ **Warning:** By default, you are limited to five Elastic IPs per AWS account.
+- ⚠️ **Warning:** By default, you are limited to five Elastic IPs per Region in each AWS account (you can ask for more).
 - 💡 **Tip:** It's generally recommended to avoid using Elastic IPs due to architectural considerations.
 
 ### Alternatives to Elastic IPs
@@ -128,7 +128,7 @@ Benefits of using Elastic IPs:
 
 ⚠️ **Warning:** There are costs associated with Elastic IPs.
 
-- You are charged a small hourly fee (approximately $0.005 per hour, or $3.50 per month) for Elastic IPs that are allocated but not associated with a running instance, or associated with a stopped instance.
+- Since 1 Feb 2024, you pay about $0.005 per hour (about $3.60 per month) for **every** Elastic IP, whether it is attached to a running instance or not. (Older material says an Elastic IP is free while it is attached to a running instance. This is no longer true.)
 - AWS provides 750 hours of free public IPv4 address usage per month.
 
 💡 **Tip:** To avoid unnecessary charges, always release Elastic IPs when you no longer need them. Terminate your instances when you are done.

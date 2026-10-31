@@ -53,12 +53,12 @@
 
 ### 7. Ledger Databases 📓
 - **Immutable**: Cryptographically verifiable
-- **Service**: QLDB (Quantum Ledger Database)
+- **Service**: QLDB (Quantum Ledger Database) — ⚠️ end of support 31 Jul 2025
 - **Use Case**: Auditable transaction logs
 
 ### 8. Time Series Databases ⏱️
 - **Time-stamped data**: Metrics, logs, events
-- **Service**: Timestream
+- **Service**: Timestream — ⚠️ LiveAnalytics closed to new customers 20 Jun 2025 (InfluxDB edition still open)
 - **Use Case**: IoT, DevOps, real-time monitoring
 
 ---
@@ -103,7 +103,7 @@
 ### Key Features
 - **MySQL/PostgreSQL compatible**: Drop-in replacement
 - **High performance**: Up to 5x MySQL, 3x PostgreSQL
-- **Auto-scaling**: Storage scales automatically (10GB-128TB)
+- **Auto-scaling**: Storage scales automatically (10GB-128TB; 256 TiB on newer engine versions)
 - **High availability**: 6 copies across 3 AZs
 - **Backup**: Continuous backup to S3
 
@@ -256,7 +256,7 @@
 - **Read replicas**: Scale reads (RDS/Aurora)
 - **DAX**: Cache DynamoDB reads
 - **ElastiCache**: Cache RDS queries
-- **Global Tables**: Reduce latency (DynamoDB/Aurora)
+- **Global Tables / Global Database**: Reduce latency (DynamoDB Global Tables / Aurora Global Database)
 
 ---
 

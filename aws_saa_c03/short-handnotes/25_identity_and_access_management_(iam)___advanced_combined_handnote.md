@@ -50,7 +50,7 @@
 #### IAM Roles
 - **Principal**: Assumes role
 - **Permissions**: Defined in role's permission policy
-- **Evaluation**: Principal's permissions + role permissions
+- **Evaluation**: Only the role's permissions apply. The principal gives up its own permissions while it uses the role
 
 #### Resource-Based Policies
 - **Principal**: Specified in policy
@@ -113,7 +113,7 @@
 - **Multi-Account Management**: Govern multiple AWS accounts
 - **Features**:
   - ✅ Automated account setup
-  - ✅ Guardrails (preventive/detective)
+  - ✅ Guardrails, now called controls (preventive / detective / proactive)
   - ✅ Landing zone setup
   - ✅ Centralized logging
 - **Built On**: Organizations, SCPs, Config

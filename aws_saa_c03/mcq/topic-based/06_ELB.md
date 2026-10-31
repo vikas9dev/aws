@@ -35,7 +35,7 @@ When you use **AWS WAF on regional services** (like ALB, API Gateway, or AppSync
 
 A **rate-based rule** tracks the **rate of requests** from each originating **IP address** and triggers the rule action when a particular **threshold** is exceeded.
 
-* You can define the limit as the **number of requests per 5-minute period**.
+* You can define the limit as the **number of requests per evaluation window** of 1, 2, 5 (default) or 10 minutes. The lowest limit is 10. (Older material says only "per 5-minute period".)
 * It is useful for **throttling illegitimate requests** or **mitigating DDoS-like behavior** without affecting genuine users.
 
 📌 Example:
@@ -220,7 +220,7 @@ In this scenario, the goal is to **block SQL Injection** and **Cross-Site Script
 **Set up security rules in AWS WAF** that block **SQL Injection** and **Cross-Site Scripting** attack patterns.
 Then, **associate those WAF rules** to your **Application Load Balancer (ALB)**.
 
-This ensures that malicious requests are identified and blocked **at the edge**, before reaching your backend servers.
+This ensures that malicious requests are identified and blocked **in the Region, at the ALB**, before reaching your backend servers. (WAF runs at the edge only when it is attached to CloudFront.)
 
 ### ✅ **Correct Answer**
 
@@ -330,6 +330,7 @@ Access logging is **disabled by default**, but you can **enable or disable it an
 
 * It **won't capture the client's IP address** or **ALB network latency**.  
 * The question explicitly requires **tracking client IP and latency**, which is only possible through **ALB access logs**.
+* Also, the X-Ray SDKs and daemon are in maintenance mode since 25 Feb 2026. AWS now recommends OpenTelemetry (ADOT) for tracing.
 
 <span style="color:red"><strong>🚫 Option: Integrate Amazon EventBridge metrics on the Application Load Balancer to capture the client IP address. Use CloudWatch GetMetricData to retrieve traffic metrics.</strong></span>  
 ❌ **Reason:**  

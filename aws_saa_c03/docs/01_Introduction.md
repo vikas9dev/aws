@@ -59,6 +59,7 @@ Here's a step-by-step guide to creating your AWS account:
     - If you exceed the Free Tier, you will be charged.
     - We will show you how to monitor your usage.
     - 💡 **Tip:** If you follow this course, you should remain within the Free Tier limits.
+    - 📝 **Note (2026):** For accounts created on or after 15 Jul 2025, the Free Tier works differently. You get up to $200 in credits ($100 at sign-up + up to $100 more). On the **free plan** the account closes after 6 months or when the credits run out, whichever comes first. The old "12 months free" offers apply only to older accounts.
 
 8.  **Identity Verification:** 📞
 
@@ -134,7 +135,7 @@ For roles focused on user interface, middleware, and infrastructure:
 If you're interested in systems administration, installing, upgrading, and maintaining computer components and software, and integrating automation processes:
 
 1.  Cloud Practitioner
-2.  SysOps Administrator Associate
+2.  SysOps Administrator Associate (renamed **CloudOps Engineer – Associate**, exam SOA-C03, from 30 Sep 2025)
 3.  DevOps Engineer Professional (For deeper expertise)
 
 ### Cloud Engineer Path ☁️
@@ -246,7 +247,7 @@ For researching, building, and designing AI systems:
 3.  Solutions Architect Associate
 4.  Machine Learning Engineer Associate
 5.  Data Engineer Associate (For deeper expertise)
-6.  Machine Learning Specialty (For deeper expertise)
+6.  Machine Learning Specialty (retired — the last exam date was 31 Mar 2026)
 
 #### Prompt Engineer
 
@@ -255,7 +256,7 @@ For designing, testing, and refining text prompts for AI language models:
 1.  Cloud Practitioner
 2.  AI Practitioner Foundational
 3.  Machine Learning Engineer Associate
-4.  Machine Learning Specialty (For deeper expertise)
+4.  Machine Learning Specialty (retired — the last exam date was 31 Mar 2026)
 
 #### Machine Learning Ops Engineer
 
@@ -276,6 +277,6 @@ For developing and maintaining AI/ML models to solve business problems:
 2.  AI Practitioner Foundational
 3.  Solutions Architect Associate
 4.  Machine Learning Engineer Associate
-5.  Machine Learning Specialty
+5.  Machine Learning Specialty (retired — the last exam date was 31 Mar 2026)
 
 ---

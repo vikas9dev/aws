@@ -342,6 +342,8 @@ Let's explore the different options offered by AWS Database Migration Service (D
 
 ### Discover and Assess 🔎
 
+> ⚠️ Note (2026): **DMS Fleet Advisor was shut down on 20 May 2026** (closed to new customers since 20 May 2025). AWS now recommends **AWS Migration Evaluator** for database assessment. The points below describe what Fleet Advisor did.
+
 *   Use AWS DMS Fleet Advisor to analyze your on-premises database inventory.
 *   Fleet Advisor helps identify the optimal migration path.
 *   ⏱️ Provides results in hours, saving significant planning time.
@@ -428,7 +430,7 @@ Here's a breakdown of the options when creating a replication instance:
 ### DMS Evolution 📈
 
 *   DMS is evolving towards serverless replication, enabling direct database-to-database replication without managing replication instances.
-*   Enhanced features include schema conversion, Fleet Advisor recommendations, and homogenous data migrations leveraging native database tooling.
+*   Enhanced features include schema conversion, Fleet Advisor recommendations (Fleet Advisor was shut down on 20 May 2026), and homogenous data migrations leveraging native database tooling.
 
 ---
 
@@ -514,6 +516,8 @@ This lecture provides a high-level overview of AWS services that facilitate on-p
 
 You can download the Amazon Linux 2 AMI as a virtual machine in ISO format. ⬇️
 
+> ⚠️ Note (2026): **Amazon Linux 2 reached end of support on 30 Jun 2026.** AWS recommends Amazon Linux 2023. The idea for the exam is the same: you can run an Amazon Linux VM image on-premises.
+
 *   This allows you to run Amazon Linux 2 on your on-premise infrastructure.
 *   You can load the ISO image into common VM software such as:
     *   VMWare
@@ -536,6 +540,7 @@ This service helps you gather information about your on-premise servers to plan 
 *   It provides server utilization information and dependency mappings.
 *   This is helpful for large-scale migrations from on-premise to the cloud.
 * AWS Migration Hub 🧳: You can track your migration progress using the AWS Migration Hub.
+* ⚠️ Note (2026): **Migration Hub and Application Discovery Service are closed to new customers since 7 Nov 2025.** Existing customers can still use them. AWS recommends **AWS Transform** for new projects.
 
 ### AWS Database Migration Service (DMS) 🗄️
 
@@ -740,6 +745,7 @@ This information helps you understand:
 There are two discovery methods:
 
 1.  **Agentless Discovery (using a Connector - AWS Agentless Discovery Connector):**
+    *   ⚠️ Note (2026): The old Discovery Connector was shut down on 17 Nov 2025. Its replacement is the **Application Discovery Service Agentless Collector**.
     *   Provides information about virtual machines.
     *   Includes configuration details.
     *   Captures performance history (CPU, memory, disk usage).
@@ -796,7 +802,7 @@ Let's consider transferring 200 TB of data to AWS with a 100 Mbps internet conne
 Calculation:
 
 ```
-200 TB * 1024 GB/TB * 1024 MB/GB * 8 Mb/MB / 100 Mbps = ~16 million seconds ≈ 185 days
+200 TB * 1000 GB/TB * 1000 MB/GB * 8 Mb/MB / 100 Mbps = ~16 million seconds ≈ 185 days
 ```
 
 *   This method could take almost half a year! ⏳
@@ -819,6 +825,7 @@ Calculation (using the previous 📌 **Example**):
 ### Option 3: AWS Snowball ❄️
 
 *   Physical data transfer solution using ruggedized appliances.
+*   ⚠️ Note (2026): **Snowball Edge is closed to new customers since 7 Nov 2025** (existing customers can still order). AWS now points new customers to **DataSync** (online) or **AWS Data Transfer Terminal** (physical). AWS will end support for all Snowball devices in commercial Regions on **31 Dec 2026**. Exam questions still use Snowball as the answer for "large data, slow network".
 *   Advantage: Significantly faster for large, one-time transfers.
 *   📌 **Example:** Transferring a database using Snowball combined with DMS for ongoing replication.
 *   Estimated end-to-end transfer time: Approximately one week (including ordering, delivery, loading, and data transfer to AWS).

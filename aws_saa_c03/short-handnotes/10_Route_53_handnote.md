@@ -99,6 +99,7 @@
 ### Geoproximity Routing
 - **Route based on geographic location** + **bias**
 - **Bias** can shift traffic to/from regions
+- Since Jan 2024: create it as a normal record (Traffic Flow no longer required)
 - ✅ **Use case**: Fine-grained traffic control
 
 ### Multivalue Answer Routing

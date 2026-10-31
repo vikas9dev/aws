@@ -71,7 +71,7 @@ Automatic storage modification occurs if:
 
 *   Free storage is less than 10% of allocated storage.
 *   Low storage condition lasts for more than five minutes.
-*   Six hours have passed since the last modification.
+*   Storage optimization from the last change has finished, and fewer than four storage changes happened in the last 24 hours. (Older material says "six hours since the last change" — AWS replaced that rule.)
 
 If these conditions are met, the storage will auto-increase when enabled.
 
@@ -79,7 +79,7 @@ This is helpful for applications with unpredictable workloads and supports all d
 
 📌 **Example:**
 
-Let's say you have an RDS instance with 100GB of allocated storage. If the free space drops below 10GB (10% of 100GB) and remains below that threshold for more than 5 minutes, and it has been more than 6 hours since the last storage modification, RDS Auto Scaling will automatically increase the storage.
+Let's say you have an RDS instance with 100GB of allocated storage. If the free space drops below 10GB (10% of 100GB) and remains below that threshold for more than 5 minutes, and the last storage change has finished its optimization (with fewer than four changes in the last 24 hours), RDS Auto Scaling will automatically increase the storage.
 
 💡 **Tip:** RDS Storage Auto Scaling helps avoid the operational overhead of manually scaling your database storage.
 
@@ -249,7 +249,7 @@ This section configures the underlying EC2 instance size.
 *   For the free tier, use `gp2` volumes for lower performance.
 *   Set the allocated storage to 20 GB (which is minimum).
 
-You can also enable **Storage autoscaling** to automatically increase the EBS volume size when nearing a threshold. Set a maximum storage limit (e.g., 1,000 GB). Note: It is not available for Multi-AZ DB instances (production env).
+You can also enable **Storage autoscaling** to automatically increase the EBS volume size when nearing a threshold. Set a maximum storage limit (e.g., 1,000 GB). Note: Storage autoscaling also works with Multi-AZ DB instances.
 
 ### Connectivity
 
@@ -407,13 +407,13 @@ Aurora is cloud-optimized, offering significant performance improvements:
 
 Aurora's storage automatically grows, which is a key feature:
 
-*   Starts at 10GB and automatically scales up to 128TB.
+*   Starts at 10GB and automatically scales up to 128TB (up to **256 TiB** on newer engine versions — older exam questions may still say 128 TB).
 *   This eliminates the need for manual disk monitoring and management.
 
 Aurora offers robust read scaling and high availability:
 
 *   Supports up to 15 read replicas.
-*   Replication lag is typically sub-10ms.
+*   Replication lag is usually well under 100 ms (older course material says "sub-10 ms").
 *   Failover is near instantaneous, much faster than Multi-AZ MySQL RDS.
 *   High availability is built-in due to its cloud-native design.
 
@@ -453,7 +453,7 @@ Key things to remember: One master, multiple read replicas, and replicated, self
 
 When clients interact with an Aurora cluster, they connect to specific endpoints.
 
-*   Shared storage volume: Auto-expands from 10GB to 128TB.
+*   Shared storage volume: Auto-expands from 10GB to 128TB (256 TiB on newer engine versions).
 *   Master instance: Handles all write operations.
 
 Aurora provides two key endpoints:
@@ -639,6 +639,8 @@ This is useful when you want to run specific workloads on more powerful instance
 
 Aurora Serverless provides automated database instantiation and auto-scaling based on actual usage.
 
+📝 **Note (2026):** Aurora Serverless **v1** reached end of life on 31 Mar 2025. Use **Serverless v2**. v2 scales in ACUs and can scale down to **0 ACU** (auto-pause) when idle. The "proxy fleet" picture below shows the old v1 design.
+
 *   Ideal for infrequent, intermittent, or unpredictable workloads.
 *   Eliminates the need for capacity planning.
 *   You pay per second of Aurora instance usage, potentially making it more cost-effective.
@@ -660,7 +662,7 @@ How it works:
 But **Aurora Global Database** is the recommended approach for cross-region replication and disaster recovery.
 
 *   One primary region handles all reads and writes.
-*   Up to five secondary read-only regions can be configured.
+*   Up to **10** secondary read-only regions can be configured (raised from 5 in May 2025 — older exam questions may still say 5).
 *   Replication lag is typically less than one second.
 *   Up to 16 Read Replicas are supported per secondary region.
 
@@ -1090,7 +1092,7 @@ Let's walk through the process of creating an ElastiCache cluster. We'll focus o
 
 ElastiCache offers different security mechanisms depending on the engine you choose.
 
-*   For Redis, it supports IAM authentication, but only for AWS API-level security. For security within Redis itself, you use Redis AUTH.
+*   For Redis, IAM controls AWS API-level access. Redis AUTH (or user ACLs) secures access inside Redis. Since Redis OSS 7.0 (and Valkey 7.2), ElastiCache can also use **IAM authentication to connect to the cache** itself (TLS required).
 *   For Memcached, it supports SASL-based authentication.
 
 ### Redis Security

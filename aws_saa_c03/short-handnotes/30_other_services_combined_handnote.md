@@ -55,6 +55,7 @@
   - ✅ User segmentation
   - ✅ Campaign management
   - ✅ Analytics
+- ⚠️ **End of support**: 30 Oct 2026 (closed to new customers May 2025). SMS/voice/push → AWS End User Messaging; email → SES
 
 ### Use Cases
 - Marketing campaigns
@@ -99,7 +100,7 @@
   - ✅ Cost trends
   - ✅ Forecasts
   - ✅ Filtering by service, tag, etc.
-- **Time Range**: Up to 12 months historical, 3 months forecast
+- **Time Range**: 13 months of history by default (38 months opt-in); forecast up to 18 months (was 12 months before Nov 2025)
 
 ---
 
@@ -186,7 +187,7 @@
 1. **CloudFormation**: Infrastructure as Code, AWS-native
 2. **Service Role**: IAM role for CloudFormation, requires iam:PassRole
 3. **SES**: Email sending service, cost-effective
-4. **Pinpoint**: Multi-channel customer engagement
+4. **Pinpoint**: Multi-channel customer engagement (⚠️ end of support 30 Oct 2026)
 5. **SSM Session Manager**: Secure shell without SSH keys
 6. **SSM Run Command**: Execute commands remotely
 7. **Patch Manager**: Automated patching

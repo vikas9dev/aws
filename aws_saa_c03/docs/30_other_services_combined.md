@@ -156,7 +156,7 @@ This note provides a quick introduction to CloudFormation and an overview of how
 
 4.  **Uploading the Template**: Select the `0-just-EC2.yaml` file to upload.
 
-5.  **Application Composer**:
+5.  **Application Composer** (now called **AWS Infrastructure Composer**; its standalone console ends on 7 Dec 2026, and the CloudFormation console now has its own visual editor):
     *   You can view the template in Application Composer for a visual representation.
     *   Application Composer provides a canvas showing the resources defined in your template.
     *   You can switch between YAML and JSON formats.
@@ -251,7 +251,7 @@ Imagine you have users who need to deploy applications using CloudFormation, but
 ### How Service Roles Work ⚙️
 
 1.  **Define a CloudFormation Template:** This template describes the resources you want to create.
-2.  **User Permissions:** The user initiating the CloudFormation stack creation needs permissions to perform actions on CloudFormation itself and, crucially, the `iam:PassRole` permission. **To create a CloudFormation stack, the user must have the `iam:PassRole` permission.**
+2.  **User Permissions:** The user initiating the CloudFormation stack creation needs permissions to perform actions on CloudFormation itself and, crucially, the `iam:PassRole` permission. **To create a CloudFormation stack with a service role, the user must have the `iam:PassRole` permission.**
 3.  **Create a Service Role:**  This IAM role is specifically for CloudFormation and has the permissions required to create, update, and delete the resources defined in your template.  For example, it might have `s3:*Bucket` permissions.
 4.  **CloudFormation Assumes the Role:** When creating the stack, the user specifies the service role. CloudFormation then assumes this role and uses its permissions to manage the stack's resources.
 
@@ -361,6 +361,8 @@ Amazon Pinpoint is a scalable inbound and outbound marketing communication servi
 *   📱 Push Notifications
 *   🗣️ Voice
 *   ✉️ In-App Messaging
+
+> ⚠️ **Note (2026):** Amazon Pinpoint closed to new customers on 20 May 2025 and reached end of support on 30 Oct 2026. Its console, segments, campaigns, journeys and analytics are gone. SMS, voice and push sending now live in AWS End User Messaging, and AWS recommends Amazon SES for email. Older exam questions may still name Pinpoint.
 
 One of the primary use cases is sending SMS messages. Customers receive SMS messages sent through Amazon Pinpoint.
 
@@ -475,12 +477,12 @@ hostname
 ### Accessing EC2 Instances: Three Methods
 
 1.  **SSH with Port 22:** Open port 22 (from MyIP or everywhere) and use SSH keys with a terminal.
-2.  **EC2 Instance Connect:** Does not require SSH keys (they are temporarily uploaded), but still requires port 22 to be open (from everywhere because will be connecting from AWS).
+2.  **EC2 Instance Connect:** Does not require SSH keys (they are temporarily uploaded), but still requires port 22 to be open to the EC2 Instance Connect IP range for your Region (the demo opens it to everywhere for simplicity).
 3.  **SSM Session Manager:** Does not require opening port 22 or using SSH keys (no inbound rules required).
 
 ### Key Requirements for Session Manager
 
-*   Use an EC2 instance with **Amazon Linux 2**.
+*   The instance must run the **SSM Agent**. It comes preinstalled on Amazon Linux 2 (used in this demo), Amazon Linux 2023 and many other AWS AMIs.
 *   Attach an IAM role to the EC2 instance that allows access from the EC2 instance to Systems Manager (using the **AmazonSSMManagedInstanceCore** policy).
 
 ### Session History
@@ -594,7 +596,7 @@ Here's what you can do with Cost Explorer:
 Cost Explorer enables cost savings by:
 
 *   Helping you choose an optimal Savings Plan to lower your bill. 💰
-*   **Forecasting usage up to 12 months in the future based on past usage**. 🔮
+*   **Forecasting usage up to 18 months in the future based on past usage** (raised from 12 months in Nov 2025 — older exam questions may still say 12 months). 🔮
 
 📌 **Example:** Monthly cost by AWS Service
 
@@ -779,7 +781,7 @@ What is the difference between Batch and Lambda? While they may seem similar, th
 *   Has no time limit, as it relies on EC2 instances.
 *   Supports any runtime that can be packaged as a Docker image.
 *   Relies on the storage that comes with an EC2 instance (EBS volume or EC2 instance store), which can provide significantly more disk space.
-*   Is not a serverless service; it is a managed service that relies on EC2 instances.
+*   Is not a serverless service; it is a managed service that relies on EC2 instances. (Since Dec 2020, Batch can also run jobs on **AWS Fargate**, which is serverless.)
 
 | Feature           | Lambda                         | Batch                            |
 | ----------------- | ------------------------------ | -------------------------------- |
@@ -866,7 +868,7 @@ Here's a breakdown of how Amplify works:
         *   AppSync for APIs ⚙️
         *   API Gateway for APIs 🌐
         *   SageMaker for machine learning 🤖
-        *   Lex for text detection 💬
+        *   Lex for chatbots (conversational interfaces) 💬
         *   Lambda for functions and data services ⚡
         *   DynamoDB for data storage 💾
 2.  **Configure Backend Services:**

@@ -142,7 +142,7 @@ echo "<h1>Hello World</h1>" > /var/www/html/index.html
 - ✅ **Up to 72% discount** vs On-Demand
 - ✅ **1 or 3 year** commitment
 - ✅ **Payment options**: All Upfront, Partial Upfront, No Upfront
-- ✅ **Types**: Standard, Convertible, Scheduled
+- ✅ **Types**: Standard, Convertible (Scheduled RIs can no longer be bought — AWS has no plans to offer them again)
 
 ### Savings Plans
 - ✅ **Up to 72% discount**
@@ -158,7 +158,7 @@ echo "<h1>Hello World</h1>" > /var/www/html/index.html
 
 ### Dedicated Instances
 - ✅ **Physical server** dedicated to you
-- ✅ **Instance placement** control
+- ⚠️ **No instance placement** control (placement control is a Dedicated Host feature)
 - ✅ **Compliance** requirements
 
 ### Dedicated Hosts
@@ -172,9 +172,9 @@ echo "<h1>Hello World</h1>" > /var/www/html/index.html
 ## ⚡ SPOT INSTANCES
 
 ### How It Works
-1. Set **maximum price** you're willing to pay
-2. If spot price < your max price → Instance runs
-3. If spot price > your max price → Instance terminated (2-min notice)
+1. Optionally set a **maximum price** (default = On-Demand price)
+2. Instance runs while AWS has spare capacity and spot price < your max price
+3. AWS can interrupt it (2-min notice) — mainly when it **needs the capacity back**, or if spot price > your max price
 
 ### Spot Instance Interruption
 - **2-minute warning** via instance metadata or CloudWatch Events
@@ -221,8 +221,8 @@ echo "<h1>Hello World</h1>" > /var/www/html/index.html
 ### Features
 - **Static public IP** address
 - **Can remap** to different instances
-- **$0.005/hour** if not attached to running instance
-- ✅ **Free** if attached to running instance
+- **$0.005/hour** for every Elastic IP, attached or not (since 1 Feb 2024)
+- ⚠️ **Not free** when attached to a running instance any more (older material says it is)
 
 ### Use Cases
 - **Fixed IP** for applications
@@ -260,7 +260,7 @@ echo "<h1>Hello World</h1>" > /var/www/html/index.html
 6. **Reserved Instances** - Up to 72% discount, 1-3 year commitment
 7. **Instance Store** - Ephemeral, lost on stop/terminate
 8. **EBS Volumes** - Persistent, can attach/detach
-9. **Elastic IP** - $0.005/hour if not attached
+9. **Elastic IP** - $0.005/hour, attached or not (since Feb 2024)
 10. **Placement Groups** - Cluster (low latency), Spread (availability), Partition (large scale)
 
 ---
