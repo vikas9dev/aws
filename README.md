@@ -193,3 +193,16 @@ The AWS Certified Solutions Architect Associate (SAA-C03) exam validates your ab
 
 - [AWS Certified Solutions Architect - Associate Official Page](https://aws.amazon.com/certification/certified-solutions-architect-associate/)
 - [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)
+
+
+---
+
+## 🤝 Found a Mistake? Want to Contribute?
+
+AWS changes often, so some limits or features in these notes may go out of date. Help keep them correct:
+
+- 🐞 **Report it:** [open an issue](https://github.com/vikas9dev/aws/issues/new). Say which file and line is wrong, what the correct fact is, and add a link to the AWS docs page that shows it.
+- 🛠️ **Fix it yourself:** fork the repo, make the change, and open a pull request. Please add the AWS source link in the PR description.
+- 💡 **Suggest a topic:** open an issue for a missing service, a better diagram, or a new interview question.
+
+Every correction helps the next person who reads these notes. 🙏
