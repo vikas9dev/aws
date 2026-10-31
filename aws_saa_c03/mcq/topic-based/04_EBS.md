@@ -92,8 +92,8 @@ When you create an **EBS volume** in an **Availability Zone**, it is **automatic
 ✅ **2. Same AZ attachment rule**
 After you create a volume, you can **attach it to any EC2 instance in the same Availability Zone.**
 
-✅ **3. Multi-Attach support (for io1 volumes only)**
-**Amazon EBS Multi-Attach** enables you to attach a single **Provisioned IOPS SSD (io1)** volume to **multiple Nitro-based instances** that are in the **same Availability Zone.**
+✅ **3. Multi-Attach support (for io1 and io2 volumes only)**
+**Amazon EBS Multi-Attach** enables you to attach a single **Provisioned IOPS SSD (io1 or io2)** volume to **multiple Nitro-based instances** that are in the **same Availability Zone.**
 ⚠️ Other EBS types **are not supported** for Multi-Attach.
 
 ✅ **4. Persistent storage**
@@ -108,7 +108,7 @@ You can modify the **volume type**, **volume size**, and **IOPS capacity** **wit
 **Amazon EBS encryption** uses **256-bit Advanced Encryption Standard (AES-256)** algorithms to secure your data.
 
 ✅ **7. SLA**
-**EBS Volumes offer 99.999% SLA**, providing high durability and reliability.
+**EBS SLA:** 99.99% uptime per Region and 99.9% per volume. **Durability:** 99.8%–99.9% for most volume types, and 99.999% for io2 Block Express.
 
 ### ✅ **Correct Answer**
 
@@ -260,6 +260,8 @@ The **latest low-cost storage options** are:
 
 * **Cold HDD (sc1)** – lowest-cost storage for infrequently accessed data
 * **Throughput Optimized HDD (st1)** – optimized for streaming and sequential I/O workloads
+
+> ⚠️ Note (2026): This answer key comes from an older question. Today AWS lists **sc1 at $0.015 per GB-month**, and Magnetic is a previous-generation type. If sc1 (Cold HDD) is an option, it is the lowest-cost choice.
 
 ✅ **Hence, the correct answers are:**
 

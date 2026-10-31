@@ -77,7 +77,7 @@ Let's illustrate how DNS works with an example. Suppose you have a web server wi
 
 4.  **Top Level Domain (TLD) Server (.com):** The local DNS server asks the `.com` domain server at `1.2.3.4` for the answer.
 
-5.  **.com Domain Server:** Managed by IANA, it responds, "I know about `example.com`. Ask the server at `5.6.7.8`."
+5.  **.com Domain Server:** Run by Verisign (the `.com` registry operator), it responds, "I know about `example.com`. Ask the server at `5.6.7.8`."
 
 6.  **Second-Level Domain DNS Server (example.com):** This server is managed by your domain registrar (e.g., Amazon Route 53). The local DNS server asks, "Hey, do you know about `example.com`?"
 
@@ -1306,7 +1306,7 @@ Resources can be:
 *   AWS resources: Specify the region, and AWS will compute the correct routing.
 *   Non-AWS resources (e.g., on-premises data center): Specify the latitude and longitude.
 
-📝 **Note:** To leverage the bias feature, you need to use the advanced Route 53 Traffic Flow.
+📝 **Note:** Since Jan 2024, you can create geoproximity records (with bias) directly in the Route 53 console, API or CLI. Before that, you needed Route 53 Traffic Flow. Older exam questions may still say "Traffic Flow is required". The visual bias map is still a Traffic Flow feature.
 
 Let's look at some examples to understand how bias affects routing.
 

@@ -11,7 +11,7 @@
 | General Purpose workloads, web servers, code repositories | **EC2 General Purpose Instances** |
 | Compute-intensive tasks, batch processing, media transcoding, HPC, ML, game servers | **EC2 Compute Optimized (C family)** |
 | Large datasets in memory, in-memory databases, ElastiCache, real-time processing | **EC2 Memory Optimized (R, X1, Z1)** |
-| High-speed local storage, OLTP, databases, data warehousing | **EC2 Storage Optimized (I, G, H1)** |
+| High-speed local storage, OLTP, databases, data warehousing | **EC2 Storage Optimized (I, D, H1)** |
 | Short workloads, predictable pricing | **EC2 On-Demand Instances** |
 | Long workloads, running databases for extended periods | **EC2 Reserved Instances (1 & 3 years)** |
 | Commit to usage in dollars (not instance type) | **EC2 Savings Plans** |
@@ -55,8 +55,8 @@
 | Scale read operations, up to 15 replicas, eventually consistent | **RDS Read Replicas** |
 | Disaster recovery, synchronous replication, automatic failover | **RDS Multi-AZ** |
 | Cloud-optimized, 5x MySQL, 3x Postgres performance | **Amazon Aurora** |
-| Auto-expanding storage (10GB to 128TB) | **Amazon Aurora** |
-| Sub-10ms replication lag, <30s failover | **Amazon Aurora** |
+| Auto-expanding storage (10 GiB to 256 TiB; was 128 TiB before Jul 2025) | **Amazon Aurora** |
+| Replication lag usually well under 100 ms (older notes say sub-10 ms), <30s failover | **Amazon Aurora** |
 | 6 copies across 3 AZs, self-healing | **Amazon Aurora** |
 | Infrequent, intermittent, unpredictable workloads | **Aurora Serverless** |
 | Global database, <1 second replication lag | **Aurora Global Database** |
@@ -73,8 +73,8 @@
 | Social Networks, Knowledge Graphs, Fraud Detection, Recommendation Engines | **Amazon Neptune** |
 | **Apache Cassandra** | **Amazon Keyspaces** |
 | IOT Device Information Storage, Time series data storage | **Amazon Keyspaces** or **Amazon Timestream** |
-| Time series data storage | **Amazon Timestream** |
-| Secure, immutable, cryptographically verifiable financial records | **Amazon QLDB** |
+| Time series data storage | **Amazon Timestream** (⚠️ Timestream for LiveAnalytics closed to new customers 20 Jun 2025; Timestream for InfluxDB is still open) |
+| Secure, immutable, cryptographically verifiable financial records | **Amazon QLDB** (⚠️ end of support 31 Jul 2025; AWS points to Aurora PostgreSQL) |
 | Gaming leaderboard | **ElastiCache Redis** (Sorted Sets) |
 | SASL-based authentication for Memcached | **ElastiCache Memcached** |
 
@@ -194,10 +194,10 @@
 | Discover and protect sensitive data in S3 | **Amazon Macie** |
 | Enforce consistent tagging across multiple accounts | **AWS Organizations Tag Policies** |
 | Restrict API calls based on client IP | **IAM Condition: aws:SourceIP** |
-| Restrict API calls based on region | **IAM Condition: aw:RequestRegion** |
-| Enforce MFA | **IAM Condition: aw:MultiFactorAuthPresent** |
-| Restrict to accounts within Organization | **IAM Condition: aw:PrincipalOrgID** |
-| Fine-grained access based on resource and user tags | **IAM Conditions: ec2:ResourceTag & aw:PrincipalTag** |
+| Restrict API calls based on region | **IAM Condition: aws:RequestedRegion** |
+| Enforce MFA | **IAM Condition: aws:MultiFactorAuthPresent** |
+| Restrict to accounts within Organization | **IAM Condition: aws:PrincipalOrgID** |
+| Fine-grained access based on resource and user tags | **IAM Conditions: ec2:ResourceTag & aws:PrincipalTag** |
 | Define maximum permissions for users/roles | **IAM Permission Boundaries** |
 | Proxy users to on-premise AD | **AD Connector** |
 | Manage users in AWS with MFA | **AWS Managed Microsoft AD** |
@@ -255,16 +255,16 @@
 | High-performance database workloads, co-location with compute | **S3 Express One Zone** |
 | Encryption managed by AWS (AES-256) | **S3 SSE-S3** |
 | Encryption with user-managed keys, audit via CloudTrail | **S3 SSE-KMS** |
-| Encryption with client-provided keys, must use HTTPS | **S3 SSE-C** |
+| Encryption with client-provided keys, must use HTTPS | **S3 SSE-C** (disabled by default on new buckets since Apr 2026) |
 | Clients encrypt before sending to S3 | **Client-Side Encryption** |
 | Temporary access to S3 objects, expiration date | **S3 Pre-Signed URLs** |
-| Lock Glacier vault, WORM model, compliance | **S3 Glacier Vault Lock** |
+| Lock Glacier vault, WORM model, compliance | **S3 Glacier Vault Lock** (⚠️ standalone Glacier vault service closed to new customers; use S3 Object Lock for new work) |
 | Lock individual objects, WORM model | **S3 Object Lock** |
 | Strict mode, no one can override | **S3 Object Lock Compliance Mode** |
 | Lenient mode, admins can override | **S3 Object Lock Governance Mode** |
 | Indefinite protection, independent of retention | **S3 Object Lock Legal Hold** |
 | Simplified security management for S3 buckets | **S3 Access Points** |
-| Modify objects via Lambda before retrieval | **S3 Object Lambda** |
+| Modify objects via Lambda before retrieval | **S3 Object Lambda** (⚠️ closed to new customers since 7 Nov 2025) |
 | Redact PII, convert formats, resize images on-the-fly | **S3 Object Lambda** |
 | System boot volumes, virtual desktops, dev/test | **EBS gp2/gp3** |
 | Mission-critical, low-latency, high-throughput, databases | **EBS io1/io2** |
@@ -274,7 +274,7 @@
 | Move snapshots to archive tier, 75% cheaper, 24-72 hours restore | **EBS Snapshot Archive** |
 | Recover from accidental deletions, 1 day to 1 year retention | **EBS Snapshot Recycle Bin** |
 | Force full initialization, no latency on first use | **EBS Fast Snapshot Restore (FSR)** |
-| Migrate petabytes of data, edge computing | **AWS Snowball** |
+| Migrate petabytes of data, edge computing | **AWS Snowball** (⚠️ Snowball Edge closed to new customers since 7 Nov 2025) |
 | Primarily for storage, 210 TB | **Snowball Edge Storage Optimized** |
 | Primarily for compute, 28 TB | **Snowball Edge Compute Optimized** |
 | Run EC2 instances and Lambda on device | **Snowball Edge Compute** |
@@ -327,8 +327,8 @@
 | Both databases running, continuous replication | **Amazon DMS** |
 | Migrate VMs and applications into EC2 | **VM Import/Export** |
 | Gather information about on-premise servers | **AWS Application Discovery Service** |
-| Track migration progress | **AWS Migration Hub** |
-| Incremental replication of on-premise servers | **AWS Server Migration Service (SMS)** |
+| Track migration progress | **AWS Migration Hub** (⚠️ closed to new customers since 7 Nov 2025; replaced by AWS Transform) |
+| Incremental replication of on-premise servers | **AWS Application Migration Service (MGN)** (replaced AWS Server Migration Service (SMS), discontinued 31 Mar 2022) |
 | Centrally manage and automate backups | **AWS Backup** |
 | WORM policy for backups, cannot be deleted | **AWS Backup Vault Lock** |
 
@@ -342,7 +342,7 @@
 | Alternative to Terraform, AWS-only | **AWS CloudFormation** |
 | Send emails securely, globally, at scale | **Amazon SES** |
 | Transactional emails, marketing emails, bulk emails | **Amazon SES** |
-| Scalable marketing communication, SMS, push notifications | **Amazon Pinpoint** |
+| Scalable marketing communication, SMS, push notifications | **Amazon Pinpoint** (⚠️ end of support 30 Oct 2026) |
 | Secure shell without SSH, bastion hosts, or SSH keys | **SSM Session Manager** |
 | Execute scripts on multiple instances | **SSM Run Command** |
 | Automate patching managed instances | **SSM Patch Manager** |
@@ -373,7 +373,7 @@
    - Graph → **Neptune**
    - Cassandra → **Keyspaces**
    - Time Series → **Timestream**
-   - Immutable Ledger → **QLDB**
+   - Immutable Ledger → **QLDB** (⚠️ end of support 31 Jul 2025)
    - Caching (requires code changes) → **ElastiCache**
 
 3. **Analytics Selection**
@@ -463,7 +463,7 @@
 - **Neptune** - Graph database
 - **Keyspaces** - Cassandra compatible
 - **Timestream** - Time series
-- **QLDB** - Immutable ledger
+- **QLDB** - Immutable ledger (⚠️ end of support 31 Jul 2025)
 - **ElastiCache** - Caching (Redis/Memcached)
 - **Snowball** - Data migration
 
@@ -532,12 +532,12 @@
 - **DMS** - Database migration
 - **SCT** - Schema conversion
 - **Snowball** - Data transfer
-- **SMS** - Server migration
+- **MGN** - Server migration (replaced SMS in 2022)
 
 ### Other Services
 - **CloudFormation** - Infrastructure as code
 - **SES** - Email service
-- **Pinpoint** - Marketing communications
+- **Pinpoint** - Marketing communications (⚠️ end of support 30 Oct 2026)
 - **SSM** - Systems management
 - **Cost Explorer** - Cost management
 - **Batch** - Batch processing

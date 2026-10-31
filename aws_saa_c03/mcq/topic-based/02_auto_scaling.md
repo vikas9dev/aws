@@ -61,6 +61,8 @@ You can specify your **launch template** with multiple Auto Scaling groups. Howe
 
 For this scenario, you have to **create a new launch template**. Remember that you **can't modify a launch template** after you've created it.
 
+> ⚠️ Note (2026): With launch templates you can also create a new **version** of the same template with the new AMI. Only launch configurations (now legacy) need a completely new object.
+
 ### ✅ **Correct Answer**
 
 🟢 **Create a new launch template.**

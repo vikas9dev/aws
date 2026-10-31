@@ -236,7 +236,7 @@ These resource access policies function similarly to S3 bucket policies.
 
 ### Amazon EventBridge Integration 🌉
 
-All S3 events are sent to Amazon EventBridge, regardless of other configured destinations. From EventBridge, you can set up rules to route these events to over 18 different AWS services.
+When you turn on EventBridge for a bucket (it is off by default), all S3 events of that bucket are sent to Amazon EventBridge, in addition to any other configured destinations. From EventBridge, you can set up rules to route these events to over 18 different AWS services.
 
 ![Amazon S3 - Amazon EventBridge Integration](img/AWS_S3_Amazon_EventBridge_Integration.png)
 

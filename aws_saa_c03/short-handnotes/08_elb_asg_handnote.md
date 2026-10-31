@@ -88,7 +88,7 @@
 - ✅ **High performance**: Millions of requests/sec
 - ✅ **Ultra-low latency**
 - ✅ **Static IP per AZ** (can assign Elastic IP)
-- ✅ **Target Groups**: EC2, IP addresses (private), Lambda, ALBs
+- ✅ **Target Groups**: EC2, IP addresses (private), ALBs (not Lambda — only ALB supports Lambda targets)
 
 ### Use Cases
 - Extreme performance requirements
@@ -226,7 +226,7 @@
 - Example: Scale up at 9 AM, scale down at 5 PM
 
 ### Scaling Cooldowns
-- **Default Cooldown**: 300 seconds
+- **Default Cooldown**: 300 seconds (simple scaling only; target tracking and step scaling use instance warm-up)
 - Prevents rapid scaling up/down
 - **Instance Warmup**: Time for new instance to be ready
 
@@ -249,7 +249,7 @@
 3. **GWLB**: Layer 3, IP protocol, GENEVE port 6081, network appliances
 4. **Sticky Sessions**: Can cause load imbalance
 5. **Cross-Zone**: ALB always on, NLB off by default ($)
-6. **Target Groups**: ALB (EC2, ECS, Lambda, IP), NLB (EC2, IP, Lambda, ALB)
+6. **Target Groups**: ALB (EC2, ECS, Lambda, IP), NLB (EC2, IP, ALB — no Lambda)
 7. **Health Checks**: Required for load balancers to work
 8. **ASG**: Min/Max/Desired capacity, scaling policies, health checks
 9. **Security Groups**: EC2 should only allow traffic from LB SG

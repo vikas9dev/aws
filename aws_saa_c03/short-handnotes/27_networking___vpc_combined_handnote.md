@@ -94,7 +94,7 @@
 - ✅ **5 Gbps bandwidth** (scales automatically)
 
 ### NAT Gateway Setup
-1. Create NAT Gateway in **public subnet**
+1. Create NAT Gateway in **public subnet** (zonal mode, the default; a regional NAT Gateway, added Nov 2025, needs no public subnet)
 2. Allocate Elastic IP
 3. Update **private subnet route table**: `0.0.0.0/0 → nat-gateway-id`
 
@@ -186,13 +186,13 @@
 - **Virtual Private Gateway (VGW)** on AWS side
 - **Customer Gateway (CGW)** on on-prem side
 - **Public internet** connection (encrypted)
-- **Max 1.25 Gbps per tunnel**
+- **Max 1.25 Gbps per tunnel** (standard tunnel; since late 2025 a VPN on Transit Gateway / Cloud WAN can use 5 Gbps large bandwidth tunnels — not on a VGW)
 - **VPN CloudHub**: Hub-and-spoke model with multiple VPNs to same VGW
 
 ### Direct Connect
 - **Private connection** (bypasses internet) from your remote network into your VPC
-- **Dedicated**: 1 Gbps, 10 Gbps, 100 Gbps (AWS provided)
-- **Hosted**: 50 Mbps - 10 Gbps (partner provided)
+- **Dedicated**: 1 Gbps, 10 Gbps, 100 Gbps, 400 Gbps (AWS provided; 400 Gbps is newer)
+- **Hosted**: 50 Mbps - 25 Gbps (partner provided; older material says 10 Gbps)
 - **More secure & stable** than VPN
 - **Direct Connect Gateway**: Connect to multiple VPCs in different regions
 - ⚠️ Warning: Setting up either a dedicated or hosted connection often takes longer than one month.
@@ -268,7 +268,7 @@
 
 ### Intra-Region (Same Region)
 - **Same AZ, private IPs**: **FREE** ✅
-- **Different AZs, private IPs**: **$0.01/GB**
+- **Different AZs, private IPs**: **$0.01/GB** (charged in each direction, so $0.02/GB in total)
 - **Different AZs, public IPs**: **$0.02/GB**
 
 ### Inter-Region
@@ -284,7 +284,7 @@
 | Option | Cost |
 |--------|------|
 | **NAT Gateway** | $0.045/hour + $0.045/GB + data transfer |
-| **VPC Endpoint** | FREE + $0.01/GB (same region) |
+| **VPC Endpoint** | FREE — no per-GB charge for EC2 ↔ S3 in the same region |
 
 💡 **Tip**: VPC Endpoint much cheaper for S3/DynamoDB access
 
@@ -299,7 +299,7 @@
 5. **Internet access requires**: Route to IGW + Public IP + SG/NACL allow
 6. **NAT Gateway**: $0.045/hour + $0.045/GB, highly available
 7. **VPC Endpoints**: Gateway (S3/DynamoDB, FREE) vs Interface (others, $)
-8. **Direct Connect**: Dedicated (1Gbps+) vs Hosted (50Mbps-10Gbps)
+8. **Direct Connect**: Dedicated (1Gbps+) vs Hosted (50Mbps-25Gbps; older material says 10Gbps)
 9. **Site-to-Site VPN**: Max 1.25 Gbps per tunnel (use Transit Gateway to scale)
 10. **Route tables must be updated** for VPC peering, VPN, Direct Connect
 

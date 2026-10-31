@@ -405,7 +405,7 @@ Here's a breakdown of the main EC2 instance classes:
       - Caching for in-memory databases (e.g., Redis)
       - Data warehousing applications
       - Distributed file systems
-    - Instance names often start with `I`, `G`, or `H1`.
+    - Instance names often start with `I`, `D`, or `H1`. (`G` is not storage optimized — it is the GPU / accelerated computing family.)
 
 Note: Other types of instances may exist but only the most important ones have been covered so you get the general idea.
 
@@ -1165,7 +1165,7 @@ Now let's look at them in detail.
 
 ### EC2 Savings Plans (Detailed)
 
-*   Discount: Similar to Reserved Instances (up to 70%).
+*   Discount: Similar to Reserved Instances (up to 72% for EC2 Instance Savings Plans; up to 66% for Compute Savings Plans).
 *   Commitment: Commit to spending a specific dollar amount per hour (e.g., $10 per hour for 1 or 3 years).
 *   Billing: Usage beyond the savings plan is billed at the on-demand price.
 *   Lock-in: Specific instance family and region (e.g., M5 in us-east-1).
@@ -1178,7 +1178,7 @@ Now let's look at them in detail.
 
 *   Discount: Most aggressive discounts (up to 90% compared to on-demand).
 *   Risk: Instances can be terminated at any time.
-*   Mechanism: You define a maximum price you're willing to pay. If the spot price exceeds your max price, you lose the instance.
+*   Mechanism: AWS can take the instance back with a 2-minute notice, mainly when it needs the capacity. You can set a maximum price (the default is the On-Demand price); if the spot price goes above it, you also lose the instance. (Older material says Spot is lost only when the price passes your "bid" — that model ended in 2017.)
 *   Use Cases:
     *   Batch jobs
     *   Data analysis
@@ -1225,7 +1225,7 @@ It can be difficult to understand which purchasing option is right for you. Here
 *   On-Demand: Come to the resort whenever you like and pay the full price.
 *   Reserved: Plan ahead and stay for a long time (1 or 3 years) to get a good discount.
 *   Savings Plan: Commit to spending a specific amount per month and change room types over time.
-*   Spot Instances: Last-minute discounts on empty rooms, but you can be kicked out at any time if someone is willing to pay more.
+*   Spot Instances: Last-minute discounts on empty rooms, but you can be kicked out at any time when the resort needs the room back.
 *   Dedicated Host: Book the entire building of the resort (your own hardware).
 *   Capacity Reservation: Book a room, even if you're not sure you'll stay in it, but you'll pay full price nonetheless.
 
@@ -1277,7 +1277,7 @@ When do you get a Public IPv4 address?
 
 ### EC2 Free Tier
 
-For new AWS accounts, there's a 12-month free tier for EC2.
+For AWS accounts created before 15 Jul 2025, there's a 12-month free tier for EC2. (Accounts created from 15 Jul 2025 get up to $200 in Free Tier credits instead.)
 
 *   🎁 Within the first 12 months, you get 750 hours of Public IPv4 usage per month.
 *   ⚠️ **Warning:** If you exceed 750 hours of Public IPv4 usage across all your EC2 instances, you will be charged for the excess.
@@ -1352,17 +1352,17 @@ aws billing get-cost-and-usage --time-period Start=2024-03-01,End=2024-03-31 --g
 Spot instances offer significant cost savings, up to 90% compared to On-Demand instances. Here's a breakdown of how they work:
 
 ### Spot Instance Basics
-*   You define a **max spot price** 💰 you're willing to pay.
-*   As long as the current spot price is below your max price, you keep the instance.
+*   You can set a **max spot price** 💰 you're willing to pay. By default it is the On-Demand price, and AWS notes that setting your own max price makes interruptions more frequent.
+*   You keep the instance while the spot price stays below your max price **and** AWS does not need the capacity back.
 *   The hourly spot price varies based on offer and capacity.
 
-### Handling Spot Price Increases
-If the current spot price exceeds your max price, you have 2 minutes grace period and two options:
+### Handling Spot Interruptions
+AWS interrupts a Spot Instance mainly when it needs the capacity back. It can also interrupt it if the spot price goes above your max price (if you set one). You get a 2-minute notice, and the instance is stopped, terminated or hibernated, based on the interruption behavior you chose:
 
 1.  **Stop** your instance:
     *   Shut down your work.
     *   Stop the instance.
-    *   If the spot price later drops below your max price, you can restart and continue.
+    *   When capacity is available again (and the price is below your max price), the instance can start again and continue.
 2.  **Terminate** your instance:
     *   Lose the instance state.
     *   Restart with a fresh instance when needed.
@@ -1535,7 +1535,7 @@ The first method involves using **spot requests**.
     *   One-time: The instance is terminated if reclaimed.
     *   Persistent: The instance keeps coming back when price requirements are met.
 7.  For persistent requests, set a validity period (until a date or no expiry).
-8.  Define interruption behavior (hibernate or stop) if the price exceeds the maximum.
+8.  Define interruption behavior (hibernate or stop) for when the instance is interrupted (mainly when AWS needs the capacity back, or when the price goes above your maximum).
 9.  Block duration is an outdated feature and may not be available.
 
 ### Reserved Instances

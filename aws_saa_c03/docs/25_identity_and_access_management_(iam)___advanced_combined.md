@@ -297,8 +297,9 @@ If your organization requires a `Project` tag with values like `Finance`, `HR`, 
 {
   "tags": {
     "Project": {
-      "enforcedFor": ["ec2:instance", "s3:bucket"],
-      "values": ["Finance", "HR", "IT"]
+      "tag_key": { "@@assign": "Project" },
+      "tag_value": { "@@assign": ["Finance", "HR", "IT"] },
+      "enforced_for": { "@@assign": ["ec2:instance", "s3:bucket"] }
     }
   }
 }
@@ -616,11 +617,12 @@ The IAM Policy Evaluation Logic determines whether an action is allowed or denie
 The evaluation process involves several steps:
 
 1.  **Explicit Deny:** If there's an explicit deny in any policy, the action is denied.
-2.  **Organizations SCP:** Is there an allow? If not, the action is denied (implicit deny).
-3.  **Resource-Based Policy:** (e.g., S3 bucket policies, SQS policies). Is there an allow? If not, continue to the next step.
-4.  **Identity-Based Policy:** (attached to users, groups, or roles). Is there an allow? If not, continue to the next step.
-5.  **IAM Permission Boundaries:** Is the action within the boundary? If not, the action is denied.
-6.  **Session Policies:** (related to STS).
+2.  **Organizations RCP (Resource Control Policy, added Nov 2024):** Is there an allow? If not, the action is denied. RCPs limit what can be done *on resources* in the account.
+3.  **Organizations SCP:** Is there an allow? If not, the action is denied (implicit deny).
+4.  **Resource-Based Policy:** (e.g., S3 bucket policies, SQS policies). Is there an allow? If not, continue to the next step.
+5.  **Identity-Based Policy:** (attached to users, groups, or roles). Is there an allow? If not, continue to the next step.
+6.  **IAM Permission Boundaries:** Is the action within the boundary? If not, the action is denied.
+7.  **Session Policies:** (related to STS).
 
 Only if **all** applicable policies allow the action (and no policy explicitly denies it) will the action be permitted.
 
@@ -893,7 +895,7 @@ Let's dive into **AWS Control Tower**, a service that makes it easy to set up an
 
 ### 🛡️ What Are Guardrails?
 
-Guardrails are **governance rules** that help ensure your accounts stay secure and compliant. Control Tower supports two types of guardrails:
+Guardrails are **governance rules** that help ensure your accounts stay secure and compliant. AWS now calls them **controls** ("guardrail" is the old name). Control Tower supports three types: preventive, detective and **proactive**. The two below are the ones the exam usually asks about:
 
 #### 1. **Preventive Guardrails** 🔒
 - **Restrict behavior** before it happens.
@@ -924,6 +926,7 @@ Guardrails are **governance rules** that help ensure your accounts stay secure a
 - **Guardrails** provide powerful mechanisms for both **prevention** and **detection**.
 - **Preventive guardrails** use SCPs to restrict actions.
 - **Detective guardrails** use AWS Config to monitor and report violations.
+- **Proactive controls** use CloudFormation hooks to check resources *before* a CloudFormation stack creates or updates them.
 - Supports **automated remediation** for faster compliance resolution.
 
 This gives you a centralized, secure, and scalable way to manage all your AWS accounts effectively.

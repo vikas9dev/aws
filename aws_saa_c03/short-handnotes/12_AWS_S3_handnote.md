@@ -24,7 +24,7 @@
 - ❌ Cannot end with `-s3alias`
 
 ### Object Properties
-- **Max size**: **5 TB** per object
+- **Max size**: **50 TB** per object (raised from 5 TB in Dec 2025 — older exam questions may still say 5 TB)
 - **>5 GB**: Must use **multi-part upload**
 - **Metadata**: Key-value pairs (system/user-defined)
 - **Tags**: Up to 10 Unicode key-value pairs
@@ -78,7 +78,7 @@
 ## 🔐 S3 ENCRYPTION
 
 ### Encryption Methods
-1. **Server-Side Encryption (SSE)** - 3 flavors
+1. **Server-Side Encryption (SSE)** - 3 main flavors (plus DSSE-KMS, dual-layer KMS, added in 2023)
 2. **Client-Side Encryption**
 
 ### Server-Side Encryption (SSE)
@@ -95,7 +95,7 @@
 - ✅ **Audit**: Key usage logged in CloudTrail
 - ✅ **Header**: `x-amz-server-side-encryption: aws:kms`
 - ✅ **Extra security**: Need access to object AND KMS key
-- ⚠️ **Limitation**: KMS API quotas (5,500-30,000 req/s by region)
+- ⚠️ **Limitation**: KMS API quotas (10,000 / 20,000 / 100,000 req/s by region for symmetric keys; older material says 5,500-30,000)
 - ⚠️ **Throttling**: High throughput may hit limits
 - ✅ **Bucket Key**: Reduces KMS API calls (enabled by default)
 
@@ -105,6 +105,7 @@
 - ⚠️ **Must use HTTPS**: Required
 - ⚠️ **Key in headers**: Must pass key with every request
 - ⚠️ **Console**: Not available (CLI/SDK only)
+- ⚠️ **Blocked by default** since Apr 2026 on new buckets (set `BlockedEncryptionTypes` to `NONE` to allow it)
 
 ### Client-Side Encryption
 - ✅ **Client encrypts**: Before sending to S3
@@ -261,7 +262,7 @@ Use bucket policy to deny HTTP:
 ### Glacier Retrieval Options
 - **Expedited**: 1-5 minutes ($$$) - only available in Flexible Retrieval
 - **Standard**: 3-5 hours (Flexible) / 12 hours (Deep Archive)
-- **Bulk**: 5-12 hours (Flexible) / 48 hours (Deep Archive) - FREE
+- **Bulk**: 5-12 hours (Flexible) / 48 hours (Deep Archive) - FREE for Flexible Retrieval only (Deep Archive bulk is charged, but cheapest)
 
 ### S3 Intelligent-Tiering Tiers
 - **Frequent Access** (default)
@@ -408,7 +409,7 @@ One-line exam takeaway
 1. **SNS Topic**: Publish notifications
 2. **SQS Queue**: Queue messages
 3. **Lambda Function**: Invoke function
-4. **EventBridge**: Advanced routing (all events sent automatically)
+4. **EventBridge**: Advanced routing (all events sent once you turn on EventBridge for the bucket — off by default)
 
 ### IAM Permissions
 - **SNS**: Resource access policy on topic
@@ -417,7 +418,7 @@ One-line exam takeaway
 - **Note**: S3 needs permission to send to destination
 
 ### EventBridge Integration
-- ✅ **All events** sent to EventBridge automatically
+- ✅ **All events** sent to EventBridge once you turn it on for the bucket (off by default)
 - ✅ **Advanced filtering**: Metadata, object size, name
 - ✅ **Multiple destinations**: Send to 18+ AWS services
 - ✅ **Features**: Event archiving, replay, reliable delivery
@@ -665,6 +666,7 @@ aws s3api put-bucket-versioning \
 ## 🗄️ S3 GLACIER VAULT LOCK
 
 ### Purpose
+- ⚠️ Vaults belong to the original **Amazon Glacier** service, closed to new customers since Dec 15, 2025. New archives use S3 Glacier storage classes + **S3 Object Lock**
 - **WORM model**: Write Once Read Many
 - **Vault level**: Applies to entire Glacier vault
 - **Immutable**: Cannot be changed once locked
@@ -704,6 +706,7 @@ aws s3api put-bucket-versioning \
 ## ⚙️ S3 OBJECT LAMBDA
 
 ### Purpose
+- ⚠️ Closed to new customers since Nov 7, 2025 (existing customers only) — may still appear in older exam questions
 - **Transform objects**: Modify on-the-fly before retrieval
 - **Single bucket**: No need for multiple buckets
 - **Lambda function**: Processes object before returning
@@ -752,7 +755,7 @@ aws s3api put-bucket-versioning \
 25. **S3 Analytics**: Recommendations for Standard/Standard-IA only
 26. **Requester Pays**: Requester pays download, owner pays storage
 27. **Event Notifications**: SNS, SQS, Lambda, EventBridge
-28. **EventBridge**: All events sent automatically, advanced routing
+28. **EventBridge**: All events sent once turned on for the bucket, advanced routing
 29. **Performance**: 3,500 PUT/5,500 GET per prefix per second
 30. **Prefixes**: Distribute objects across prefixes for higher throughput
 31. **Multi-Part Upload**: Recommended >100MB, required >5GB

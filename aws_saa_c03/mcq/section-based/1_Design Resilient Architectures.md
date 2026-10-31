@@ -16,27 +16,29 @@
 
 ### ✅ **Correct Answer**
 
-Use **AWS Database Migration Service (AWS DMS)** to migrate data from the existing DB cluster to a new **Aurora Serverless** database.
+**Add an Aurora Replica to the cluster and set its instance class to Serverless. Failover to the read replica and promote it to primary.**
 
-This option ensures **minimal downtime** ⏱️ and a **smooth migration** 🔄.
+> ⚠️ Correction (2026): this file used to give **AWS DMS** as the answer. That was based on Aurora Serverless **v1** (end of life 31 Mar 2025). With Aurora Serverless **v2**, AWS documents "add a Serverless v2 reader, then fail over" as the way to switch a provisioned cluster.
+
+Aurora Serverless v2 is the `db.serverless` **instance class**, and one cluster can mix provisioned and Serverless v2 instances. You add a `db.serverless` reader, fail over to it, and it becomes the writer. The only downtime is the short failover ⏱️.
 
 ### ❌ **Incorrect Options (with reasons)**
 
 <span style="color:red"><strong>#### 🔴 Change the Aurora Instance class to Serverless</strong></span>
 
-This is **not possible**. You **cannot directly modify** a provisioned Aurora instance to Aurora Serverless.
+Possible in Serverless v2, but changing the **writer** in place restarts it, so the database is down during the change. Adding a reader and failing over has less downtime.
 
 <span style="color:red"><strong>#### 🔴 Take a snapshot of the DB cluster and create a new Aurora DB cluster</strong></span>
 
 Although functional, this method causes **long downtime** 😴 because the application must be stopped until the new cluster is created and ready.
 
-<span style="color:red"><strong>#### 🔴 Add an Aurora Replica, set it to Serverless, then fail over</strong></span>
+<span style="color:red"><strong>#### 🔴 Use AWS DMS to migrate to a new Aurora Serverless database</strong></span>
 
-While technically doable, this approach still results in a **write downtime** ✍️🚫 for a short period during the failover process.
+It works, but it needs a second cluster, a replication task and an application cutover. That is more effort and more risk than a failover inside the same cluster.
 
 ### 🟢 Summary
 
-AWS DMS provides the **most efficient**, **least disruptive**, and **recommended** way to migrate to **Aurora Serverless** 🎯.
+Provisioned Aurora → Aurora Serverless v2: **add a `db.serverless` reader and fail over to it** 🎯.
 
 </details>
 
@@ -242,7 +244,7 @@ It only works with:
 - NFS  
 - SMB  
 - Self-managed object storage  
-- Snowcone  
+- Snowcone (discontinued for new orders in Nov 2024)  
 - S3  
 - EFS  
 - FSx for Windows  
@@ -256,7 +258,7 @@ It does **not** affect EBS volume termination behavior.
 
 <span style="color:red"><strong>#### 🔴 Enable Termination Protection for all EC2 instances</strong></span>
 
-Termination Protection only prevents **accidental manual termination** from the console.  
+Termination Protection only blocks **`TerminateInstances` calls** (from the console, CLI or API). It does not stop Auto Scaling from terminating instances.  
 It does **not** preserve EBS volumes nor affect **DeleteOnTermination** behavior.
 
 ### 🟢 **Summary**

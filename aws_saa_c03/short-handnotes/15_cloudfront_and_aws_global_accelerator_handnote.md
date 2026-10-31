@@ -4,7 +4,7 @@
 
 ### What is CloudFront?
 - **Content Delivery Network (CDN)**
-- **Global edge network** (300+ locations)
+- **Global edge network** (750+ PoPs + 15 regional edge caches)
 - **Caches content** at edge locations
 - **Reduces latency** & **bandwidth costs**
 
@@ -20,7 +20,7 @@
 - **EC2 Instances**: Dynamic content
 - **ELB**: Load balanced applications
 - **Custom Origins**: Any HTTP server
-- **S3 Transfer Acceleration**: Accelerate uploads
+- **S3 Transfer Acceleration**: Accelerate uploads (not an origin type — a separate S3 feature that uses CloudFront edge locations)
 
 ### Distribution Types
 - **Web Distribution**: HTTP/HTTPS content
@@ -45,10 +45,10 @@
 - ✅ **Field-Level Encryption**: Encrypt sensitive fields
 
 ### Performance
-- ✅ **Compression**: Automatic gzip compression
+- ✅ **Compression**: Gzip and Brotli compression (when you turn on compression in the cache behavior)
 - ✅ **HTTP/2**: Modern protocol support
 - ✅ **Keep-Alive**: Persistent connections
-- ✅ **Edge Locations**: 300+ locations worldwide
+- ✅ **Edge Locations**: 750+ PoPs worldwide
 
 ---
 
@@ -94,7 +94,7 @@
 - **Private S3 bucket** access
 - **CloudFront-only** access
 - ✅ **Supports** all HTTP methods (GET, PUT, POST, etc.)
-- ✅ **Use for** S3, custom origins, API Gateway
+- ✅ **Use for** S3 buckets, Lambda function URLs, MediaStore, MediaPackage v2 and VPC origins (not custom HTTP origins or API Gateway)
 
 ---
 
@@ -110,7 +110,7 @@
 
 ### Key Points
 - ✅ **Cheaper than S3** for data transfer
-- ✅ **Free tier**: 1 TB data transfer, 10M requests/month (first year)
+- ✅ **Free tier**: 1 TB data transfer, 10M requests/month (always free since Dec 2021, not only the first year)
 
 ---
 
@@ -137,7 +137,7 @@
 ### Features
 - ✅ **Fixed IP addresses** (2 static anycast IPs)
 - ✅ **Automatic failover** (health checks)
-- ✅ **Path-based routing** (advanced routing)
+- ✅ **Traffic dials & endpoint weights** (no path-based routing — Global Accelerator works at layer 4)
 - ✅ **Client affinity** (sticky sessions)
 - ✅ **TCP termination** at edge
 
@@ -165,29 +165,23 @@
 ### Health Checks
 - **Automatic health checks** of endpoints
 - **Failover** to healthy endpoints
-- **Path-based routing** (advanced)
 
 ### Client Affinity
 - **Source IP affinity**: Same client → same endpoint
 - ✅ **Use case**: Stateful applications
 
 ### Path-Based Routing
-- **Route based on URL path**
-- **Different endpoints** for different paths
-- ✅ **Use case**: Microservices
+- ⚠️ **Not supported.** Global Accelerator routes TCP/UDP (layer 4) and cannot see URL paths. Use an ALB or CloudFront for path-based routing.
 
 ---
 
 ## 💰 GLOBAL ACCELERATOR PRICING
 
 ### Fixed Charges
-- **$0.025/hour** per accelerator
-- **$0.025/hour** per endpoint group
+- **$0.025/hour** per accelerator (no separate per-endpoint-group fee)
 
 ### Data Transfer
-- **$0.01/GB** for first 10 TB
-- **$0.008/GB** for next 40 TB
-- **$0.005/GB** for next 100 TB
+- **Data Transfer-Premium** per GB, on top of normal data transfer out. The rate depends on the source Region and the destination edge (e.g. US → US $0.015/GB, US → Asia Pacific $0.035/GB). It is charged only in the dominant direction.
 
 ---
 
@@ -199,7 +193,7 @@
 4. **Signed URLs**: Single file access, time-limited
 5. **Signed Cookies**: Multiple files access
 6. **Cache Invalidation**: Force refresh (costs money)
-7. **Edge Locations**: 300+ locations worldwide
+7. **Edge Locations**: 750+ PoPs worldwide
 8. **Global Accelerator**: 2 static anycast IPs, automatic failover
 9. **CloudFront cheaper** than S3 for data transfer
 10. **Path-based routing**: Different origins for different paths

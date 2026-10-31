@@ -43,14 +43,14 @@
 - **Definition**: One or more discrete data centers
 - **Isolation**: AZs isolated to prevent cascading failures
 - **Connectivity**: High-bandwidth, ultra-low-latency networking
-- **Minimum**: 2 AZs per region (AWS requirement)
+- **Minimum**: 3 AZs per region (AWS standard for every region)
 - **Typical**: 3 AZs per region
 - **Maximum**: Up to 6 AZs
 - **Example**: `ap-southeast-2a`, `ap-southeast-2b`, `ap-southeast-2c`
 
 ### Points of Presence (Edge Locations)
-- **Count**: 400+ points of presence
-- **Coverage**: 90 cities, 40 countries
+- **Count**: 750+ points of presence + 15 regional edge caches (older material says 400+)
+- **Coverage**: 100+ cities, 50+ countries
 - **Purpose**: Deliver content with lowest latency
 - **Used By**: CloudFront CDN
 
@@ -108,12 +108,12 @@
 
 1. **Regions**: Geographic areas with multiple AZs
 2. **AZs**: Isolated data centers within a region
-3. **Minimum AZs**: 2 per region (AWS requirement)
+3. **Minimum AZs**: 3 per region
 4. **Typical AZs**: 3 per region
 5. **Region Selection**: Consider compliance, latency, service availability, pricing
 6. **Global Services**: IAM, Route 53, CloudFront, WAF
 7. **Regional Services**: EC2, Lambda, most others
-8. **Edge Locations**: 400+ for CloudFront CDN
+8. **Edge Locations**: 750+ PoPs for CloudFront CDN
 9. **Stay in Same Region**: Important during course to avoid confusion
 
 ---

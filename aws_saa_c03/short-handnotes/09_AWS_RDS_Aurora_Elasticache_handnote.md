@@ -32,7 +32,7 @@
 - ✅ Triggers when:
   - Free storage < 10% of allocated
   - Condition lasts > 5 minutes
-  - 6 hours passed since last modification
+  - Last storage change has finished optimizing, and < 4 changes in last 24 hours (old rule: "6 hours since last change")
 - ✅ Set **maximum storage threshold**
 
 ---
@@ -79,7 +79,7 @@
 - **20% more expensive** than RDS (but often cost-effective at scale)
 
 ### Storage
-- ✅ **Auto-expands**: 10GB → 128TB
+- ✅ **Auto-expands**: 10GB → 128TB (256 TiB on newer engine versions)
 - ✅ **6 copies** across 3 AZs
 - ✅ **4/6 copies** required for writes
 - ✅ **3/6 copies** required for reads
@@ -88,7 +88,7 @@
 
 ### High Availability
 - ✅ **Up to 15 read replicas** - Aurora supports 1 writer + up to 15 read replicas **per cluster**, and those replicas can be distributed across multiple AZs — but the limit applies per cluster, not across Regions.
-- ✅ **Sub-10ms replication lag**
+- ✅ **Replication lag usually well under 100 ms** (old material: "sub-10 ms")
 - ✅ **<30 second failover** (faster than Multi-AZ MySQL)
 - ✅ **Any read replica can become master**
 
@@ -100,14 +100,14 @@
 ### Aurora Features
 - ✅ **Backtrack**: Restore to any point in time (no backups needed)
 - ✅ **Replica Auto-Scaling**: Automatically scale read replicas (1-15)
-- ✅ **Serverless**: Auto-scaling based on usage (pay per second)
+- ✅ **Serverless**: Auto-scaling based on usage (pay per second). v1 ended 31 Mar 2025; v2 can scale to 0 ACU
 - ✅ **Global Aurora**: Cross-region replication (<1 second lag)
 - ✅ **Machine Learning**: Integrate with SageMaker, Comprehend
 - ✅ **Babelfish**: Aurora PostgreSQL understands T-SQL (SQL Server migration)
 
 ### Global Aurora
 - **Primary region**: Read/write
-- **Up to 5 secondary regions**: Read-only
+- **Up to 10 secondary regions**: Read-only (was 5 before May 2025)
 - **<1 second replication lag**
 - **RTO <1 minute** for failover
 - **Up to 16 read replicas** per secondary region
@@ -167,7 +167,7 @@ Aurora Global Database (Multi-Region)
 - ✅ **No public access** (unless explicitly enabled)
 
 ### Authentication
-- ✅ **IAM Database Authentication**: Use IAM roles (MySQL/PostgreSQL)
+- ✅ **IAM Database Authentication**: Use IAM roles (MariaDB/MySQL/PostgreSQL)
 - ✅ **Kerberos Authentication**: Microsoft SQL Server
 
 ### Automated Security
@@ -224,14 +224,14 @@ Aurora Global Database (Multi-Region)
 | **Persistence** | ✅ Yes (AOF, RDB) | ❌ No |
 | **Pub/Sub** | ✅ Yes | ❌ No |
 | **Multi-AZ** | ✅ Yes (with replication) | ❌ No |
-| **Backup/Restore** | ✅ Yes | ❌ No |
+| **Backup/Restore** | ✅ Yes | ❌ No (✅ only with ElastiCache Serverless for Memcached) |
 | **Threading** | Single-threaded | Multi-threaded |
 | **Use Case** | Advanced features needed | Simple caching |
 
 ### ElastiCache Features
 - ✅ **Cluster Mode**: Scale horizontally (Redis)
 - ✅ **Multi-AZ**: Automatic failover (Redis)
-- ✅ **Backup & Restore**: Point-in-time restore (Redis)
+- ✅ **Backup & Restore**: Snapshots, restored into a new cache (Redis) — no point-in-time restore
 - ✅ **Encryption**: At rest & in transit
 - ✅ **VPC**: Deploy in private subnets
 - ✅ **Security Groups**: Control access
@@ -264,7 +264,7 @@ Aurora Global Database (Multi-Region)
 1. **Read Replicas**: Scale reads, async, eventually consistent
 2. **Multi-AZ**: DR only, sync, automatic failover, NOT for reads
 3. **Read Replicas CAN be Multi-AZ** (common exam question)
-4. **Aurora**: 6 copies, 3 AZs, auto-expands 10GB→128TB
+4. **Aurora**: 6 copies, 3 AZs, auto-expands 10GB→128TB (256 TiB on newer versions)
 5. **Aurora failover**: <30 seconds (faster than RDS Multi-AZ)
 6. **Aurora Global**: <1 second replication lag, RTO <1 minute
 7. **RDS backups**: Can be disabled (set retention to 0)

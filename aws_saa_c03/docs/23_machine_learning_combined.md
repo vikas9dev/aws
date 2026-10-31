@@ -38,7 +38,7 @@ Rekognition's use cases include:
 *   Face detection and analysis (e.g., gender, age range, emotions). 😃
 *   Face search and verification. 🔍
 *   Celebrity recognition. 🌟
-*   Pathing (e.g., sports game analysis). ⚽
+*   Pathing (e.g., sports game analysis). ⚽ ⚠️ AWS discontinued Rekognition People Pathing on 31 Oct 2025 (closed to new customers since Oct 2024). Older exam questions may still list it.
 
 📌 **Example:** Identifying elements in an image such as a person, rock, mountain bike, crest, and outdoors.
 
@@ -276,7 +276,7 @@ Here's what Comprehend can do:
 *   📍 Entity Recognition: Identify places, people, brands, and events.
 *   😊 Sentiment Analysis: Determine the sentiment (positive, negative, neutral) of the text.
 *   🧮 Tokenization and Parts of Speech Analysis: Analyze the text's structure.
-*   🎤 Audio Analysis: Process audio data.
+*   🎤 Audio: Comprehend accepts text only, not audio. To analyze speech, first convert it to text with Amazon Transcribe.
 *   📂 Topic Modeling: Organize a collection of text files by topic.
 
 Comprehend's core purpose is to ingest large amounts of data and automatically understand its meaning. It transforms unstructured text data into structured insights using the features mentioned above. ✨

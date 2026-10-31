@@ -94,7 +94,7 @@ When launching a new application, how do you choose an AWS region? The answer de
 
 ### Availability Zones (AZs) 🏘️
 
-Availability Zones reside within regions. Each region has multiple AZs, typically three, minimum 2 to maximum six, but usually three.
+Availability Zones reside within regions. Each region has multiple AZs: a **minimum of three**, a maximum of six, usually three.
 
 📌 **Example:** The Sydney region (`ap-southeast-2`) has three availability zones: `ap-southeast-2a`, `ap-southeast-2b`, and `ap-southeast-2c`.
 
@@ -102,7 +102,7 @@ Availability Zones reside within regions. Each region has multiple AZs, typicall
 - **Asia Pacific (Mumbai)**: 3 AZs
 - **Europe (Paris)**: 3 AZs
 - **Africa (Cape Town)**: 3 AZs
-- **Newer or smaller regions** may start with **2 AZs**, but AWS often expands them later.
+- **New regions** launch with **at least 3 AZs** (AWS: "Each AWS Region consists of a minimum of three ... AZs").
 
 ![AWS AZs](./img/AWS_availability_zones.webp)
 
@@ -114,13 +114,13 @@ AZs are isolated from each other to prevent cascading failures. If something hap
 
 AZs are connected with high-bandwidth, ultra-low-latency networking, forming a region.
 
-- AWS requires **a minimum of two AZs** in every region.
+- AWS builds **a minimum of three AZs** in every region.
 - However, **us-west-1** is the only region where **new accounts** are limited to **two AZs**, despite having **three** mapped internally.
 - In contrast, all other regions (e.g., us-east-1, us-west-2, ap-south-1, eu-west-1, etc.) provide **a minimum of three AZs** to all accounts .
 
 ### Points of Presence (Edge Locations) 🌐
 
-AWS has over 400 points of presence in 90 cities across 40 countries. These are used to deliver content to end-users with the lowest possible latency. We'll cover this in more detail later in the course.
+AWS has **750+ points of presence** in 100+ cities across 50+ countries, plus **15 regional edge caches** (older course material says 400+ PoPs in 90 cities). These are used to deliver content to end-users with the lowest possible latency. We'll cover this in more detail later in the course.
 
 ### AWS Console Tour 🖥️
 

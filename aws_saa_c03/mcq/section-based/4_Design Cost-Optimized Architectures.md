@@ -202,7 +202,7 @@ This approach is called **envelope encryption**.
 
 ### 🔑 Server-Side Encryption Options in Amazon S3
 
-You have **three mutually exclusive options** for managing encryption keys in S3:
+You have **four mutually exclusive options** for managing encryption keys in S3 (the fourth, DSSE-KMS, was added in Jun 2023 — older material says three). The three below are the ones this question uses:
 
 #### 1️⃣ SSE-S3 (Amazon S3–Managed Keys)
 
@@ -408,7 +408,7 @@ The key requirements are:
 
 - Guarantee **EC2 capacity availability in a specific Availability Zone**
 - Ensure workloads are **not delayed or interrupted**
-- Are billed at **On-Demand rates** only when instances are running
+- Are billed at **On-Demand rates** whether or not instances run in them (an unused reservation is still charged)
 - Can be combined with **Savings Plans or Reserved Instances** for cost optimization
 
 This directly satisfies the requirement for **capacity assurance without overpaying for unused resources**.

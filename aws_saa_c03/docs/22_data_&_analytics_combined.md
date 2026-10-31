@@ -21,7 +21,7 @@ Sections:-
 
 Amazon Athena is a serverless query service that enables you to analyze data stored in Amazon S3 buckets. You use standard SQL to query the files.
 
-*   Athena is built on the Presto engine, which also uses SQL.
+*   Athena is built on the Presto engine, which also uses SQL. (Since Oct 2022, Athena engine version 3 is based on Trino, a fork of Presto.)
 *   You load data into your S3 bucket and then use Athena to query and analyze this data directly in S3 without moving it.
 *   Athena is serverless and analyzes data directly in your S3 bucket.
 
@@ -369,7 +369,7 @@ There are **three primary ways** to load data:
 
 📝 Requirements:
 
-* Must have a **Redshift cluster** provisioned.
+* Must have a **Redshift cluster** provisioned. (Redshift Serverless can also query S3 external tables, but it uses a built-in data lake engine on its own compute, not the separate Spectrum fleet.)
 * Query is submitted to **thousands of Spectrum nodes**.
 * These nodes:
 
@@ -607,6 +607,8 @@ You can mix EC2 purchasing models in your EMR cluster:
 
 Amazon **[QuickSight](https://aws.amazon.com/quicksight/)** is a **serverless**, **machine learning–powered** business intelligence (**BI**) service that enables users to create **interactive dashboards** and **visualizations** from various data sources.
 
+> ⚠️ **Note (2026):** In Oct 2025 AWS renamed QuickSight to **Amazon Quick Sight**, part of Amazon Quick Suite. The BI features and APIs stay the same. Exam questions still say QuickSight.
+
 ![QuickSight](https://d1.awsstatic.com/onedam/marketing-channels/website/aws/en_US/product-categories/analytics/approved/images/d26f6344416ecf7d6314b7372717a437.0e2164fb96a72329ec1e353d6ebd0d65808c7893.png)
 
 ### 📊 What is QuickSight?
@@ -665,7 +667,7 @@ Amazon **[QuickSight](https://aws.amazon.com/quicksight/)** is a **serverless**,
 - **CSV**
 - **JSON**
 - **TSV**
-- **EFS CLF** (Common log format)
+- **ELF/CLF** (Extended log format / Common log format)
 
 📝 **Note**: Imported files can use the **SPICE engine** for performance optimization.
 
@@ -895,14 +897,14 @@ We have two primary options:
 
 ### SQL Applications (Legacy) 📜
 
-> SQL Applications (Legacy) (also known as Kinesis Data Analytics for SQL Applications) is being phased out/discontinued by AWS.  
+> SQL Applications (Legacy) (also known as Kinesis Data Analytics for SQL Applications) has been discontinued by AWS.  
 > - October 15, 2025 → Creation of new SQL Applications will be blocked.  
 > - January 27, 2026 → All existing SQL Applications will be deleted; no further operation/support.
 
 *   The original Kinesis Data Analytics for SQL Applications is now considered legacy.
 *   You can find it under "SQL applications (legacy)" in the console.
 *   AWS recommends using Kinesis Data Analytics Studio and Apache Flink for new applications.
-*   However, if you need to read from Kinesis Data Firehose, you would create a SQL application in the legacy form.
+*   Older material says that if you need to read from Kinesis Data Firehose, you would create a SQL application in the legacy form. This is no longer possible: SQL applications stopped running on 27 Jan 2026.
 *   You'll need to define an application name.
 *   Once the application name is defined, you can go to real-time analytics and write the SQL you want to execute.
 
@@ -938,7 +940,7 @@ Amazon MSK gives you a **fully managed Kafka cluster** on AWS. With just a few c
 
 ✅ **Key Features:**
 
-* AWS provisions and manages **Kafka broker nodes** and **ZooKeeper nodes**.
+* AWS provisions and manages **Kafka broker nodes** and **ZooKeeper nodes** (or, since May 2024, KRaft controllers instead of ZooKeeper; Kafka 4.x clusters use KRaft only).
 * Clusters run inside your **VPC** across up to **3 Availability Zones** for high availability.
 * **Automatic recovery** from common Kafka failures.
 * Data is stored on **EBS volumes** for as long as you need.
@@ -950,7 +952,7 @@ Amazon MSK gives you a **fully managed Kafka cluster** on AWS. With just a few c
 
 | Feature                  | Amazon Kinesis Data Streams           | Amazon MSK (Kafka)                                      |
 | ------------------------ | ------------------------------------- | ------------------------------------------------------- |
-| **Message size**         | Max 1 MB                              | 1 MB by default, configurable for high (e.g., 10 MB)             |
+| **Message size**         | 1 MB by default; up to 10 MiB opt-in since Oct 2025 (older exam questions say max 1 MB) | 1 MB by default, configurable for high (e.g., 10 MB)             |
 | **Streaming**         | Data Streams with Shards                              | Kafka Topics with Partitions                            |
 | **Data retention**       | Limited (default hours to days)       | Keep data **as long as you want** (pay for EBS storage) |
 | **Scaling**              | Scale by splitting/merging **shards** | Scale by adding **partitions** (cannot remove)          |
@@ -1030,7 +1032,7 @@ Here's a breakdown of the pipeline:
 
 *   **IoT Core:** Manages data from numerous IoT devices.
 *   **Kinesis:** Facilitates real-time data collection.
-*   **Firehose:** Delivers data to S3 in near real-time (minimum frequency of one minute).
+*   **Firehose:** Delivers data to S3 in near real-time (the buffer interval can be 0–900 seconds since Dec 2023; older material says the minimum is one minute).
 *   **Lambda:** Supports data transformation within Firehose.
 *   **Amazon S3:** Triggers notifications to SQS, SNS, or Lambda.
 *   **Athena:** Provides a serverless SQL service.
@@ -1110,7 +1112,7 @@ Amazon OpenSearch Service (successor of Elasticsearch Service) is designed for:
 
 * **Amazon S3** → Great for storing logs, but lacks **search & analytics** capabilities out-of-the-box. You'd still need Athena or OpenSearch.
 * **Amazon ElastiCache** → Used for caching (Redis/Memcached), not log analysis.
-* **Amazon QLDB** → Ledger database for immutable, cryptographically verifiable records, not for log analytics.
+* **Amazon QLDB** → Ledger database for immutable, cryptographically verifiable records, not for log analytics. (QLDB reached end of support on 31 Jul 2025.)
 
 ✅ Answer: **Amazon OpenSearch Service**
 

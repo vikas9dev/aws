@@ -24,7 +24,7 @@
 4. **Set Root Password**: Strong password (can recover via email)
 5. **Account Type**: Personal account
 6. **Credit Card**: $1 authorization (pending, not charged)
-7. **Free Tier**: Stay within limits to avoid charges
+7. **Free Tier**: Stay within limits to avoid charges (accounts created from 15 Jul 2025: up to $200 credits; the free plan lasts 6 months)
 8. **Identity Verification**: Phone number (SMS/voice)
 9. **Support Plan**: Basic (free) for course
 10. **Complete Signup**: Account activation takes a few minutes
@@ -59,7 +59,7 @@
 
 ### Operations Path ⚙️
 1. Cloud Practitioner
-2. SysOps Administrator Associate
+2. SysOps Administrator Associate (renamed **CloudOps Engineer – Associate**, exam SOA-C03, from 30 Sep 2025)
 3. DevOps Engineer Professional (Optional)
 
 ### Cloud Engineer Path ☁️
@@ -108,13 +108,13 @@
 3. Solutions Architect Associate
 4. Machine Learning Engineer Associate
 5. Data Engineer Associate (Optional)
-6. Machine Learning Specialty (Optional)
+6. Machine Learning Specialty (retired — the last exam date was 31 Mar 2026)
 
 #### Prompt Engineer
 1. Cloud Practitioner
 2. AI Practitioner Foundational
 3. Machine Learning Engineer Associate
-4. Machine Learning Specialty (Optional)
+4. Machine Learning Specialty (retired — the last exam date was 31 Mar 2026)
 
 ---
 

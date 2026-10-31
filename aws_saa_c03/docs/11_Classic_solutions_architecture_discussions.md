@@ -415,10 +415,10 @@ Beanstalk supports a wide range of programming languages and platforms, includin
 *   PHP
 *   Python
 *   Ruby
-*   Packer Builder
-*   Single Docker Container
-*   Multi Docker Container
-*   Pre-configured Docker
+*   Docker (single container)
+*   ECS on Amazon Linux 2023 (multi-container Docker)
+
+📝 **Note:** Older course material also lists "Packer Builder" (custom platforms), "Multi Docker Container" and "Pre-configured Docker". AWS retired all three on 18 Jul 2022. Multi-container apps now use the ECS platform.
 
 Beanstalk aims to support the deployment of virtually any application.
 

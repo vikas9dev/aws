@@ -47,7 +47,7 @@
 ### Reserved Concurrency
 - **Reserve** concurrent executions
 - **Prevents** other functions from using capacity
-- ⚠️ **Costs money** even if not used
+- ✅ **No extra charge** to configure (but it leaves less concurrency for other functions)
 
 ### Provisioned Concurrency
 - **Pre-warm** functions (no cold start)
@@ -109,7 +109,7 @@
 
 ### VPC Access
 - ✅ **Deploy in VPC** for private resource access
-- ⚠️ **Cold starts** longer in VPC
+- ℹ️ **Cold starts** in a VPC are no longer much slower (shared Hyperplane ENIs since Sep 2019; older material says they are)
 - ✅ **Use VPC endpoints** to avoid NAT Gateway
 
 ### Encryption
@@ -147,7 +147,7 @@
 - ✅ **Use layers** for common dependencies
 - ✅ **Optimize package size** (faster cold starts)
 - ✅ **Use provisioned concurrency** for low latency needs
-- ✅ **Avoid VPC** unless necessary (slower cold starts)
+- ✅ **Avoid VPC** unless necessary (since Sep 2019 the VPC cold-start penalty is mostly gone, but you need NAT or VPC endpoints for internet/AWS access)
 
 ### Security
 - ✅ **Least privilege** IAM roles
@@ -185,7 +185,7 @@
 2. **Lambda memory**: 128 MB - 10 GB (CPU scales with memory)
 3. **Cold starts**: First invocation slower (use provisioned concurrency)
 4. **IAM roles**: Use for Lambda (not IAM users)
-5. **VPC access**: Slower cold starts, use VPC endpoints
+5. **VPC access**: Use VPC endpoints or NAT for outbound access (VPC cold starts are no longer much slower since Sep 2019)
 6. **Layers**: Shared code/libraries (up to 5 per function)
 7. **Reserved concurrency**: Prevents other functions from using capacity
 8. **Environment variables**: Encrypted with KMS (optional)

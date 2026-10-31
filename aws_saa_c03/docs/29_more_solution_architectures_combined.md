@@ -38,8 +38,8 @@ Let's explore event processing in AWS, covering different possibilities and asso
 
 *   SNS (Simple Notification Service) sends messages asynchronously to Lambda.
 *   The Lambda function has its own internal retry behavior.
-*   The Lambda service retries three times.
-*   If processing fails after three retries, the message is discarded by default.
+*   The Lambda service retries **two** more times (3 attempts in total).
+*   If processing still fails after these retries, the message is discarded by default.
 *   💡 **Tip:** Configure a DLQ at the Lambda service level to send failed messages to, for example, an SQS queue for further processing.
 *   📝 **Note:** With SQS, the DLQ is configured on the SQS side, while with SNS, it's configured on the Lambda side.
 
@@ -82,7 +82,7 @@ Let's explore event processing in AWS, covering different possibilities and asso
 
 ![AWS EventBridge](./img/AWS_EventBridge.png)
 
-*   Events in Amazon S3 buckets are sent to Amazon EventBridge.
+*   Events in Amazon S3 buckets are sent to Amazon EventBridge after you turn on EventBridge notifications for the bucket (it is off by default).
 *   Use rules to route events to over 18 AWS services as destinations.
 *   Benefits of using EventBridge:
     *   Filtering options with JSON rules (filter on metadata, object size, name, etc.).
@@ -267,7 +267,7 @@ Let's explore the AWS services that facilitate HPC.
 How do we efficiently move large datasets into AWS?
 
 *   **Direct Connect**: Transfer GB/s of data to the cloud, over a private secure network. 🔒
-*   **Snowball & Snowmobile**: Move petabytes of data to the cloud via physical transport for large, one-off transfers. 🚚
+*   **Snowball & Snowmobile**: Move petabytes of data to the cloud via physical transport for large, one-off transfers. 🚚 ⚠️ **Note (2026):** Snowmobile was retired in 2024, and Snowball Edge is closed to new customers since 7 Nov 2025. AWS now points new customers to DataSync or AWS Data Transfer Terminal.
 *   **DataSync**: Install DataSync agents to move large amounts of data between on-premises file systems (NFS, SMB) and AWS storage services (S3, EFS, FSx for Windows). ⚙️
 
 ### Compute and Networking
@@ -305,7 +305,7 @@ Where should we store the data for our HPC workloads?
     *   **Instance Store**: Can scale to millions of IOPS, offering very low latency. However, data is lost if the instance fails. ⚠️
 *   **Network Storage**:
     *   **Amazon S3**: Store large blobs of data (object storage). 📦
-    *   **EFS**: IOPS scale based on the size of the file system. Provisioned IOPS mode is available for higher performance. 📁
+    *   **EFS**: In Bursting mode, throughput scales with the size of the file system. Elastic and Provisioned **throughput** modes give higher performance (EFS has no "Provisioned IOPS" mode). 📁
     *   **FSx for Lustre**: A file system specifically designed for HPC, offering millions of IOPS. It's backed by S3. 🌟 "Lustre" stands for "Linux cluster".
 
 ### Automation and Orchestration

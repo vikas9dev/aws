@@ -200,6 +200,8 @@ The correct steps are:
   - Up to **3,000 messages/second with batching**
     Since the question explicitly mentions **FIFO with batching**, the correct limit is **3,000 messages per second**.
 
+> ⚠️ Note (2026): 300 / 3,000 is the limit **without** high throughput mode. A FIFO queue with **high throughput mode** turned on goes much higher (up to 70,000 transactions per second in the largest Regions). The exam answer above is still 3,000.
+
 ### ❌ Why the other options are incorrect
 
 - <span style="color:red"><strong>Make sure that the name of the FIFO queue is the same as the standard queue</strong></span>
@@ -607,6 +609,8 @@ This approach minimizes:
 - **Petabyte-scale migration** → Use **AWS Snowball Edge** ✅
 - **Archival storage** → Use **Amazon S3 Glacier via lifecycle policies** ✅
 - **Network-based transfers** → Not cost-effective at this scale ❌
+
+> ⚠️ Note (2026): Since **7 Nov 2025**, AWS Snowball Edge is available only to existing customers. New customers should use AWS DataSync (online) or AWS Data Transfer Terminal (physical). Older exam questions may still expect Snowball Edge.
 
 </details>
 

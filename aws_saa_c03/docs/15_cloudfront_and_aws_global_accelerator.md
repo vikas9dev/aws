@@ -27,7 +27,7 @@ Amazon **CloudFront** is a **Content Delivery Network (CDN)** designed to improv
 
 ### 🌍 Global Reach
 
-- CloudFront operates through **216+ Points of Presence (PoPs)**, also known as **Edge locations**.
+- CloudFront operates through **750+ Points of Presence (PoPs)**, also known as **Edge locations**, plus **15 Regional Edge Caches** (older course material says 216+ PoPs).
 - AWS is **continually adding more locations** to enhance global reach and performance.
 - 💡 **Tip:** The distributed nature of CloudFront not only speeds up content delivery but also provides **DDoS protection**.
 
@@ -103,7 +103,7 @@ CloudFront supports multiple **origin types** (i.e., backends):
 | Feature                         | CloudFront                                      | S3 Cross-Region Replication                 |
 |-------------------------------|--------------------------------------------------|---------------------------------------------|
 | Purpose                        | Distribute content globally via cache           | Replicate S3 bucket to specific regions     |
-| Reach                          | 🌍 Global (216+ Edge locations)                 | 📍 Limited to configured regions. Must be setup for each region you want replication to happen            |
+| Reach                          | 🌍 Global (750+ Edge locations)                 | 📍 Limited to configured regions. Must be setup for each region you want replication to happen            |
 | Content Refresh                | Cached for ~1 day                               | Real-time replication                       |
 | Ideal for                      | Static content that must be available everywhere                                 | Read only. Dynamic content that needs to be available at low-latency in few regions                            |
 | Usage                          | CDN with latency optimization                   | Backup/failover and multi-region access     |
@@ -498,7 +498,7 @@ These resources can be **public or private**.
 | **Caching**                        | ❌ **No caching**                                           | ✅ **Caching at Edge locations**                                |
 | **Traffic Flow**                   | Proxies traffic from edge → origin                         | Delivers content from edge (cached) → fetches origin if needed |
 | **Best for**                       | Good fit for non-HTTP use cases like Real-time apps, gaming (UDP), VoIP (Voice Over IP), IoT (MQTT), Good for HTTP use cases that require static IP addresses, Good for HTTP use cases that required deterministic, fast regional failover | Static websites, media, images, videos, dynamic websites               |
-| **Failover**                       | Global, automatic failover with health checks              | None built-in                                                  |
+| **Failover**                       | Global, automatic failover with health checks              | Origin failover only (origin groups: primary → secondary on error responses) |
 | **Latency Optimization**          | Based on network performance and health                    | Based on cache and edge proximity                              |
 
 ⚠️ **Warning:** Don’t confuse Global Accelerator with CloudFront. They serve **different purposes** even though they both use edge locations and integrate with AWS Shield.
@@ -534,7 +534,7 @@ In the next lecture, we’ll get hands-on and learn how to **set up AWS Global A
 #### Region 1: US East (N. Virginia)
 
 1. Navigate to the **EC2 service** in `us-east-1`.
-2. Launch a new **Amazon Linux 2 AMI** instance.
+2. Launch a new **Amazon Linux 2 AMI** instance. (📝 Amazon Linux 2 reached end of support on Jun 30, 2026 — use **Amazon Linux 2023** today; the same `yum` commands still work there.)
 3. Choose `t2.micro` and configure instance details.
 4. Under **User Data**, paste this script (with region-specific info):
    ```bash
@@ -663,8 +663,8 @@ To simulate a failed endpoint:
 * **\$0.025/hour** per active accelerator
 * **Data transfer fees** vary by region:
 
-  * **\$0.01/GB** (low)
-  * Up to **\$0.08/GB** (e.g., Australia)
+  * **\$0.015/GB** (low, e.g. US → US or Europe)
+  * Up to about **\$0.105/GB** (e.g., US → Australia)
 
 📝 **Note:** Despite the cost, Global Accelerator is a **valuable service** and important for the AWS certification exam.
 

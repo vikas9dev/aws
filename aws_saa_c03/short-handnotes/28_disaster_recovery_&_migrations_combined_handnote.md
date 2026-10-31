@@ -108,10 +108,11 @@
 ### Options for Large Data
 
 #### AWS Snow Family
-- **Snowball**: 80 TB capacity
-- **Snowball Edge**: 100 TB, compute capabilities
-- **Snowmobile**: Petabytes, truck-mounted
+- **Snowball**: 80 TB capacity (old model — retired Nov 2025)
+- **Snowball Edge**: 100 TB, compute capabilities (current Storage Optimized model: 210 TB)
+- **Snowmobile**: Petabytes, truck-mounted (**retired Mar 2024** — may still appear in older exam questions)
 - **Use Case**: One-time large transfers
+- ⚠️ **Note (2026)**: Snow Family devices are closed to new customers since 7 Nov 2025. New customers: DataSync (online) or AWS Data Transfer Terminal (physical). Support for all Snowball devices in commercial Regions ends 31 Dec 2026
 
 #### AWS DataSync
 - **Purpose**: Move data between on-premises and AWS
@@ -168,7 +169,7 @@
 3. **DR Strategies**: Backup/Restore → Pilot Light → Warm Standby → Hot Site
 4. **DMS**: Data migration, not full schema (use SCT for schema)
 5. **CDC**: Continuous replication with DMS
-6. **Snow Family**: Large one-time transfers (Snowball, Snowmobile)
+6. **Snow Family**: Large one-time transfers (Snowball; Snowmobile retired 2024)
 7. **DataSync**: Ongoing file system synchronization
 8. **Direct Connect**: Dedicated network connection
 9. **AWS Backup**: Centralized backup service
@@ -185,7 +186,7 @@
 - **Mission-critical**: Hot Site/Multi-Site
 
 ### Data Transfer Selection
-- **One-time, large**: Snowball/Snowmobile
+- **One-time, large**: Snowball (Snowmobile retired 2024)
 - **Ongoing sync**: DataSync
 - **High bandwidth**: Direct Connect
 - **Hybrid storage**: Storage Gateway

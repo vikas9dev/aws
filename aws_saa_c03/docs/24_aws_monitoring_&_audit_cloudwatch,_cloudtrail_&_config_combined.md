@@ -218,7 +218,7 @@ CloudWatch Logs can be exported to various destinations:
 ![CloudWatch Logs Subscriptions](./img/cloudwatch-logs-subscriptions.png)
 
 *   Provides a real-time stream of log events for processing and analysis.
-* We can create up to two subscription filters per log group.
+* We can create up to **five** subscription filters per log group (raised from two — older exam questions may still say two).
 *   Destinations: Kinesis Data Streams, Kinesis Data Firehose, or Lambda.
 *   Use subscription filters to specify which log events to deliver.
     *   **Kinesis Data Streams:** Ideal for integration with Kinesis Data Firehose, Kinesis Data Analytics, Amazon EC2, or Lambda.
@@ -302,7 +302,7 @@ CloudWatch Logs allows you to monitor, store, and access your log files from var
     *   Kinesis Data Streams
     *   Kinesis Data Firehose
     *   Lambda
-*   You can create up to two subscription filters per log group.
+*   You can create up to five subscription filters per log group (older material says two).
 *   This enables real-time log processing and analysis.
 
 ### Retention Settings ⏳
@@ -977,7 +977,7 @@ To analyze these long-term logs in S3, you can use Amazon Athena, a serverless s
 
 In summary:
 
-*   Management Events, Data Events, and Insights Events are stored in CloudTrail for 90 days.
+*   Only Management Events are kept in the CloudTrail Event history, for 90 days. Data Events and Insights Events are not shown there. You see them only if you create a trail or a CloudTrail Lake event data store.
 *   For long-term retention, log these events to S3 buckets.
 *   Use Athena to analyze the logs stored in S3.
 
@@ -1078,7 +1078,7 @@ You can aggregate data across regions and accounts to centralize it. Configurati
 
 What types of rules can you use in Config?
 
-*   **AWS Managed Config Rules:** There are over 75 pre-built rules. ✅
+*   **AWS Managed Config Rules:** There are over 800 pre-built rules (older course material says "over 75"). ✅
 *   **Custom Config Rules:** Define your own rules using Lambda functions. ⚙️
 
 📌 **Example:**
@@ -1091,7 +1091,7 @@ Rules can be triggered:
 *   On configuration change. 🔄
     📌 **Example:** Evaluate the type of an EBS disk whenever its configuration changes.
 *   At regular time intervals. ⏰
-    📌 **Example:** Every two hours, ensure all EBS disks are of type `gp2`.
+    📌 **Example:** Every three hours, ensure all EBS disks are of type `gp2`. (Periodic rules can run every 1, 3, 6, 12 or 24 hours. 24 hours is the default.)
 
 ⚠️ **Warning:** **Config Rules are for compliance monitoring only. They do not prevent actions and do not replace security mechanisms** like IAM. Config provides an overview of your configuration and resource compliance.
 
@@ -1426,7 +1426,7 @@ You have enabled AWS Config to monitor Security Groups if there's unrestricted S
 
 <summary>Explanation</summary>
 
-AWS Config Remediations allow you to automatically correct non-compliant resources by triggering actions (e.g., AWS Lambda functions or SSM documents) to restore them to a compliant state. In this case, it can fix Security Groups with unrestricted SSH access.
+AWS Config Remediations allow you to automatically correct non-compliant resources by running SSM Automation documents (which can in turn invoke a Lambda function) to restore them to a compliant state. In this case, it can fix Security Groups with unrestricted SSH access.
 
 **Answer:** A) AWS Config Remediations
 

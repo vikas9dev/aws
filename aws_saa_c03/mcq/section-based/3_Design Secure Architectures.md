@@ -205,7 +205,7 @@ The key requirements are:
 If you want to serve private content through CloudFront and you're trying to decide whether to use signed URLs or signed cookies, consider the following:
 
 1. Signed URLs are best for the following cases:
-   – You want to use an RTMP distribution. Signed cookies aren't supported for RTMP distributions.
+   – You want to use an RTMP distribution. Signed cookies aren't supported for RTMP distributions. (Note: CloudFront removed RTMP distributions on 31 Dec 2020, so this point is history only.)
    – You want to restrict access to individual files, for example, an installation download for your application.
    – Your users are using a client (for example, a custom HTTP client) that doesn't support cookies.
 
@@ -449,7 +449,7 @@ The requirements explicitly state:
   Protects stored data but **does not control client authentication**.
 
 - ❌ **🅓 IAM authentication token**
-  IAM authentication for Redis is **not supported**. Redis AUTH does not integrate with IAM-generated tokens.
+  ElastiCache **does** support IAM authentication (Valkey 7.2+ / Redis OSS 7.0+, with in-transit encryption on). But the IAM token is valid for only **15 minutes**, so it is short-lived. The question asks for **long-lived** credentials, so Redis AUTH is still the answer.
 
 ### Key takeaway 📌
 
@@ -578,6 +578,8 @@ To make S3 objects publicly readable over the Internet:
 * ✅ Use **object-level public read permissions**
 * ✅ Or apply a **bucket policy granting public `GetObject` access**
 * ❌ CORS and IAM alone do **not** make objects public
+
+> ⚠️ Note (2026): Since **April 2023**, every new bucket has **S3 Block Public Access** on and **ACLs disabled** (Object Ownership = bucket owner enforced). So both answers work only after you turn off Block Public Access, and the per-object public-read option also needs ACLs turned back on. The exam answer is still 🅑 and 🅓.
 
 </details>
 

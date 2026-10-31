@@ -19,7 +19,7 @@
   - ✅ Celebrity recognition
   - ✅ Content moderation
   - ✅ Text detection
-  - ✅ Pathing (sports analysis)
+  - ⚠️ Pathing (sports analysis) — People Pathing was discontinued on 31 Oct 2025
 
 ### Content Moderation
 - **Purpose**: Detect inappropriate/offensive content

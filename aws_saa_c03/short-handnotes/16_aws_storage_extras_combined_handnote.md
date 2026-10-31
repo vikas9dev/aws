@@ -12,8 +12,9 @@
 
 #### gp3 (General Purpose SSD)
 - ✅ **Latest generation** (recommended)
-- ✅ **3,000 IOPS** baseline (up to 16,000 IOPS)
-- ✅ **125 MB/s** baseline throughput (up to 1,000 MB/s)
+- ✅ **3,000 IOPS** baseline (up to **80,000 IOPS**; was 16,000 before Sep 2025)
+- ✅ **125 MB/s** baseline throughput (up to **2,000 MiB/s**; was 1,000 MB/s)
+- ✅ Size up to **64 TiB** (was 16 TiB)
 - ✅ **$0.08/GB-month**
 
 #### gp2 (General Purpose SSD)
@@ -22,7 +23,7 @@
 - ✅ **$0.10/GB-month**
 
 #### io1/io2 (Provisioned IOPS SSD)
-- ✅ **Up to 64,000 IOPS** (io2 Block Express: 256,000 IOPS)
+- ✅ **io1: up to 64,000 IOPS**. **io2** is Block Express for all volumes since Apr 2025: up to **256,000 IOPS**, 4,000 MiB/s, 64 TiB, 99.999% durability
 - ✅ **Consistent low latency**
 - ✅ **Use cases**: Databases, I/O-intensive workloads
 - ✅ **io2**: More durable, same price as io1
@@ -56,9 +57,10 @@
 
 ### EFS Performance Modes
 - **General Purpose**: Low latency, web servers
-- **Max I/O**: Higher latency, higher throughput, big data
+- **Max I/O**: Higher latency, higher throughput, big data (AWS now recommends General Purpose; Elastic throughput and One Zone file systems do not support Max I/O)
 
 ### EFS Throughput Modes
+- **Elastic** (default and recommended): Scales up and down with the workload, pay for what you use
 - **Bursting**: Scales with file system size
 - **Provisioned**: Set throughput regardless of size
 
@@ -73,7 +75,7 @@
 - ✅ **Encryption**: At rest & in transit
 
 ### EFS Pricing
-- **Storage**: $0.30/GB-month (Standard), $0.025/GB-month (IA)
+- **Storage**: $0.30/GB-month (Standard), $0.016/GB-month (IA, cut from $0.025 in Nov 2023), $0.008/GB-month (Archive)
 - **Throughput**: Bursting (included), Provisioned ($6/MBps-month)
 
 ---
@@ -120,10 +122,12 @@
 
 ### Snowball Edge
 - **Physical device** for data transfer
-- **80 TB** or **42 TB** usable storage
+- **210 TB** (Storage Optimized) or **28 TB** NVMe (Compute Optimized). The older 80 TB / 42 TB models were discontinued in Nov 2024
+- ⚠️ Closed to new customers since Nov 7, 2025 (AWS suggests DataSync or AWS Data Transfer Terminal)
 - **Use cases**: Large data transfers, offline processing
 
 ### Snowmobile
+- ⚠️ **Retired in 2024** — keep only for older exam questions
 - **Exabyte-scale** data transfer
 - **45-foot shipping container**
 - **Up to 100 PB** per Snowmobile

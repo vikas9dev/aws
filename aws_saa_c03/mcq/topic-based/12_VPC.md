@@ -79,7 +79,7 @@ This means **traffic cannot flow through a peered VPC to reach another network**
 * Internet via IGW
 * Private subnets via NAT Gateways
 * AWS services via Gateway Endpoints (e.g., S3)
-* ClassicLink (for IPv6)
+* ClassicLink (for IPv6) — ClassicLink was retired with EC2-Classic in Aug 2023
 
 So even if **VPC-1 ↔ VPC-2** are peered, and **VPC-2 ↔ On-Prem** are connected (via VPN or Direct Connect),
 ➡️ **VPC-1 cannot route traffic through VPC-2 to reach on-premises**, and vice versa.

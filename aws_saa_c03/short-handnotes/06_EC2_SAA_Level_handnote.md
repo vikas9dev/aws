@@ -42,10 +42,8 @@
 - ✅ **Private IP**: Usually remains same
 
 ### Elastic IP Pricing 💰
-- **Free**: When attached to running instance
-- **Cost**: ~$0.005/hour (~$3.50/month) if:
-  - Allocated but not attached
-  - Attached to stopped instance
+- **Cost**: ~$0.005/hour (~$3.60/month) for every Elastic IP, attached or not (since 1 Feb 2024)
+- ⚠️ Older material says an EIP is free when attached to a running instance — no longer true
 - **Free Tier**: 750 hours/month free public IPv4
 
 ---

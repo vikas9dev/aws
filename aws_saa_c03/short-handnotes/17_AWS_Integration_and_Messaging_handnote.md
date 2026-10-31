@@ -48,7 +48,7 @@
 - ✅ **Topics**: Communication channels
 - ✅ **Subscriptions**: Email, SMS, HTTP/HTTPS, SQS, Lambda, etc.
 - ✅ **Message filtering**: Filter by attributes
-- ✅ **FIFO Topics**: Exactly-once delivery, ordering
+- ✅ **FIFO Topics**: Exactly-once delivery, ordering (subscribers must be SQS queues)
 
 ### SNS Integrations
 - **Email/Email-JSON**: Email notifications
@@ -149,7 +149,7 @@
 
 ### What is Kinesis?
 - **Real-time streaming data platform** for collecting, processing, and analyzing streaming data
-- **Multiple services**: Data Streams (real-time streaming), Data Firehose (data loading), Data Analytics (real-time analytics)
+- **Multiple services**: Data Streams (real-time streaming), Data Firehose (data loading), Data Analytics (real-time analytics — now Amazon Managed Service for Apache Flink)
 
 ### Kinesis Data Streams
 - **Real-time streaming** data
@@ -165,7 +165,7 @@
 
 ### Kinesis Data Analytics
 - **Real-time analytics** on streaming data
-- **SQL queries** on streams
+- **SQL queries** on streams — ⚠️ Kinesis Data Analytics for SQL was discontinued on 27 Jan 2026. Use Amazon Managed Service for Apache Flink (renamed from Kinesis Data Analytics for Apache Flink in Aug 2023) or Flink Studio for SQL. Older exam questions may still name it.
 - **Use cases**: Real-time dashboards, alerts
 
 ---

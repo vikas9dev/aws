@@ -88,7 +88,7 @@
 ## 🛡️ IAM SECURITY
 
 ### Password Policies
-- **Minimum length**: 8-128 characters
+- **Minimum length**: 6-128 characters (default policy: 8)
 - **Character requirements**: Uppercase, lowercase, numbers, symbols
 - **Password expiration**: 1-1095 days
 - **Password reuse**: Prevent reuse of last N passwords
@@ -96,8 +96,8 @@
 ### Multi-Factor Authentication (MFA)
 - ✅ **Virtual MFA**: Mobile app (Google Authenticator, etc.)
 - ✅ **Hardware MFA**: Physical device
-- ✅ **U2F Security Key**: FIDO-compliant
-- ✅ **Best practice**: Enable MFA for root account & privileged users
+- ✅ **U2F Security Key**: FIDO-compliant (now called FIDO security key / passkey)
+- ✅ **Best practice**: Enable MFA for root account & privileged users (root MFA is enforced by AWS for all account types since Jun 2025)
 
 ### Access Keys
 - **Access Key ID**: Public identifier

@@ -197,7 +197,7 @@ There are two main types of KMS keys:
 
 *   **AWS Managed Keys:** Automatic rotation every one year.
 *   **Customer Managed Keys:** You can enable automatic rotation and set the period, or perform on-demand rotation.
-*   **Imported KMS Keys:** Manual rotation only.
+*   **Imported KMS Keys:** No automatic rotation. You can rotate them on demand (import new key material, then rotate), or rotate manually.
 *   📝 **Note:** Leverage an alias for key rotation.
 
 ### KMS Key Scope
@@ -845,7 +845,7 @@ This section demonstrates how to use AWS Lambda to retrieve parameters from the 
 
 1.  Create a new Lambda function.
 2.  Name the function: `helloWorldSSM`.
-3.  Choose the runtime: Python 3.7 (or any Python 3.x version).
+3.  Choose the runtime: any supported Python 3.x version (the course used Python 3.7, which Lambda deprecated in Dec 2023 — you can no longer create functions with it).
 4.  For permissions, create a new role with basic Lambda permissions. This role will allow the function to write to CloudWatch Logs.
     *   The role will be named `helloWorldSSM-role-<8 character random string>`.
 5.  Click "Create function".
@@ -1138,7 +1138,7 @@ Imagine you have an Application Load Balancer (ALB) connected to an Auto Scaling
     *   CloudFront Distributions
     *   APIs on API Gateway
 
-⚠️ **Warning:** ACM cannot be directly used with EC2 instances for public certificates. Public certificates cannot be extracted from ACM.
+⚠️ **Warning:** A normal (free) ACM public certificate cannot be used directly on EC2 instances, and its private key cannot be extracted. Since Jun 2025, ACM also offers **exportable** public certificates (paid, per domain) that you can install on EC2 or on-premises. Older exam questions assume public certificates can never be exported.
 
 ### Requesting a Public Certificate
 
@@ -1157,7 +1157,7 @@ Here's the process to request a public certificate:
 
 ### Automatic Renewal
 
-ACM automatically renews ACM-generated certificates 60 days before expiry, providing peace of mind.
+ACM automatically renews ACM-generated certificates before they expire. Since Feb 2026, new public certificates are valid for at most 198 days and are renewed **45 days** before expiry (older 395-day certificates renew 60 days before expiry — older exam questions may say 60 days).
 
 ### Importing Certificates
 
@@ -1235,7 +1235,7 @@ You can set rules to filter based on:
 *   HTTP headers, HTTP body, URI strings protects from common attacks - like SQL injection and cross-site scripting ( XSS ).
 *   Size constraints: To limit request sizes (e.g., up to 2MB).
 *   Geo match: To allow or block specific countries.
-*   Rate-based rules: To count requests per IP for DDoS protection. 📌 **Example:** Prevent an IP from sending more than 10 requests per second.
+*   Rate-based rules: To count requests per IP for DDoS protection. 📌 **Example:** Block an IP that sends more than 1,000 requests in 5 minutes. The rate is counted over an evaluation window of 1, 2, 5 or 10 minutes (5 is the default), not per second. The lowest limit you can set is 10.
 
 Web ACLs are regional, except for CloudFront, where they are defined globally.
 
@@ -1392,7 +1392,7 @@ To use WAF, you create a **Web ACL (Access Control List)**. Here's how:
             *   Amazon IP Reputation List: Allows access only to reputable IPs.
             *   Anonymous IP List: Blocks IPs from VPNs, proxies, etc.
             *   Known Bad Inputs: Blocks known malicious inputs.
-5.  **Rule Capacity:** Each rule has a capacity, and the maximum capacity for a Web ACL is 1500. This limits the number of rules you can have.
+5.  **Rule Capacity:** Each rule has a capacity (WCUs). The basic Web ACL price includes up to 1,500 WCUs. You can go up to 5,000 WCUs per Web ACL, but each WCU above 1,500 costs extra. Older exam questions may say the maximum is 1,500. This limits the number of rules you can have.
 6.  **Default Action:** If a request doesn't match any rule, the default action is to allow it. Otherwise, it will be blocked.
 7.  **Rule Priorities:** Set the order in which rules are evaluated (Move the rules Up and Down).
 8.  **Metrics:** Configure metrics for monitoring.
@@ -1522,7 +1522,7 @@ GuardDuty analyzes various input data sources to detect threats:
 
 *   **CloudTrail Event Logs:** Looks for unusual API calls and unauthorized deployments. This includes:
     *   Management events (e.g., create VPC Subnet).
-    *   Data events (e.g., get object, list objects, delete objects on S3).
+    *   Data events on S3 (e.g., get object, list objects, delete objects) — only when you turn on the optional **S3 Protection** feature. They are not a foundational source.
 *   **VPC Flow Logs:** Monitors for unusual internet traffic and IP addresses.
 *   **DNS Logs:** Detects EC2 instances sending encoded data within DNS queries, which could indicate a compromise.
 
@@ -1578,7 +1578,7 @@ Let's break down each of these.
 
 ### EC2 Instances 💻
 
-Amazon Inspector leverages the AWS Systems Manager (SSM) agent on your EC2 instances to assess their security. It analyzes:
+Amazon Inspector leverages the AWS Systems Manager (SSM) agent on your EC2 instances to assess their security. (Since 2024 it can also scan EC2 instances without the agent, using EBS snapshots — called agentless or hybrid scanning.) It analyzes:
 
 *   Unintended network accessibility
 *   The running operating system for known vulnerabilities
@@ -1673,7 +1673,9 @@ When you enable **Automatic Rotation** on your **KMS Key**, the backing key is r
 
 AWS Key Management Service (KMS) supports automatic key rotation for customer-managed KMS keys. When enabled, AWS automatically generates a new cryptographic backing key every 12 months (1 year). The key ID remains the same, but a new underlying key material is created and used for future encrypt operations. Older backing keys are retained to decrypt data encrypted in the past, ensuring backward compatibility and seamless access.
 
-Therefore, the backing key rotation occurs every 1 year.
+Therefore, the backing key rotation occurs every 1 year by default.
+
+> ⚠️ Note (2026): Since Apr 2024 you can set a custom rotation period from 90 to 2,560 days. 1 year (365 days) is still the default, so "1 year" stays the correct answer here.
 
 </details>
 
@@ -1693,15 +1695,17 @@ You have created a **Customer-managed CMK** in KMS that you use to encrypt both 
 
 ✅ **Correct Answer**: 1. Re-configure your KMS CMK and enable Automatic Key Rotation, and configure the Retention Period with 180 days
 
-AWS KMS supports **automatic key rotation** for **customer-managed CMKs**, but the rotation occurs every **1 year** by default. To comply with a 6-month rotation policy, you must adjust the retention and rotation strategy of your CMK accordingly.
+AWS KMS supports **automatic key rotation** for **customer-managed CMKs**. The rotation occurs every **1 year** by default. Since Apr 2024 you can set a custom **rotation period** from 90 to 2,560 days. (The option text says "Retention Period", but the KMS setting is called the **rotation period**.)
 
-By **reconfiguring the CMK** and enabling **automatic key rotation** while setting the **retention period to 180 days**, you ensure:
+By **reconfiguring the CMK** and enabling **automatic key rotation** with a **rotation period of 180 days**, you ensure:
 
 * Keys are rotated **every 6 months** as per policy
-* Older backed keys are kept long enough to **decrypt previously encrypted data**
+* Older backing keys are kept until the KMS key itself is deleted, so you can always **decrypt previously encrypted data**
 * No need for manual CMK creation or alias management
 
 This solution meets compliance while maintaining operational efficiency and seamless decryption.
+
+> ⚠️ Note (2026): Before Apr 2024 the rotation period was fixed at 1 year. So older answer keys mark option 3 (manual rotation: create a new key and move the alias) as correct. With current KMS, option 1 is the better answer.
 
 </details>
 

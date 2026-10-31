@@ -502,12 +502,12 @@ These are cost-effective storage options with low latency. They are suitable for
 *   Virtual desktops
 *   Development and test environments
 
-Sizes range from 1 GB to 16 TB.
+Sizes range from 1 GB to 16 TB for gp2, and from 1 GB to **64 TiB** for gp3 (gp3 was raised from 16 TiB in Sep 2025).
 
 #### gp3 (Newer Generation)
 
 *   Baseline: 3,000 IOPS and 125 MB/s throughput.
-*   Scalable: Can increase IOPS up to 16,000 and throughput up to 1,000 MB/s independently. 🚀
+*   Scalable: Can increase IOPS up to **80,000** and throughput up to **2,000 MiB/s** independently (raised from 16,000 IOPS and 1,000 MB/s in Sep 2025 — older exam questions may still say 16,000 / 1,000). 🚀
 
 #### gp2 (Older Version)
 
@@ -520,7 +520,7 @@ Sizes range from 1 GB to 16 TB.
 
 ### Provisioned IOPS Volumes: io1 and io2
 
-These are designed for critical business applications that require sustained IOPS performance or high IOPS (more than 16,000).
+These are designed for critical business applications that require sustained IOPS performance or high IOPS (io1: more than 16,000; io2 Block Express: more than 80,000, which is the gp3 maximum).
 
 *   Ideal for database workloads sensitive to storage performance and consistency. 🗄️
 
@@ -535,6 +535,7 @@ These are designed for critical business applications that require sustained IOP
 #### io2 Block Express
 
 *   Size: 4 GB to 64 TB.
+*   Since 30 Apr 2025, **all io2 volumes are io2 Block Express**. Durability is 99.999%, and max throughput is 4,000 MiB/s.
 *   Sub-millisecond latency.
 *   Max IOPS: 256,000.
 *   IOPS to GB ratio: 1,000:1.
@@ -570,7 +571,7 @@ These are designed for critical business applications that require sustained IOP
 *   **General Purpose SSD (gp2/gp3) vs. Provisioned IOPS SSD (io1/io2):** Use Provisioned IOPS for databases.
 *   **st1 and sc1:** Use for high throughput and lowest cost.
 
-📝 **Note:** If you need more than 32,000 IOPS, you need EC2 Nitro instances with io1 or io2 volumes.
+📝 **Note:** If you need more than 32,000 IOPS, you need EC2 Nitro instances with io1, io2 or gp3 volumes (gp3 now goes up to 80,000 IOPS).
 
 ---
 
@@ -721,7 +722,7 @@ EFS is well-suited for:
 You can set the performance mode at EFS creation time.
 
 1.  **General Purpose:** (Default) For latency-sensitive use cases like web servers and CMS. 💻
-2.  **Max I/O:** High latency, but higher throughput and highly parallel. Suitable for big data applications and media processing. 🎬
+2.  **Max I/O:** High latency, but higher throughput and highly parallel. Suitable for big data applications and media processing. 🎬 (AWS now calls Max I/O a previous-generation mode and recommends General Purpose for all file systems. Max I/O does not work with Elastic throughput or with One Zone file systems.)
 
 #### c. Throughput Modes
 
@@ -730,7 +731,7 @@ You can set the performance mode at EFS creation time.
 *   **Provisioned:** Allows you to set a specific throughput level regardless of storage size. ⚙️
     *   📌 **Example:** You can provision 1 GBps for 1 terabyte of storage. This decouples throughput from storage.
 *   **Elastic:** Automatically scales throughput up and down based on your workload. Great for unpredictable workloads. 💫
-    *   📌 **Example:** Up to 3 GBps for reads and 1 GBps for writes based on workload.
+    *   📌 **Example:** Up to 20–60 GiBps for reads and 1–5 GiBps for writes per file system, depending on the Region (older material says 3 GBps / 1 GBps).
 
 ### Storage Classes
 
@@ -795,7 +796,7 @@ Let's dive into using the Amazon Elastic File System (EFS) service.
         *   **Enhanced:** 
             *   **Elastic:** 
                 *   Recommended for workloads with unpredictable I/O. **Choose this for our demo.**
-                *   Automatically scales I/O based on demand. It can scale 0 GBps to 3 GBps within no time.
+                *   Automatically scales I/O based on demand. It can scale from 0 up to tens of GiBps of reads (20–60 GiBps, depending on the Region) within no time.
                 *   Pay only for what you use.
             *   **Provisioned:**
                 *   You have to specify the required throughput in advance.
@@ -1025,7 +1026,7 @@ Because your requirement is **310,000 IOPS**, which is extremely high and **beyo
 
 ### **1. io2 maximum IOPS is much lower than 310,000**
 
-* **Standard io2 max:** ~**64,000 IOPS**
+* **io2 max:** **256,000 IOPS** — since Apr 2025 every io2 volume is io2 Block Express (older material says standard io2 = ~64,000 IOPS)
 * **io2 Block Express max:** **256,000 IOPS**
 
 Your requirement: **310,000 IOPS**
@@ -1057,7 +1058,7 @@ So **only Instance Store** can comfortably support a workload requiring **310,00
 | ------------------------- | -------------- | ----------------------- |
 | gp2                       | ~16,000        | ❌                       |
 | io1                       | 64,000         | ❌                       |
-| io2                       | 64,000         | ❌                       |
+| io2 (all Block Express since Apr 2025) | 256,000 | ❌                       |
 | io2 Block Express         | 256,000        | ❌                       |
 | EC2 Instance Store (NVMe) | **1,000,000+** | ✅                       |
 

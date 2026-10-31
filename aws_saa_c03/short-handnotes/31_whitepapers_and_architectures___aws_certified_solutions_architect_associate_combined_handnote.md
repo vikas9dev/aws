@@ -68,7 +68,7 @@
 
 ### Check Sets
 - **Core Checks**: Available to all (limited)
-- **Full Checks**: Business/Enterprise Support required
+- **Full Checks**: Business/Enterprise Support required (since the 2026 plan change: Business Support+, Enterprise or Unified Operations)
 
 ### Core Security Checks (Free)
 - ✅ Bucket Permissions
@@ -130,7 +130,7 @@
 2. **Pillars are Synergistic**: Not trade-offs
 3. **Well-Architected Tool**: Review architectures, get recommendations
 4. **Trusted Advisor**: Account assessment, checks in 6 categories
-5. **Full Checks**: Require Business/Enterprise Support
+5. **Full Checks**: Require Business/Enterprise Support (now Business Support+, Enterprise or Unified Operations)
 6. **Architecture Center**: 2,000+ reference architectures
 7. **Solutions Library**: Deployable solutions with templates
 8. **Core Principles**: Auto-scaling, testing, automation, evolution
@@ -145,8 +145,8 @@
 - **Lenses**: Framework, FTR, Serverless, SaaS, Custom
 
 ### Trusted Advisor
-- **Free**: Core security checks
-- **Paid**: Full checks (Business/Enterprise Support)
+- **Free**: Core security checks + all Service Limits checks
+- **Paid**: Full checks (Business/Enterprise Support; now Business Support+, Enterprise or Unified Operations)
 - **Categories**: Cost, Performance, Security, Fault Tolerance, Limits, Operations
 
 ### Architecture Resources
