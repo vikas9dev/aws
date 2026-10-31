@@ -40,3 +40,16 @@ These notes keep only what helps in a design round. 🎯 Each service is explain
 1. 🏛️ **Start with the map:** [01 Reference Architectures](system_design/01_reference_architectures.md). It shows how the pieces fit together.
 2. 🔥 **Then the core four** — they come up in almost every design round: 🗃️ [02 Databases](system_design/02_databases.md) → 📨 [03 Messaging](system_design/03_messaging_and_streaming.md) → ⚡ [04 Caching](system_design/04_caching_and_edge.md) → ⚙️ [05 Compute](system_design/05_compute_and_scaling.md).
 3. 📖 **Then the depth topics:** 🛡️ [06 Reliability](system_design/06_reliability_and_dr.md) → 🌐 [07 Networking](system_design/07_networking.md) → 🔐 [08 Security](system_design/08_security.md) → 🪣 [09 Storage](system_design/09_storage.md) → 🔭 [10 Observability](system_design/10_observability.md).
+
+
+---
+
+## 🤝 Found a Mistake? Want to Contribute?
+
+AWS changes often, so some limits or features in these notes may go out of date. Help keep them correct:
+
+- 🐞 **Report it:** [open an issue](https://github.com/vikas9dev/aws/issues/new). Say which file and line is wrong, what the correct fact is, and add a link to the AWS docs page that shows it.
+- 🛠️ **Fix it yourself:** fork the repo, make the change, and open a pull request. Please add the AWS source link in the PR description.
+- 💡 **Suggest a topic:** open an issue for a missing service, a better diagram, or a new interview question.
+
+Every correction helps the next person who reads these notes. 🙏
