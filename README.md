@@ -204,6 +204,7 @@ AWS changes often, so some limits or features in these notes may go out of date.
 
 - 🐞 **Report it:** [open an issue](https://github.com/vikas9dev/aws/issues/new). Say which file and line is wrong, what the correct fact is, and add a link to the AWS docs page that shows it.
 - 🛠️ **Fix it yourself:** fork the repo, make the change, and open a pull request. Please add the AWS source link in the PR description.
+- 💬 **Ask a question:** use [Discussions](https://github.com/vikas9dev/aws/discussions) for questions, study tips or ideas. Keep Issues for mistakes that need a fix.
 - 💡 **Suggest a topic:** open an issue for a missing service, a better diagram, or a new interview question.
 
 Every correction helps the next person who reads these notes. 🙏
