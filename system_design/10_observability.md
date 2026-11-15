@@ -44,6 +44,20 @@
 
 ## 1. Which Service Answers Which Question
 
+#### 📖 Story first — five ways to watch a hospital
+
+A hospital uses five different tools. Each tool answers a different question.
+
+- 💓 **The heart monitor** at the bed shows numbers every minute: pulse, blood pressure. It beeps when a number crosses a line.
+- 📜 **The nurse's notebook** says what happened to this patient at 2:10 and which medicine they got.
+- 🧵 **The patient's file** travels with them: reception → X-ray → lab → doctor. Each desk writes its time, so you see where the patient waited.
+- 🕵️ **The security register** at the store room says who took a key, changed a lock, or entered — and when.
+- 📋 **The inspector's checklist** says if the fire exits are open and the fridge is cold. It also shows how they looked last week.
+
+The first three watch the **patient**. The last two watch the **building**.
+
+Now in exact terms:
+
 | Question | Service | Data |
 |---|---|---|
 | 💓 "Is my system healthy **now**?" | **CloudWatch Metrics + Alarms** | Numbers over time |
@@ -119,6 +133,17 @@ graph LR
 
 ### Basic ideas
 
+#### 📖 Story first — electricity meters in a housing society
+
+- 🏢 A housing society tracks electricity use. Each meter is one **metric**.
+- 🏷️ Each meter has a label, like `Tower=A, Flat=101`. These labels are the **dimensions**.
+- 💰 Every new label combination means a new meter. Each meter has its own monthly rent.
+- ✅ 3 towers × 100 flats = 300 meters. That is fine.
+- ❌ Now someone adds a label `Visitor=<name>`. Every visitor creates a new meter. You get thousands of meters, each one billed, each one almost empty.
+- 🙅 That is what happens when you put a user ID or request ID in a dimension.
+
+Now in exact terms:
+
 - 📈 A **metric** is a time series in a **namespace** (`AWS/ApplicationELB`, `AWS/SQS`, or your own).
 - 🏷️ **Dimensions** are name/value pairs that identify it (`LoadBalancer=…`, `QueueName=…`). Up to **30** per metric.
 - 💰 Each new combination of dimension values is a **separate metric** (and a separate cost).
@@ -157,6 +182,17 @@ graph LR
 
 ### Failure modes
 
+#### 📖 Story first — the tiffin service that "looks fine"
+
+- 🍱 A tiffin service delivers 100 lunches.
+- ⏱️ 98 lunches arrive in 20 minutes. 2 lunches arrive after 3 hours (180 minutes).
+- 🧮 Average = (98 × 20 + 2 × 180) ÷ 100 = **23.2 minutes**. The owner thinks all is well.
+- 😠 But 2 customers got lunch at dinner time. They call to complain.
+- 📊 **p99** asks: "Within what time do 99 out of 100 lunches arrive?" Here the answer is **180 minutes**, because the 99th lunch is a late one.
+- 💡 The average shows the typical lunch. The p99 shows the angry customer.
+
+Now in exact terms:
+
 | ⚠️ Failure | What goes wrong | ✅ What to do |
 |---|---|---|
 | **Averages hide pain** | An average latency of 80 ms can hide a p99 of 3 s | Alarm on **p99** (or p95) |
@@ -190,6 +226,20 @@ graph LR
 
 ### How an alarm works
 
+#### 📖 Story first — the night guard and the water tank
+
+- 💧 A night guard checks the water tank level every 10 minutes. That gap is the **period**.
+- 📏 The rule: wake the secretary if the level is below the red mark. That mark is the **threshold**.
+- 🌊 One low reading may be a wave in the water. So the rule is stricter: **3 low readings out of the last 5 checks** → wake the secretary. This is **M of N**.
+- 🚦 The guard's board shows one of three states:
+  - all fine (`OK`)
+  - wake the secretary (`ALARM`)
+  - "not enough readings yet" (`INSUFFICIENT_DATA`)
+- 🕳️ Sometimes the gauge shows nothing. The society decides in advance: skip it, count it as fine, or count it as bad.
+- 🫀 A second guard must blow a whistle every hour. Here **no whistle is bad news**: silence means the guard is asleep or hurt. That is missing data treated as **breaching**.
+
+Now in exact terms:
+
 - 👀 **What it watches:** **one metric** (or a metric math expression) over a **period**.
 - 🚦 **States:** `OK`, `ALARM`, `INSUFFICIENT_DATA`.
 - 🔕 **M of N datapoints** (for example 3 of 5 one-minute periods) stops one noisy minute from paging someone.
@@ -205,6 +255,18 @@ graph LR
 > 🖼️ *With 3 evaluation periods, three breaching periods in a row fire the alarm; one spike alone does not.* Source: [Alarm evaluation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/alarm-evaluation.html) · License: CC BY-SA 4.0
 
 ### Composite alarms
+
+#### 📖 Story first — when to call the fire brigade
+
+- 🔥 A building has a smoke sensor and a heat sensor.
+- 🍳 Each sensor alone gives false alarms: smoke from cooking, heat on a summer afternoon.
+- 💡 So each sensor only lights a lamp on the guard's panel. It does **not** call anyone.
+- 🧩 One combined rule makes the call: smoke **AND** heat together → call the fire brigade.
+- 🪔 On Diwali night the secretary sets the system to **mute**, because fireworks are planned.
+
+The sensors are child alarms. The combined rule is the composite alarm. The mute is the actions suppressor.
+
+Now in exact terms:
 
 🧩 A composite alarm combines other alarms with `AND`, `OR`, `NOT`.
 
@@ -318,6 +380,17 @@ fields @timestamp, orderId, @message
 
 ### Metric filters
 
+#### 📖 Story first — the tally clerk at the post office
+
+- 📒 A post office keeps a complaints register. Clerks write each complaint as one line.
+- 🔢 Head office says: "Count every line that says **parcel lost**. Send us the count every minute." A tally clerk sits next to the register and counts.
+- ⚠️ The tally clerk starts **today**. Last month's pages are not counted.
+- 📮 Head office can also ask for a different job. "Photocopy every **parcel lost** line. Post it to us right away." This sends the lines themselves, not a count.
+
+The tally clerk is a **metric filter**. The photocopy job is a **subscription filter** (next part).
+
+Now in exact terms:
+
 🔢 A metric filter turns matching log lines into a **CloudWatch metric**. Then you can alarm on it.
 
 - 📏 **Example:** count lines with `"level":"ERROR"` and `"errorCode":"PAYMENT_TIMEOUT"` → alarm when > 10 per minute.
@@ -415,6 +488,17 @@ graph LR
 
 ### Main ideas
 
+#### 📖 Story first — one courier docket number
+
+- 📦 You send a parcel from Pune to Guwahati. It gets one **docket number**. That is the **trace ID**.
+- 🏭 The parcel passes 4 hubs. Each hub scans the docket and writes its in-time and out-time. Each hub's record is a **segment** (or **span**).
+- 🗺️ Head office joins all scans with the same docket number. Now it sees the whole route, and that one hub held the parcel for 2 days.
+- 🏷️ Each hub must copy the docket number onto the new label. If one hub forgets, the trail breaks into two "different" parcels. This is the **trace header** being dropped.
+- 🎲 Tracking every parcel costs too much. So head office tracks the first parcel each second, plus 5% of the rest. That is **sampling**.
+- 🔑 A tag like `customer = Ravi` lets staff search for the parcel (**annotation**). A free note on the label cannot be searched (**metadata**).
+
+Now in exact terms:
+
 | Term | Meaning |
 |---|---|
 | 🧵 **Trace** | One request end to end, with one trace ID |
@@ -492,6 +576,20 @@ graph LR
 
 ### What problem it solves
 
+#### 📖 Story first — the society's key register
+
+- 📒 The office of a housing society keeps a register. Someone takes a master key, changes a lock, or signs in. Each time, the clerk writes one line.
+- ✍️ The line says who, when, from which gate, and if it was allowed.
+- ✅ This register is always on. The office keeps the last **90 days** at the desk for free.
+- 🗄️ Should it also log every single opening of every locker in the bank vault? That is far too many lines. The society does it **only for the vault with valuables**, and pays extra.
+- 🔒 To keep pages longer, the office sends copies to a **locked archive room in another building**. A thief inside this building cannot tear them out.
+- 🐢 Copies reach the archive in batches, a few minutes late.
+- ❌ The register says **who changed a lock**. It does not say why the lift is slow.
+
+The key register holds **management events**. The locker log holds **data events**. The archive room is a **trail** to S3 in a separate account.
+
+Now in exact terms:
+
 🕵️ CloudTrail records **AWS API calls** in your account: who called, from where, when, what
 parameters, and the result.
 
@@ -543,6 +641,16 @@ parameters, and the result.
 ## 7. AWS Config — Configuration Compliance and Drift
 
 ### What problem it solves
+
+#### 📖 Story first — the inspector's photo album
+
+- 📸 A flat changes: a new door, or a wall removed. Each time, an inspector takes a photo and files it with the date.
+- 📏 The inspector also has a checklist: "every main door has a lock", "no balcony grill removed". Each flat is marked **OK** or **not OK**.
+- 🔧 For some "not OK" items, a repair team comes and fixes them.
+- ⚠️ The inspector finds a missing lock only **after** it is removed. The inspector cannot stop it. To stop it, the society needs a rule that forbids it up front.
+- 🕵️ The album shows what the door looked like last Tuesday. It does **not** show who removed the lock. That is the key register (CloudTrail).
+
+Now in exact terms (photos = configuration items, checklist = rules, repair team = remediation):
 
 📋 AWS Config records the **configuration** of each resource over time, and checks it against
 **rules**. It answers:

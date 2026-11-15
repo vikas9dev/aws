@@ -61,6 +61,18 @@ It does not teach queue theory again. For the general ideas, read these first:
 
 ## 1. The Five Services in One Picture
 
+#### 📖 Story first — the token counter, the loudspeaker and the notice board
+
+Think of three ways a housing society can pass on information.
+
+- 🎫 **Token counter (a queue).** You take a token. The first free clerk calls it and serves you. Then the token is torn up. Each token goes to **one** clerk only. More clerks finish more work.
+- 📣 **Loudspeaker (pub/sub).** The office makes one announcement. Everyone at home hears it **now**. Nothing is written down, so it is not kept for later.
+- 📋 **Notice board (a log).** Notices are numbered and stay pinned for a fixed time, for example one week. Every resident reads at their own pace. Reading a notice does **not** remove it. Each resident remembers "I read up to notice 57".
+
+So a token counter spreads **work**. A notice board shares **data**. A loudspeaker tells everyone **at once**.
+
+Now in exact terms:
+
 🧩 Each service answers a different question:
 
 | Service | One-line job | Model |
@@ -108,6 +120,21 @@ graph LR
 - 🛡️ If the worker is down, messages wait in the queue.
 
 ### Standard vs FIFO
+
+#### 📖 Story first — deposit slips at a bank
+
+A bank gets thousands of deposit slips every hour.
+
+- 📥 **Standard way:** all slips go into one big tray. Any free clerk picks any slip. It is very fast, but slips can be done out of order. Now and then the same slip is picked twice.
+- 📁 **FIFO way:** each account number gets **its own file**. Slips in one file are done strictly in order. A clerk finishes the earlier slips before the next one in that file.
+- 👥 Different files go to different clerks **at the same time**. So account A and account B move in parallel.
+- ❌ **Bad setup:** put every slip in **one** file. Now only one clerk can work, and everyone waits in a single line.
+- 🧾 **Inward register:** the front desk notes each slip number. If the **same** slip comes in again within **5 minutes**, the desk refuses it.
+- ⚠️ The register checks only at the front desk. It cannot stop a clerk from doing a slip twice later.
+
+In this story, the account number is the **message group ID** and the slip number is the **deduplication ID**.
+
+Now in exact terms:
 
 | | **Standard** | **FIFO** (First-In, First-Out) |
 |---|---|---|
@@ -219,6 +246,23 @@ or turn on content-based dedup (SHA-256 of the body).
 
 ## 3. Visibility Timeout — the Most Common Failure
 
+#### 📖 Story first — the courier office and its timer
+
+A courier office keeps parcels on a shelf. Delivery staff take them one by one.
+
+1. 📦 Ravi takes a parcel. The office **hides** it from the others and starts a **timer** (on SQS the default is 30 seconds).
+2. ✅ Ravi delivers it and calls the office: "done". The office strikes the parcel off the list for good.
+3. ⏱️ If no "done" call comes before the timer ends, the office thinks Ravi failed. It puts the parcel **back on the shelf**.
+4. 🔁 Meena now takes the same parcel. If Ravi was only **slow**, not lost, the customer gets **two** deliveries.
+
+Two ways to get the timer wrong:
+
+- ⚠️ **Too short:** slow but healthy deliveries come back, and parcels go out twice.
+- 🐢 **Too long:** Ravi's bike breaks down. The parcel stays hidden for hours, and nobody else can take it.
+- 💓 **The fix for long trips:** Ravi calls on the way, "still going, give me 10 more minutes". The office extends the timer.
+
+Now in exact terms:
+
 🧩 **How it works:**
 
 1. When a consumer receives a message, SQS hides it from other consumers for the **visibility timeout**.
@@ -304,6 +348,20 @@ Standard queues also allow a per-message delay (`DelaySeconds`).
 ---
 
 ## 4. Dead-Letter Queue and Redrive
+
+#### 📖 Story first — the post office "dead letter" shelf
+
+A letter has a wrong address. The postman cannot deliver it.
+
+- 🔁 **No rule:** the letter goes out, comes back, and goes out again, forever. It wastes the postman's time every day.
+- 🪦 **With a rule:** after **5** failed tries, the letter moves to a separate **"dead letter" shelf**. It is not thrown away.
+- 🔭 Someone must **check that shelf every day**. A shelf nobody checks means letters are quietly lost.
+- 🔁 After the address is fixed, the letters go **back** into normal sorting.
+- 📅 **The date-stamp trap:** a letter keeps its **first** date stamp. Say the shelf throws away letters older than 4 days. A letter that already waited 3 days has only 1 day left on the shelf.
+
+In SQS terms: the 5 tries are `maxReceiveCount`, the shelf is the **DLQ**, and sending letters back is **redrive**. The date-stamp trap applies to Standard queues.
+
+Now in exact terms:
 
 🪦 A **DLQ** is a normal queue. The source queue's **redrive policy** says: after
 `maxReceiveCount` receives, move the message to the DLQ.
@@ -453,6 +511,24 @@ graph LR
 
 ### EC2 / ECS workers with Auto Scaling
 
+#### 📖 Story first — how many bank counters to open
+
+A bank manager must decide how many counters to keep open.
+
+- 😴 **Wrong signal — "how busy the clerks look".** Many clerks sit waiting on the phone for the head office. They look relaxed, but the token line keeps growing.
+- 🎫 **Right signal — "tokens waiting per open counter".** Count the waiting tokens and divide by the open counters.
+- 🎯 **Pick a target.** Each customer takes 0.5 minutes, and nobody should wait more than 30 minutes. So one counter can carry **60** waiting tokens. Above that, open a counter. Below it, close one.
+- ⏳ **Also watch the oldest token.** "How long has the first person waited?" is what customers actually feel.
+- 🐢 **Close counters slowly.** Never shut a counter in the middle of serving a customer.
+
+Here clerk busyness is CPU, and the token count is the SQS backlog.
+
+<p align="center"><img src="./img/03-asg-sqs-backlog.png" alt="An SQS queue backlog and the Auto Scaling group capacity feed a custom metric, backlog per instance, in CloudWatch; a target tracking scaling policy uses it to launch and terminate processing servers" width="520"/></p>
+
+> 🖼️ *Backlog per instance is the number you publish. Target tracking adds or removes servers to keep it near the target.* Source: [Scaling policy based on Amazon SQS](https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-using-sqs-queue.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
+
 > ⚠️ **Trap:** CPU is the wrong signal for a queue worker. A worker blocked on I/O has low CPU but a growing backlog.
 
 📈 **Scale on backlog per instance:**
@@ -544,6 +620,28 @@ public SQSBatchResponse handleRequest(SQSEvent event, Context context) {
 - ⚠️ **No storage.** If a subscriber is down and retries run out, the message is lost — unless the subscription has its own DLQ.
 
 ### SNS → SQS fan-out (the standard pattern)
+
+#### 📖 Story first — one circular, a letterbox for each department
+
+A housing society office sends a circular: "Flat 302 booking is cancelled".
+
+- 📢 The office writes it **once**. It puts a copy in **every** department's letterbox: accounts, maintenance, security.
+- 📬 Each department has **its own letterbox**. If the accounts staff are on leave, the circular waits in their box. The other departments are not affected.
+- ➕ A new department joins? Fix one more letterbox. The office does not change how it sends.
+- 🔎 The refunds desk said, "Send me only circulars about **cancelled** bookings". The office checks this before it drops a copy in their box.
+- ⚠️ **Without letterboxes**, the office hands the circular to a person. If nobody is there after a few tries, that copy can be lost.
+
+In AWS terms:
+
+- 🏢 the office = the **SNS topic**
+- 📬 each letterbox = an **SQS queue**
+- 🔎 the "only cancelled" rule = a **filter policy**
+
+<p align="center"><img src="./img/03-sns-fanout.png" alt="A publisher sends to one SNS topic; the topic copies the message to two SQS queues, and each queue feeds its own EC2 instance" width="520"/></p>
+
+> 🖼️ *One publish to the topic, one copy in each queue. Each queue has its own worker.* Source: [What is Amazon SNS?](https://docs.aws.amazon.com/sns/latest/dg/welcome.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
 
 ```mermaid
 graph LR
@@ -767,6 +865,25 @@ graph LR
 
 ### The outbox pattern on AWS
 
+#### 📖 Story first — the shop ledger and the "to inform" column
+
+A mobile shop sells a phone. It must also tell the courier company to deliver it.
+
+- ❌ **Two-step way:** the shopkeeper writes the sale in the ledger, then phones the courier. The power goes off in between. The sale is in the ledger, but the courier never hears of it.
+- ✅ **Outbox way:** on the **same ledger line**, the shopkeeper writes the sale **and** ticks a "to inform" column. It is one entry, so both are written or neither is.
+- 🧑‍💼 A helper checks the "to inform" column every few minutes. They phone the courier, then mark the line "informed".
+- 🔁 **The catch:** the helper may phone and then forget to mark the line. Next round, they phone again.
+- 🛡️ So the courier checks, "Do I already have a booking for bill 123?" A repeat call does no harm.
+
+In AWS terms:
+
+- 📒 the ledger = the **database**
+- ☑️ the "to inform" column = the **outbox row**
+- 🧑‍💼 the helper = the **relay**
+- 🛡️ the courier's check = the **idempotent consumer**
+
+Now in exact terms:
+
 🧩 **Problem:** "write to the DB, then publish to SNS" is two systems.
 
 - ⚠️ If the service crashes between them, the DB has the change but no event is sent (or the reverse).
@@ -836,6 +953,21 @@ graph LR
 - 👥 Many consumers read the same data independently.
 
 ### Shards and limits
+
+#### 📖 Story first — toll plaza lanes with cameras
+
+A highway toll plaza has several lanes. Each lane is a **shard**.
+
+- 🚗 Each lane can pass only so many vehicles per second. Need more traffic? Open more lanes.
+- 🔢 A fixed rule uses the **vehicle number** to pick the lane. The same vehicle always uses the same lane, so its trips stay **in order**.
+- 🎥 A camera records each lane. Recordings are kept for 24 hours by default, or up to 365 days.
+- 👥 Police, traffic and billing teams all watch the **same** recordings. Each team keeps its own place. Watching does not delete anything.
+- 📺 **Shared cable:** all normal viewers of a lane share one cable. **Enhanced fan-out** gives each team its own cable.
+- 🔥 **Hot lane:** one big transport company sends all its trucks with one number. That one lane jams, while other lanes are empty.
+
+In Kinesis the "fixed rule" is a hash: the stream takes an MD5 hash of the **partition key**. Each shard owns a range of hash values.
+
+Now in exact terms:
 
 | Item | 📏 Value |
 |---|---|
@@ -969,6 +1101,24 @@ graph LR
 ## 13. Step Functions — Orchestration and Sagas
 
 ### Orchestration vs choreography
+
+#### 📖 Story first — planning a wedding
+
+A family plans a wedding. It needs a hall, a caterer and a band.
+
+- 💃 **Choreography — no planner.** The family announces the date. The caterer hears it and books food. The decorator hears it and books flowers. Each vendor acts on their own. Adding a vendor is easy. But nobody sees the whole picture, and a problem is hard to trace.
+- 🎼 **Orchestration — a wedding planner.** The planner has one checklist. They call each vendor in order and decide the next step. Anyone can ask the planner, "Where are we?"
+
+What if a step fails? This is the **saga**:
+
+1. 🏛️ The planner books the hall, then pays the caterer, then books the band.
+2. ❌ The band cancels at the last minute.
+3. ↩️ There is no single "undo everything" button. So the planner **undoes each step in reverse**: get the caterer's refund, then release the hall.
+4. 🔁 A cancel call may be made twice. So "cancel" must be safe to repeat.
+
+The saga diagram below has the same shape: stock = hall, payment = caterer, shipment = band.
+
+Now in exact terms:
 
 | | 💃 **Choreography** (events) | 🎼 **Orchestration** (Step Functions) |
 |---|---|---|

@@ -64,6 +64,19 @@ This file covers how an AWS system **survives failure**. The order is:
 
 ## 1. Availability vs Disaster Recovery
 
+#### 📖 Story first — a generator, a locker and a photocopier
+
+- 🏢 An apartment society has a **spare generator**. When the power fails, it starts in seconds. Nobody has to decide anything. This is **high availability**.
+- 🔥 But a fire can burn the whole building, generator and all. So the society also keeps **copies of all its papers** in a bank locker in another town.
+- 🗓️ After a fire, the committee meets, picks a new place and starts again from the locker copies. This takes days. This is **disaster recovery**.
+- 🖨️ The secretary also has a photocopier that copies **every page the moment it is written**.
+- ✏️ One day someone writes the wrong flat number in the register. Within a second, the photocopy has the **same mistake**.
+- 📅 Only the **dated copy from last week** in the locker still has the right number.
+
+> 🎯 **In one line:** a live copy copies your mistakes too. Only a copy **from a point in time** lets you go back. That is why replication is not a backup.
+
+Now in exact terms:
+
 🧩 These are two different problems. Interviewers often check if you mix them up.
 
 | | 🛡️ **High availability (HA)** | 💥 **Disaster recovery (DR)** |
@@ -141,6 +154,17 @@ This file covers how an AWS system **survives failure**. The order is:
 
 ## 3. RPO, RTO and the Availability Math
 
+#### 📖 Story first — the medical shop's sales notebook
+
+- 📒 A medical shop writes every sale in a notebook. Each night at closing, the owner takes a **photo** of the day's pages and sends it home.
+- 🔥 One day a fire burns the notebook at 6 PM. The last photo is from last night. So **all of today's sales records are lost**. That gap — how much data you lose, counted in time — is the **RPO**.
+- 🏪 The shop opens again in a rented room after **2 days**. The time the shop stays closed is the **RTO**.
+- 📸 Take a photo **every hour** → you lose at most one hour of records. Smaller RPO, but more work every day.
+- 🏬 Keep a **second shop already stocked and open** → you are closed only for minutes. Smaller RTO, but you pay rent for two shops.
+- ⏰ The RTO clock starts **at the fire**, not when the owner hears about it. If the owner learns about it 3 hours late, those 3 hours count too.
+
+Now in exact terms:
+
 | Term | Question it answers | Drives |
 |---|---|---|
 | 💾 **RPO** — Recovery Point Objective | "How much data, in time, can we lose?" | How often you back up or how you replicate |
@@ -188,6 +212,53 @@ graph LR
 ---
 
 ## 4. The Four DR Strategies
+
+#### 📖 Story first — a tiffin service and its second kitchen
+
+A tiffin service cooks 500 lunches a day in one kitchen in Andheri. What if that kitchen floods?
+
+**💾 Option 1 — Backup & restore: recipes in a locker**
+
+- 📋 The recipes and the supplier list sit in a locker. No second kitchen exists.
+- 🛠️ After the flood, they rent a kitchen, buy stoves, buy food and hire cooks. This takes **a day or more**.
+- 💲 Cheapest: they pay only for the locker.
+
+**💡 Option 2 — Pilot light: a stocked fridge, stoves off**
+
+- 🧊 A second kitchen in Thane has a fridge that is **kept stocked and fresh every day**. The food (the data) is always ready.
+- 🔥 But the stoves are off and **no cooks are there**. It cannot send even **one** lunch until cooks arrive and light the stoves.
+- ⏱️ Ready in **tens of minutes**.
+
+<p align="center"><img src="./img/06-dr-pilot-light.png" alt="Pilot light architecture: Route 53 sends all traffic to the active Region with load balancer, front end and application servers in two AZs and an Aurora primary; the second Region has a load balancer and empty Auto Scaling groups with no instances running, plus an Aurora replica fed by Aurora Global Database cross-Region replication" width="520"/></p>
+
+> 🖼️ *In the second Region (right) the Aurora replica is live, but the server groups are empty — "No instances running".* Source: [Disaster recovery options in the cloud](https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-options-in-the-cloud.html) · License: CC BY-SA 4.0
+
+**🔥 Option 3 — Warm standby: one cook already working**
+
+- 👩‍🍳 The Thane kitchen has the fridge **and one cook**, who cooks a few lunches every day.
+- ✅ It can send lunches **right away**. They only need to call more cooks to reach 500.
+- ⏱️ Full speed in **minutes**. They pay one cook's salary every day.
+
+<p align="center"><img src="./img/06-dr-warm-standby.png" alt="Warm standby architecture: the same two-Region layout, but the second Region already runs one front end server and one application server, with an Aurora replica that forwards writes to the Aurora primary" width="520"/></p>
+
+> 🖼️ *Now the second Region runs a small set of servers ("Minimal instances running"). It can serve at once, then scale up.* Source: [Disaster recovery options in the cloud](https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-options-in-the-cloud.html) · License: CC BY-SA 4.0
+
+**🚀 Option 4 — Multi-site active-active: two full kitchens**
+
+- 🏭 Both kitchens have full staff for **all 500** lunches. Each one cooks for half the customers today.
+- 🌊 If Andheri floods, Thane cooks all 500. Customers barely notice.
+- 💲💲 About **twice the cost**. (If Thane is full size but cooks nothing until needed, that is **hot standby**.)
+
+| | Can it send a lunch at once? | Time to full speed | Cost |
+|---|---|---|---|
+| 💾 Recipes in a locker | ❌ No | A day or more | 💲 |
+| 💡 Stocked fridge, stoves off | ❌ No | Tens of minutes | 💲💲 |
+| 🔥 One cook working | ✅ Yes, a few | Minutes | 💲💲💲 |
+| 🚀 Two full kitchens | ✅ Yes, all | Near zero | 💲💲💲💲 |
+
+> 🎯 **In one line:** the more of the second kitchen already runs, the faster you recover. You also pay more every day.
+
+Now in exact terms:
 
 🧭 AWS names four strategies. They go from cheap and slow to expensive and fast.
 
@@ -309,6 +380,23 @@ _⚖️ Left to right: lower RPO/RTO, higher cost, more complexity._
 
 ## 6. Active-Active: Write Conflicts
 
+#### 📖 Story first — one family kitty, two registers
+
+- 🏠 A family keeps a shared kitty. One register is in the Mumbai house, one is in the Delhi house.
+- 📸 When someone writes a line, they send a photo to the other house. It arrives in about **one second**.
+- 💰 Both registers say **₹500**. At the same moment, Asha in Mumbai adds ₹100 and writes **₹600**. Ravi in Delhi also adds ₹100 and writes **₹600**.
+- ⚖️ The photos cross. The rule is "the line with the later time wins". Both lines say ₹600. **One ₹100 is gone** from the record. This is a **lost update**.
+
+**Three ways the family can fix it:**
+
+- 🏠 **One home register.** Only the Mumbai house may write about the kitty. Delhi sends its changes to Mumbai.
+- 📜 **Write entries, not totals.** Asha writes "+₹100, slip 17". Ravi writes "+₹100, slip 18". Both lines survive, and the total is added up: ₹700.
+- 📞 **Call first, then write.** The houses agree on every change before writing it. Always correct, but **every write waits** for the call.
+
+> 🎯 **In one line:** reading from your own register is easy. Writing the same line in two places at once is where data gets lost.
+
+Now in exact terms:
+
 - ✅ **Reads are easy:** **read local** — serve each user from the nearest Region.
 - ⚠️ **Writes are the hard part.** If two Regions accept a write to the same item at the same time, one write must lose.
 
@@ -373,6 +461,20 @@ graph LR
 ---
 
 ## 7. Static Stability and Control Plane vs Data Plane
+
+#### 📖 Story first — cashiers, the head office and a flood day
+
+- 🧾 A bank has 3 branches in one city. **Cashiers** at the counter do one simple job: serve customers. This is the **data plane**.
+- 🏢 The **head office** hires cashiers, opens counters and changes rules. Its work has many steps and approvals. This is the **control plane**.
+- 🌧️ On a flood day, one branch closes. Every bank in the city calls the hiring agency at once. The head office is **slow** or cannot be reached.
+- 📏 On the busiest day, customers need **300 cashiers**.
+  - ❌ **Plan A — 100 per branch.** One branch closes → 200 left. They must hire 100 more **during the flood**, through the slow head office.
+  - ✅ **Plan B — 150 per branch.** One branch closes → **300 left**. Nobody needs to call anyone. This is **static stability**.
+- 💰 The price of Plan B: the bank pays 450 cashiers every day — **150%** of what it needs.
+
+> 🎯 **In one line:** plan your recovery so it needs only the cashiers already at the counter, not a call to head office.
+
+Now in exact terms:
 
 🔗 These two ideas come from the Amazon Builders' Library. They explain **why** some designs survive an AZ failure and others do not.
 
@@ -484,6 +586,20 @@ _🛡️ If cell 2 fails (red), only its customers are hurt — about 1/N of all
 
 ### Shuffle sharding
 
+#### 📖 Story first — 8 ticket counters at a railway station
+
+- 🎫 A station has **8 ticket counters**. Passenger groups (customers) are assigned to counters.
+- 💥 One passenger has a strange request that **freezes the computer** at any counter they visit. This is the **poison pill**.
+- ❌ **Fixed pairs:** the 8 counters work as 4 fixed pairs. A quarter of the groups use each pair. The bad passenger freezes both counters of their pair → **25%** of all groups are stuck.
+- ✅ **Own random pair:** each group gets **its own random pair** from the 8 counters. There are **28** possible pairs.
+  - The bad passenger still freezes their 2 counters.
+  - Another group is fully stuck only if it has the **exact same pair** — about 1 in 28.
+  - Most groups share **at most one** frozen counter. They walk to their other counter (the client retries).
+
+> 🎯 **In one line:** each customer gets a different small set of servers. So one bad customer rarely blocks another customer completely.
+
+Now in exact terms:
+
 - ❌ **Normal sharding:** 8 workers in 4 shards of 2. A poison customer kills its shard → **25%** of customers are down.
 - ✅ **Shuffle sharding:** give **each customer its own random pair** of the 8 workers. There are C(8,2) = **28** possible pairs.
   - A poison customer kills its 2 workers.
@@ -516,6 +632,18 @@ _🛡️ If cell 2 fails (red), only its customers are hurt — about 1/N of all
 ---
 
 ## 9. Retries, Backoff, Jitter and Timeouts
+
+#### 📖 Story first — booking a Tatkal ticket
+
+- 🚆 Tatkal booking opens at 10:00 AM. The booking site is already slow.
+- 🔁 **Too many retries.** You ask a travel agent. The agent asks a sub-agent, who asks another. Five people in a chain. Each one **tries 3 times** before giving up. So one ticket becomes 3 × 3 × 3 × 3 × 3 = **243 tries** at the site.
+- 🌊 **Retries in waves.** The site tells 1,000 people "try again later". Everyone waits the same time, so all 1,000 press the button **at the same second**. Then they all wait twice as long, and hit it together again.
+- 🎲 **Jitter.** Each person instead waits a **random** time, up to the limit. The 1,000 clicks spread out, and the site can handle them.
+- ⏱️ **Timeouts.** You do not wait forever on a frozen page. You also stop if your train leaves before the booking can finish — work after that point is wasted.
+
+> 🎯 **In one line:** retry from one place only, wait longer each time, add randomness, and always set a time limit.
+
+Now in exact terms:
 
 ### Retries can make an outage worse
 
@@ -581,6 +709,18 @@ long backoffMillis(int attempt, long baseMillis, long capMillis) {
 ---
 
 ## 10. Throttling, Load Shedding and Health Checks
+
+#### 📖 Story first — the ration shop and its gate
+
+- 🧾 **Throttling:** each ration card gets at most **5 kg of rice a month**. One family cannot take everyone's share. The limit is **per card** (per caller).
+- 🚪 **Load shedding:** the shop counter can serve about 20 people at a time. When 20 are inside, the guard **closes the gate**. People outside hear "come back later" at once.
+- ⚡ The guard says no **at the gate**. The clerk does not weigh rice first and then send people away.
+- 😵 **Without the guard:** 60 people push inside. The clerk cannot move, everyone waits, and **nobody** gets rice. Useful work falls to zero.
+- ⏱️ A person who left the queue an hour ago should not be served now. Their bag is not there anymore.
+
+> 🎯 **In one line:** throttling is fair shares per card. Load shedding is the gate that protects the shop itself.
+
+Now in exact terms:
 
 ### Throttling (protect from callers)
 
@@ -719,6 +859,19 @@ The pillar groups best practices into **four areas**:
 ## 12. Migrations: DMS + CDC and the 7 Rs
 
 ### Zero-downtime database migration with DMS + CDC
+
+#### 📖 Story first — moving an office while it still works
+
+- 🗄️ An office moves its paper files to a new building. It cannot close for a week.
+- 🪑 **Shelves first.** The movers carry papers, not the labelled shelves and index cards. So the new office **builds its shelves before** the move (the schema).
+- 📦 **Full load.** Over a few days, the movers copy every old file to the new building.
+- 📝 **Changes.** The old office keeps working. It writes every change in a **daily change register**. A runner reads that register and repeats each change in the new office (CDC).
+- 🔀 **Cutover.** On Sunday they stop new work for **10 minutes**. The runner finishes the last pages (lag zero). A board says "We have moved".
+- 🔑 They keep the old office keys for a few days, in case they need to go back.
+
+> 🎯 **In one line:** copy everything once, keep copying the changes, then switch in a short pause.
+
+Now in exact terms:
 
 - 🗃️ **AWS DMS** (Database Migration Service) copies data from a source DB to a target while the source **stays live**.
 - 🔁 **CDC** (change data capture) reads the source's transaction log (MySQL binlog, PostgreSQL WAL (Write-Ahead Log), Oracle redo). It replays every change on the target.

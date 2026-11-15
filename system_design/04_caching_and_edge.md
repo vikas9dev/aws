@@ -111,6 +111,27 @@ graph LR
 
 ### 1.3 Cluster mode disabled vs enabled
 
+#### 📖 Story first — one counter or many counters
+
+- 🏪 A ration shop has **one counter**. All customers queue there.
+- 📈 More customers? The shop can only hire a **faster clerk**. There is still one queue.
+- 🏬 A bigger shop opens **3 counters**. A fixed rule turns each ration card number into a token from **0 to 16,383**.
+  - Counter 1 serves tokens 0–5,460, counter 2 serves 5,461–10,922, counter 3 serves the rest.
+- ➕ To add a counter, the shop moves some token ranges to it. The shop stays open while it does this.
+- 🧭 Every customer must read the board to find their counter. A customer who cannot read the board is lost.
+- ⚠️ One visit can handle several cards only if they have the **same token**. Same counter is not enough.
+  - 👨‍👩‍👧 Fix: write the same **family tag** on both cards. The rule then reads only the tag, so both cards get the same token.
+
+| In the story | In ElastiCache |
+|---|---|
+| One counter, faster clerk | Cluster mode disabled, scale up the node |
+| Many counters, token ranges | Cluster mode enabled, shards own hash slot ranges |
+| Moving token ranges | Online resharding |
+| Reading the board | Cluster-aware client |
+| Family tag | Hash tag, for example `{user42}` |
+
+Now in exact terms:
+
 | | **Cluster mode disabled** | **Cluster mode enabled** |
 |---|---|---|
 | Shards | 1 | Up to **500** shards (node quota applies) |
@@ -155,6 +176,17 @@ Each primary has its replicas in other AZs (not drawn).
 
 ### 1.4 Replication and Multi-AZ failover
 
+#### 📖 Story first — the shop owner and the assistant's copy
+
+- 🧾 A shop owner writes every sale in the main ledger. Then the owner tells the customer "done".
+- ✍️ An assistant in another building copies each entry into a second ledger. The copy happens **a little later**, not at the same moment.
+- 😷 One day the owner falls sick in the middle of the day.
+- 🔁 The manager makes the assistant the new owner. The shop's phone number now rings at the assistant's desk.
+- ⏳ For a short time nobody can record a sale.
+- ❌ The last few sales were written by the owner but not yet copied. They are **gone**, even though those customers already heard "done".
+
+Now in exact terms:
+
 - 🔁 Replication from primary to replicas is **asynchronous**.
 - 🛡️ With **Multi-AZ** on, ElastiCache detects a failed primary and **promotes a replica**. The primary endpoint DNS moves to it.
 - ⏳ The promotion usually takes seconds to under a minute. Writes fail during that window.
@@ -169,6 +201,16 @@ Each primary has its replicas in other AZs (not drawn).
 🌍 **Global Datastore** (Redis/Valkey only): one primary Region, up to 2 secondary read-only Regions, replication lag usually under 1 s. Promote a secondary for Regional DR (Disaster Recovery).
 
 ### 1.5 Memory and eviction
+
+#### 📖 Story first — the office fridge with a sticker rule
+
+- 🧊 An office shares one fridge. A quarter of the space is kept free for the fridge's own needs. Staff cannot fill it to the top.
+- 🏷️ The default rule: the cleaner may throw out only boxes **with an expiry sticker**. Among them, the box nobody touched for the longest time goes first.
+- 📦 Staff keep adding boxes **without stickers**. The fridge fills up. The cleaner is not allowed to throw out anything.
+- ❌ The next person with a new box is turned away at the door.
+- ✅ Fix: change the rule to "**any** box may go, least recently used first". Also put a sticker on every box.
+
+Now in exact terms:
 
 - 📏 ElastiCache reserves part of the memory for overhead (`reserved-memory-percent`, default **25%**). Do not size the cache to 100% of node RAM.
 - 🗑️ Default eviction policy is **`volatile-lru`**: only keys **with a TTL** (Time To Live) can be evicted.
@@ -245,6 +287,21 @@ This section only covers how they map to AWS and how they fail.
 
 ### 2.2 Invalidation — the order matters
 
+#### 📖 Story first — the notice board in the lift
+
+- 📒 The society office keeps the real **register** of the water tanker time.
+- 📋 The lift has a **notice** with a copy of that time. Residents read the notice, because walking to the office is slow.
+- ✏️ When the time changes, the secretary first changes the register. Then the secretary **tears down the notice**. The secretary does not write a new one.
+- 🔁 The next resident finds no notice. That resident checks the register and pins a fresh notice.
+- 💡 Why tear it down? Two secretaries who each write a new notice can pin them in the wrong order. The old time can then stay on top.
+- ⚠️ A small gap remains:
+  1. A slow resident reads the **old** time in the register and starts walking.
+  2. The secretary changes the register and tears down the notice.
+  3. The slow resident reaches the lift and pins the **old** time.
+- 🛡️ So every notice says "valid till" (TTL). The secretary also tears it down once more a minute later.
+
+Now in exact terms:
+
 ✅ **For cache-aside with a database:**
 1. 🗃️ **Write the database first.** Commit the transaction.
 2. 🗑️ **Then delete the cache key** (do not update it).
@@ -275,6 +332,18 @@ This section only covers how they map to AWS and how they fail.
 > 💡 **Tip:** Event-driven invalidation lets you use a long TTL safely.
 
 ### 2.4 Cache stampede (thundering herd)
+
+#### 📖 Story first — the empty lunch tray
+
+- 🍱 An office canteen keeps a **tray of ready lunch boxes** at the counter. The kitchen cooks slowly.
+- ⏰ At exactly 1 PM the tray becomes empty. **500 staff** arrive at the same moment.
+- 🏃 All 500 walk into the kitchen and ask the cook directly. The cook cannot handle it and stops working.
+- 🛡️ What a good canteen does:
+  - 🔒 Only **one person** goes to the kitchen for a refill. Others wait a moment, or take a box from the earlier batch.
+  - 🎲 Trays are refilled at slightly **different times**, so they never all go empty together.
+  - ☕ Each floor keeps a few boxes in its own **small fridge** for the most popular meal.
+
+Now in exact terms:
 
 🧩 **Problem:** A hot key expires. Thousands of requests miss at the same moment and all query the DB.
 
@@ -386,6 +455,17 @@ graph LR
 
 ### 3.4 Cache key and TTL
 
+#### 📖 Story first — the label on the tiffin shelf
+
+- 🍱 A tiffin centre packs boxes and puts them on a shelf. Each box has a **label**.
+- ✅ A customer who asks for a label that is already on the shelf gets a box at once. Nothing is cooked.
+- 🏷️ Label "veg thali": hundreds of customers ask for the same label. The shelf serves almost everyone.
+- 📉 Label "veg thali + customer's phone model + exact address": no two orders match. The kitchen cooks every order fresh. The shelf is useless.
+- 📝 The kitchen may still need the address. So it goes on a **separate slip** for the kitchen, not on the label.
+- 🔒 Danger: Asha's box has her name and diet inside. Someone puts it under the plain label "special thali". Ravi asks for "special thali" and gets **Asha's box**.
+
+Now in exact terms:
+
 🔑 **The cache key** decides which requests share one cached object.
 By default it is the host + path. You add parts with a **cache policy**:
 - 🧩 Query strings, headers, cookies — none, an allow-list, or all.
@@ -413,6 +493,16 @@ By default it is the host + path. You add parts with a **cache policy**:
 > 💡 Keep `index.html` on a short TTL so it points to the new names.
 
 ### 3.6 Private content: signed URLs vs signed cookies
+
+#### 📖 Story first — a ride ticket or a wristband
+
+- 🎫 An amusement park sells a **ticket for one ride**. Anyone who holds the ticket can show it at that ride's gate. (signed URL)
+- 🎢 A visitor who paid for **Zone B** wants all 200 rides in it. A separate ticket per ride is too much work.
+- ⌚ So the park gives a **wristband**: "All rides in Zone B, until 6 PM". (signed cookie)
+- 🙋 The wristband works only if the visitor **keeps wearing it**. A visitor who cannot wear one needs tickets.
+- 🔐 Both carry a stamp from the park office. Every gate knows that stamp and can check it.
+
+Now in exact terms:
 
 | | 🔗 **Signed URL** | 🍪 **Signed cookie** |
 |---|---|---|
@@ -564,6 +654,15 @@ By default it is the host + path. You add parts with a **cache policy**:
 
 ### 5.1 What problem it solves
 
+#### 📖 Story first — two phone numbers answered at the nearest office
+
+- ☎️ A company prints **2 phone numbers** on every bill. The numbers never change.
+- 📍 A caller in Chennai reaches the Chennai office. A caller in Delhi reaches the Delhi office. Same numbers, nearest office answers.
+- 🛣️ The local office passes the call to the head office. It uses the company's **own private line**, not the busy public network.
+- 🔌 The operator does **not** listen to the call and keeps no recordings. The operator only connects it. Any kind of call works.
+
+Now in exact terms:
+
 🧩 **Problem:** Global Accelerator gives you **2 static anycast IPv4 addresses** (dual-stack adds IPv6).
 
 - 📡 **Anycast** = the same IP address is announced from many edge locations. The internet routes each user to the nearest one.
@@ -691,6 +790,21 @@ By default it is the host + path. You add parts with a **cache policy**:
 - 🔒 Allow the Route 53 health checker IP ranges in the security group.
 
 ### 6.5 TTL and DNS caching — the limit on failover speed
+
+#### 📖 Story first — the clinic that moved
+
+- 🏥 A clinic in one area closes suddenly. Patients must now go to its other branch.
+- 🔍 A guard checks the door **every 30 seconds**. After **3** closed checks in a row, the guard reports it. That is already 90 seconds.
+- 📒 The city directory updates the address at once. But the local **enquiry desk** wrote the old address on its board. The board says "valid for 60 seconds", so the desk keeps it until then.
+- 📱 Some patients saved the old address in their own phones. Some of them never check again.
+- 🪑 Some patients are already sitting in the old waiting room. They leave only when someone sends them away.
+- 📏 So the switch takes **minutes**, not seconds.
+
+<p align="center"><img src="./img/04-route53-dns-resolution.png" alt="A user asks a DNS resolver for www.example.com; the resolver asks the root name server, the .com name server and the Route 53 name server, gets the IP 192.0.2.44 back, returns it to the user, and the user's browser then calls the web server at that IP" width="520"/></p>
+
+> 🖼️ *The DNS resolver in the middle is the enquiry desk. Users get their answer from the resolver, not from Route 53. The resolver keeps each answer for the record's TTL, so a change in Route 53 reaches users only after that.* Source: [How internet traffic is routed to your website or web application](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/welcome-dns-service.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
 
 ⚠️ DNS failover is **never instant**. The total time is the sum of three parts:
 

@@ -89,6 +89,20 @@ Each main section answers six things:
 
 ## 2. VPC and CIDR planning
 
+### 📖 Story first — a housing society and its house numbers
+
+- 🏘️ A new housing society gets a **range of house numbers** from the city. This range is the **VPC CIDR**.
+- 📏 A big range, like `/16`, has 65,536 numbers. A small range, like `/28`, has only 16.
+- 🔢 The rule feels backwards at first: a **smaller** number after the `/` means a **bigger** range.
+- 🏢 The society splits its range into **wings**. Each wing stands in one place. A wing is a **subnet**, and the place is one AZ.
+- 🔒 In every wing, **5 numbers are kept back** for the society's own use. Nobody can live there. A wing of 256 numbers has 251 homes.
+- 📮 Two societies in one city both use house numbers 1 to 500. A courier gets a parcel for "house 42". Which society? The courier cannot tell. This is an **overlapping CIDR**.
+- 🧱 A wing cannot grow later without rebuilding it. So the society takes a big range at the start.
+
+The lesson: plan the numbers once, for the whole company, and never let two networks share them.
+
+Now in exact terms:
+
 🧩 **Problem:** You need a private network that you control: your IP ranges, your routes, your firewalls.
 
 - 🌐 A **VPC** (Virtual Private Cloud) is that network. It lives in **one Region** and spans all its AZs.
@@ -262,6 +276,22 @@ graph TD
 
 ## 5. Route tables
 
+### 📖 Story first — the courier office's sorting board
+
+- 📦 A courier office has a **board** on the wall. Each line says: "parcels for this area go in this van."
+- 🧾 The board has three lines:
+  - "Koramangala, Bengaluru" → van 3
+  - "Bengaluru" → van 2
+  - "Anywhere else" → speed post
+- 🎯 A parcel for Koramangala matches all three lines. The clerk picks the **most exact** line: van 3.
+- 🏠 Every board also has one fixed line: "Our own area → deliver by hand." Nobody can erase it.
+- 🚪 Each wing of the society follows exactly **one** board. If that board says "anywhere else → main road", the wing is public.
+- 🛡️ The board only says **which way** a parcel goes. It never checks **who** may send it. That is the guard's job (§7).
+
+Map it back: "anywhere else" is `0.0.0.0/0`. "Most exact line wins" is longest prefix match. "Our own area" is the `local` route. The main road is the IGW.
+
+Now in exact terms:
+
 🧩 **What they do:** Each subnet has exactly one route table. It decides where a packet goes next.
 
 | Rule | Meaning |
@@ -302,6 +332,20 @@ graph TD
 ---
 
 ## 6. NAT Gateway
+
+### 📖 Story first — the office phone exchange
+
+- ☎️ An office has 200 desk phones. No desk has its own outside number. They all share **one main number**.
+- 📞 A clerk at desk 57 calls a supplier. The call goes through the **exchange**. The supplier sees only the main number.
+- 🔁 The exchange notes "desk 57 called this supplier". So the supplier's reply reaches desk 57.
+- 🚫 A stranger calls the main number and asks for desk 57. The exchange connects only calls the office started. The stranger gets nothing.
+- 🔢 The exchange can hold about **55,000 calls at once to the same supplier number**. If desks keep opening new calls and never reuse them, the slots run out.
+- ⏱️ If a call stays silent for **350 seconds**, the exchange cuts it. It tells nobody.
+- 🏢 Each office building should have its **own** exchange. If all buildings share one, a power cut there stops outside calls for everyone.
+
+Map it back: the desks are private instances. The exchange is the NAT Gateway. The main number is its Elastic IP. Each building is one AZ.
+
+Now in exact terms:
 
 🧩 **Problem:** Private instances must call the internet (payment gateways, third-party APIs, OS updates). The internet must not be able to call them.
 
@@ -394,6 +438,24 @@ graph TD
 
 ## 7. Security Groups vs Network ACLs
 
+### 📖 Story first — the flat's door guard and the wing's gate guard
+
+A visitor comes to ask you a question. Two guards stand on the path.
+
+- 🛡️ **Door guard at your flat (security group).**
+  - Has a list of who may come **in**. The list can say "anyone with an app-team badge", not only names.
+  - **Remembers** every visitor they let in. When your answer goes back out, they let it pass. No list check is needed.
+  - Can only say "allow". There is no "never let this person in" line.
+- 🧱 **Gate guard at the wing (NACL).**
+  - Has **two** numbered lists: one for coming in, one for going out.
+  - Reads each list top to bottom. The **first** line that matches decides.
+  - **Remembers nothing.** Can say "allow" and "deny".
+- ⚠️ **The trap:** the gate's "coming in" list allows visitors. But the "going out" list has no line for answers to visitors. Your answer is stopped at the gate. The visitor waits, and nobody tells them why.
+
+Most societies keep the gate open and trust the door guards. They use the gate only to block a known bad group.
+
+Now in exact terms:
+
 🧩 **Problem:** You need firewall rules between tiers, and you need them to be easy to get right.
 
 | | 🛡️ **Security Group (SG)** | 🧱 **Network ACL (NACL)** |
@@ -457,6 +519,33 @@ graph TD
 
 ## 8. VPC Endpoints and PrivateLink
 
+### 📖 Story first — reaching the bank without the highway
+
+Your society is gated. Residents need to visit the bank and some government offices.
+
+- 🚗 **No endpoint.** Residents leave by the main gate and drive on the public highway. The highway charges a **toll for every kg** they carry.
+- 🛤️ **Gateway endpoint.** A private lane goes from the society to **two places only**: the bank and the records office.
+  - The society's road board gets one new line: "to the bank → take the lane".
+  - No toll. Nothing new is built inside the society.
+- 🏪 **Interface endpoint.** An office opens a small **counter inside your society**. The counter has its own house number.
+  - Many offices can do this, not just two.
+  - You pay rent per hour, plus a small fee per kg. It is still much less than the highway toll.
+  - A guard stands at the counter.
+- 📒 The counter works only if the society's directory sends people there. If the directory still shows the office's city address, people keep using the highway.
+- 🏘️ People from a neighbouring society can walk to your counter. They cannot use your private lane. The lane starts only from your own road board.
+
+<p align="center"><img src="./img/07-gateway-endpoints.png" alt="Instances in two private subnets of a VPC send traffic through gateway endpoints to Amazon S3 and DynamoDB, without an internet gateway or NAT gateway" width="520"/></p>
+
+> 🖼️ *The private lane: private subnets reach S3 and DynamoDB through gateway endpoints. There is no NAT and no internet gateway on the path.* Source: [Gateway endpoints - Amazon Virtual Private Cloud](https://docs.aws.amazon.com/vpc/latest/privatelink/gateway-endpoints.html) · License: CC BY-SA 4.0
+
+<p align="center"><img src="./img/07-interface-endpoint.png" alt="Instances in private subnets of two Availability Zones each send traffic to a network interface in their own subnet; both network interfaces belong to one interface VPC endpoint that connects to AWS services" width="520"/></p>
+
+> 🖼️ *The counter inside the society: each AZ gets a network interface (ENI) with a private IP. Both belong to one interface endpoint.* Source: [Access AWS services through AWS PrivateLink - Amazon Virtual Private Cloud](https://docs.aws.amazon.com/vpc/latest/privatelink/privatelink-access-aws-services.html) · License: CC BY-SA 4.0
+
+Map it back: the highway is NAT → IGW at $0.045/GB. The bank and records office are S3 and DynamoDB. The counter is an ENI with a private IP. The directory is private DNS. The guard is a security group.
+
+Now in exact terms:
+
 🧩 **Problem:** A private instance calls S3, DynamoDB, SQS (Simple Queue Service), KMS (Key Management Service) or Secrets Manager.
 - ❌ Without an endpoint, that traffic goes **private subnet → NAT → IGW → public AWS endpoint**.
 - 💰 You pay NAT per GB, and the traffic leaves your VPC.
@@ -511,6 +600,25 @@ graph LR
 | 🪣 **Bucket policy** | Can require `aws:SourceVpce` (only via this endpoint) or `aws:SourceVpc` | Access from the internet, even with valid credentials |
 
 ### PrivateLink to expose your own service
+
+#### 📖 Story first — a tiffin kitchen with a hatch in each office
+
+- 🍱 Meera runs a tiffin kitchen. Office B wants lunch from them every day.
+- 🚧 **Option 1 — build a corridor between the two buildings.** Now anyone can walk anywhere in both buildings. Worse, both buildings number their rooms 1 to 500. "Room 42" now means two rooms.
+- 🪟 **Option 2 — a hatch.** Meera puts a small **hatch** in Office B's wall. The hatch gets a room number from **Office B's own** list.
+  - Office B staff order through the hatch. Food comes back through it.
+  - Meera's cooks cannot walk into Office B through the hatch. It works **one way**.
+  - Only the lunch counter is shared, not the whole kitchen. Clashing room numbers do not matter.
+- 🧑‍🍳 Inside the kitchen, a dispatcher takes each order from the hatch and passes it to a free cook.
+- 📈 Meera can put hatches in hundreds of offices. They approve each office first.
+
+Map it back: the kitchen is the provider VPC. The dispatcher is the NLB plus the endpoint service. The hatch is the consumer's interface endpoint. The corridor is peering.
+
+<p align="center"><img src="./img/07-privatelink-endpoint-service.png" alt="Instances in a service consumer VPC send traffic to VPC endpoint network interfaces in two Availability Zones, which connect to a Network Load Balancer and instances in a separate service provider VPC" width="520"/></p>
+
+> 🖼️ *The consumer VPC (left) has only endpoint ENIs. The provider VPC (right) has the NLB and the service. No route joins the two networks.* Source: [Share your services through AWS PrivateLink - Amazon Virtual Private Cloud](https://docs.aws.amazon.com/vpc/latest/privatelink/privatelink-share-your-services.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
 
 🧩 **Problem:** Team B (another VPC or another account) must call your service. You do not want to connect whole networks.
 
@@ -574,6 +682,25 @@ graph LR
 ---
 
 ## 9. VPC Peering vs Transit Gateway
+
+### 📖 Story first — gates between societies, or one bus stand
+
+- 🚪 **Peering.** Society A and society B open a private gate between them. A and C open another gate.
+- ❌ A resident of B **cannot** walk through A to reach C. A's guard lets B's people into A, and no further. B needs its **own** gate to C.
+- 🔢 With 10 societies, every pair needs its own gate. That is **45 gates**, and both sides of each gate update their road boards.
+- 🚌 **Transit Gateway.** The city builds one **bus stand** in the middle. Each society builds **one** road to it. Now any society can reach any other through the stand.
+- 🎫 The bus stand charges a fee **per kg** carried. A gate between two societies has no such fee. So two societies that send a lot to each other still keep a direct gate.
+- 🪧 The stand has separate route boards. Buses from "prod" and "dev" societies both go to the shared market, but never to each other.
+
+<p align="center"><img src="./img/07-peering-not-transitive.png" alt="VPC A in the middle has one VPC peering connection to VPC B and another to VPC C; there is no connection between VPC B and VPC C" width="520"/></p>
+
+> 🖼️ *A is peered with B and with C. B and C have no peering, so B cannot reach C through A.* Source: [VPC peering configurations with routes to an entire VPC - Amazon Virtual Private Cloud](https://docs.aws.amazon.com/vpc/latest/peering/peering-configurations-full-access.html) · License: CC BY-SA 4.0
+
+<p align="center"><img src="./img/07-transit-gateway-hub.png" alt="A transit gateway in the center with attachments to VPC A (10.1.0.0/16), VPC B (10.2.0.0/16), VPC C (10.3.0.0/16) and a VPN gateway (10.99.99.0/24)" width="520"/></p>
+
+> 🖼️ *The bus stand: three VPCs and a VPN attach once to the Transit Gateway. Note that no two CIDRs overlap.* Source: [How AWS Transit Gateway works - Amazon VPC](https://docs.aws.amazon.com/vpc/latest/tgw/how-transit-gateways-work.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
 
 🧩 **Problem:** Many VPCs (per team, per environment, per account) need to talk to each other and to on-prem.
 
@@ -645,6 +772,25 @@ graph LR
 ---
 
 ## 10. Hybrid connectivity — Site-to-Site VPN vs Direct Connect
+
+### 📖 Story first — a locked box on the highway, or your own private road
+
+A branch office sends cash to the head office every day.
+
+- 🔐 **VPN — a locked box on the public highway.**
+  - The cash goes in a **locked steel box**. A courier drives it on the public highway.
+  - The lock is on from day one. You can start the same day.
+  - Traffic changes every day, so the trip time changes too.
+  - One van carries only so much.
+- 🛣️ **Direct Connect — your own private road.**
+  - You build a **private road** to the head office. It takes weeks or months.
+  - The trip time is the same every day. The road is wide and carries a lot.
+  - ⚠️ But the box on this road has **no lock** by default. Private is not the same as locked. For bank data, you still add a lock.
+- 🛡️ **The backup.** A truck crash on your only private road stops everything. So keep the highway courier as a backup, or build a second road from a different place. The switch happens by itself.
+
+Map it back: the lock is IPsec (or MACsec on DX). One van is one 1.25 Gbps tunnel. The automatic switch is BGP failover.
+
+Now in exact terms:
 
 🧩 **Problem:** An on-prem data center or a bank partner must reach your VPC privately.
 

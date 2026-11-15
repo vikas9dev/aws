@@ -77,6 +77,19 @@
 
 ### The evolution, step by step
 
+#### 📖 Story first — a bank that grows from one counter to many
+
+- 🏦 A small bank has **one counter**. The clerk keeps each customer's half-filled form **on their own desk**. This works, until the clerk falls sick. Then the whole bank stops.
+- 👥 The bank opens **many counters**. A guard at the door (the load balancer) sends each customer to a free counter.
+- ❌ **New problem:** you start a form at counter 1. Next time the guard sends you to counter 3. Your half-filled form is still on desk 1.
+- 🔁 **Fix A — "always go to the same counter"** (sticky sessions). It works, until clerk 1 goes home. Your form leaves with them. Some counters also get long queues.
+- ✅ **Fix B — a shared form cabinet** behind all counters (ElastiCache). Any clerk can pick up your form. Now a clerk can go home at any time, and nothing is lost.
+- 📒 The final account book goes into the bank's **strong room** (Aurora). Photos go to a **shared store room** (S3), not a drawer in one desk (EBS).
+
+The rule: **keep nothing on the counter desk.** Then counters are easy to add and remove.
+
+Now in exact terms:
+
 | Stage | Change | ✅ Problem it solves | ⚠️ New problem it creates |
 |---|---|---|---|
 | 1 | One EC2 (Elastic Compute Cloud) + Elastic IP | It works | Single point of failure; vertical scaling needs downtime |
@@ -221,6 +234,22 @@ graph LR
 
 ### Request flow — "list my todos"
 
+#### 📖 Story first — the apartment gate pass and the locker key
+
+- 🏢 You visit a big apartment complex. The **security guard** checks your ID card. They give you a **gate pass** with your name and an expiry time. This is the **user pool** and its JWT.
+- 🚪 At the lobby door (API Gateway), a second guard only looks at the pass. No pass, or an expired pass, and you do not get in. The people inside (Lambda) never see you.
+- 🔑 You also want to open **your own storage locker** in the basement. The gate pass does not open lockers.
+- 🗝️ So you show the gate pass at the **key office** (the **identity pool**). The office gives you a **temporary key** that opens **only your locker**, and only for a short time.
+- 📦 You carry your big boxes straight to the locker (direct S3 upload). You do not pass them through the lobby.
+
+So the two pools do different jobs. The user pool says **who you are**. The identity pool gives you **AWS keys** for that identity.
+
+<p align="center"><img src="./img/08-cognito-user-and-identity-pool.png" alt="An app signs in to an Amazon Cognito user pool and gets tokens, exchanges the tokens at an identity pool for AWS credentials, and then calls other AWS services such as DynamoDB and S3" width="520"/></p>
+
+> 🖼️ *Follow the numbers: 1. the user pool gives tokens, 2. the identity pool swaps them for AWS credentials, 3. the app calls AWS services directly with those credentials.* Source: [Common Amazon Cognito scenarios](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-scenarios.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
+
 1. 🔐 The app signs in to **Cognito user pool** and gets a JWT (JSON Web Token).
 2. 🚪 It calls `GET /todos` on **API Gateway** with the JWT. The **Cognito authorizer** checks the token — Lambda is not invoked for a bad token.
 3. 📏 API Gateway checks throttling (account and usage-plan limits), then the response cache.
@@ -251,6 +280,22 @@ graph LR
 | DynamoDB partition | 3,000 RCU / 1,000 WCU | Choose a high-cardinality partition key |
 
 ### Bottlenecks and how it scales
+
+#### 📖 Story first — ticket counters at a railway station
+
+- 🚉 **5,000 people** reach the ticket hall every second. Each counter serves one person at a time.
+- ⏱️ If each ticket takes **0.1 s**, about **500 counters** are busy at any moment (5,000 × 0.1).
+- 🐢 Now the printer at each counter slows down. Each ticket takes **1 s**. The same crowd now needs **5,000 counters**.
+- ❌ The station has only **1,000 counters**. The extra people are turned away.
+- 🆕 Opening a **new** counter takes setup time (cold start). A free counter just calls the next person.
+
+Note what changed: not the crowd, but **how long each ticket takes**. A slow printer (a slow database) fills all the counters.
+
+<p align="center"><img src="./img/05-lambda-concurrency-ten-requests.png" alt="Timeline of ten requests handled by six Lambda execution environments, A to F; each new environment runs Init before its first Invoke, and a free environment takes the next request without Init" width="520"/></p>
+
+> 🖼️ *Ten requests need only six environments. Each environment runs Init once, before its first request. After that, a free environment (A to D) takes the next request with no Init.* Source: [Understanding Lambda Event Function scaling](https://docs.aws.amazon.com/lambda/latest/dg/lambda-concurrency.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
 
 - 📏 **Concurrency = RPS (Requests Per Second) × duration.** 5,000 rps × 100 ms = 500 concurrent Lambdas. If DynamoDB slows to 1 s, the same traffic needs 5,000 — over the default quota. So latency of the dependency drives Lambda concurrency.
 - ⚡ **Cold starts** hurt Java the most (often 1–3 s without help). Use **SnapStart** for Java, or provisioned concurrency for the hot path.
@@ -381,6 +426,23 @@ _Q2 and Q3 have their own workers too; they are left out to keep the diagram sma
 
 ### Request flow
 
+#### 📖 Story first — one circular, three department trays
+
+- 📄 A college office receives **one new admission form**. Three departments must work on it: photo ID card, records, and document checking.
+- 📢 The office does not walk to each department. It sends the form to the **notice desk** (the SNS topic).
+- 📥 The notice desk puts **one copy in each department's tray** (one SQS queue per step).
+- ⚙️ Each department picks forms from its own tray, at its own speed.
+- 🐢 The checking department is slow today. Its tray just grows. The ID card department still finishes on time.
+- 🗂️ A form that fails again and again goes to that department's **problem file** (its DLQ), not back in the tray forever.
+
+The office hands over the form **once**. So it can never reach two trays and miss the third.
+
+<p align="center"><img src="./img/03-sns-fanout.png" alt="A publisher sends one message to an SNS topic, which copies it to two SQS queues, each read by its own EC2 instance" width="520"/></p>
+
+> 🖼️ *One message goes into the SNS topic. Each SQS queue gets its own copy, and each consumer reads only its own queue. A3 has three queues, not two.* Source: [What is Amazon SNS?](https://docs.aws.amazon.com/sns/latest/dg/welcome.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
+
 1. 🔒 The client asks the API for an upload URL. The API returns an **S3 pre-signed PUT URL** (short expiry, fixed key like `uploads/<userId>/<uuid>.jpg`).
 2. 🪣 The client uploads straight to S3 (multipart for large files).
 3. 📨 S3 sends an `ObjectCreated` event to an **SNS (Simple Notification Service) topic**.
@@ -421,6 +483,20 @@ _Q2 and Q3 have their own workers too; they are left out to keep the diagram sma
 - 📦 **Large files:** memory and `/tmp` space (up to 10 GB each) in Lambda. Past that, move to ECS.
 
 ### Failure modes
+
+#### 📖 Story first — the courier and the hidden parcel
+
+- 📦 A courier takes a parcel from the shelf. The office **hides** it from other couriers for a fixed time, say **30 minutes** (the visibility timeout).
+- ✅ If the courier marks it "delivered" in time, the office throws away the slip (the message is deleted).
+- ⏰ If 30 minutes pass with no "delivered", the parcel **comes back on the shelf**. A second courier takes it.
+- 😬 But maybe the first courier was **only slow**, not lost. Now two couriers deliver the same parcel.
+- 🔧 **Fix 1:** hide the parcel for much longer than a delivery can take (AWS says at least **6 ×** the Lambda timeout).
+- 🔧 **Fix 2:** the house checks the parcel number at the gate. A second copy of the same parcel changes nothing (an idempotent worker).
+- 🗂️ After **5** failed tries, the parcel goes to the **problem room** (the DLQ). A person looks at it later.
+
+Even with Fix 1, a second copy can still come (SQS standard is at-least-once). So Fix 2 is always needed.
+
+Now in exact terms:
 
 | ⚠️ Failure | Effect | Fix |
 |---|---|---|
@@ -511,6 +587,19 @@ graph LR
 ```
 
 ### Request flow
+
+#### 📖 Story first — a travel agent books a family trip
+
+- 📝 You ask a travel agent for a trip. The agent writes it in the **booking register** as "pending", with a booking number. You get a slip: "request accepted".
+- 👀 The agent's assistant **watches the register**. Each new line starts the work. Nobody has to remember to make a separate phone call (this is the outbox).
+- 🏨 The agent works in order: **hold a hotel room** → **pay for the train tickets** → **book the cab**.
+- ❌ The cab company says "no cabs that day". The agent now **undoes** the done steps, in reverse order: **refund the train tickets** → **release the hotel room**.
+- 🔁 Every call uses the **same booking number**. If the agent calls the hotel twice, the hotel says "already held" and does not hold two rooms.
+- 📒 The agent keeps one notebook with every step and its result. Anyone can see where a trip got stuck.
+
+There is no single "book everything or nothing" button across three companies. So the agent books step by step and undoes steps when needed. This is a **saga**.
+
+Now in exact terms:
 
 1. 🔑 `POST /orders` with an **idempotency key**. The Order Lambda writes the order with status `PENDING`. It uses a conditional put (`attribute_not_exists`), so a retried request does not create a second order. It returns **202 Accepted**.
 2. 📨 **DynamoDB Streams** picks up the new item. **EventBridge Pipes** turns it into an `OrderPlaced` event on an EventBridge bus. This is the **transactional outbox**. The event comes from the same write as the order. So you can never save the order and lose the event.
@@ -727,6 +816,21 @@ graph LR
 
 ### Request flow
 
+#### 📖 Story first — a toll plaza with many lanes
+
+- 🛣️ A highway toll plaza has many **lanes** (shards). Each lane lets through at most **1,000 vehicles a second, or 1 MB of load a second** — whichever comes first.
+- 🚌 For **100 MB/s** of traffic, you need **at least 100 lanes**. Add a few spare lanes for rush hour.
+- 🔢 A fixed rule, based on the vehicle's **group number** (the partition key), picks the lane. All buses of one tour group (one user session) use **the same lane**. So they come out **in the same order** they went in. (The real rule: Kinesis takes an **MD5 hash of the partition key**, and each shard owns a range of hash values.)
+- 📹 Cameras record every lane. The recording is kept for **24 hours** by default (retention). You can replay it if a counting clerk made mistakes.
+- 👥 Two offices watch the same recording: one counts live traffic (Lambda), one files a daily report (Firehose → S3).
+- 🚧 One group with 10,000 buses jams its one lane. Other lanes stay empty. This is a **hot shard**.
+
+<p align="center"><img src="./img/03-kinesis-shards.png" alt="Producers such as EC2 instances, clients, mobile clients and servers send data into an Amazon Kinesis stream made of shards 1 to N; consumers on EC2 read it and write to S3, DynamoDB, Redshift, EMR and Firehose" width="520"/></p>
+
+> 🖼️ *Many producers on the left, one stream split into shards in the middle, and several consumers on the right reading the same stream.* Source: [Amazon Kinesis Data Streams terminology and concepts](https://docs.aws.amazon.com/streams/latest/dev/key-concepts.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
+
 1. 📨 Producers send batches to **Kinesis Data Streams** with `PutRecords`. The **partition key** is the session ID, so one session's events stay in order on one shard. (Browsers send through API Gateway or a small ingest service; they must not hold AWS keys.)
 2. ⚙️ **Lambda** reads each shard in batches and updates per-minute counters in DynamoDB for the live dashboard.
 3. 🪣 **Data Firehose** reads the same stream and buffers it. It converts JSON to **Parquet** using a Glue table schema. It writes to S3 with **dynamic partitioning**, like `dt=2026-10-31/hour=14/`.
@@ -886,6 +990,18 @@ graph LR
 
 ### Bottlenecks and how it scales
 
+#### 📖 Story first — one rank register, one clerk
+
+- 📚 An exam board keeps the **rank list** of 10 million students in **one register**. The register keeps itself sorted, so "who is in the top 100?" and "what is my rank?" are quick to answer.
+- 🧑‍💼 The office has five clerks, but a register sits on **one clerk's desk**. Only that clerk writes in it.
+- 📈 Results arrive at **50,000 a second**. All of them queue at that one clerk.
+- 🗄️ The desk has lots of free space (memory is fine). The clerk's **hands** are the limit (CPU).
+- ❌ Hiring more clerks does not help. The register cannot be torn into pieces.
+- ✅ **Fix:** keep **one register per region**. To get the national top 100, take each region's top 100 and merge them.
+- 👀 Readers can look at **photocopies** of the register (replicas), so the clerk only writes.
+
+Now in exact terms:
+
 - ⚠️ **One sorted set = one key = one shard.** In cluster mode, a key cannot be split. 10 M members fit in memory easily (≈ 1 GB). But 50k writes/s on one key all go to **one node's CPU**. Redis-compatible engines run commands mostly on one thread per node.
 - 🧭 **Fixes:**
   - Batch updates in the Lambda (one pipeline per batch).
@@ -973,6 +1089,23 @@ graph LR
 _A third Region is the same as Region B. Static assets in S3 replicate with CRR (Cross-Region Replication)._
 
 ### Request flow
+
+#### 📖 Story first — a head office and city copies of the price list
+
+- 🏢 A shop chain keeps its **master price list** at the **head office** in one city. Only the head office can change it.
+- 📠 Every change is copied to the **branch copies** in other cities in about **one second**.
+- 🏪 Most customers only read prices. They read the **branch copy in their own city** — fast, no long trip.
+- 🗞️ Even closer, a **kiosk at the street corner** keeps printed copies of the most popular pages (CloudFront). Most people never even reach the branch.
+- ✍️ To **change** something, the request must reach the head office. That trip is slower, and that is fine.
+- 😟 **The catch:** you change your address at the head office. One moment later you read the branch copy. The change has not arrived yet, so you see your **old** address.
+- ✅ **Fix:** for a few seconds after your own change, you read from the head office copy. Everyone else keeps reading their branch copy.
+- 🛒 Shopping carts are different. Each branch keeps its **own** cart book that it can write to. The branches swap changes later.
+
+<p align="center"><img src="./img/01-aurora-global-database.png" alt="An Aurora global database: a primary DB cluster in one Region with a writer and a reader on shared storage, and storage-level replication to a secondary DB cluster in another Region with two readers" width="520"/></p>
+
+> 🖼️ *Only the primary cluster has a writer. Its storage copies changes to the secondary Region, where only readers run.* Source: [Using Amazon Aurora Global Database](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
 
 1. ⚡ **Static assets and cacheable API responses** (product pages, catalog) are served from **CloudFront** edge locations. Most reads end here.
 2. 🌐 Cache misses and dynamic calls go to the origin domain. **Route 53 latency-based routing** with health checks sends them to the nearest healthy Region.

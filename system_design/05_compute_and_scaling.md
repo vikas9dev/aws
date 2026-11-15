@@ -86,6 +86,43 @@ size `xlarge`. In a design round you only need the family.
 
 ### 1.3 Placement groups
 
+#### 📖 Story first — a team on one train
+
+A company sends its staff on a long train trip. The manager decides how to seat them.
+
+In this story:
+- 🚆 the **train** = one Availability Zone (AZ)
+- 🚃 a **coach** = one rack of hardware
+- 🧑‍💼 a **person** = one EC2 instance
+
+**🤝 Option 1 — Cluster: everyone in the same coach**
+
+- ⚡ They sit close together. They talk fast and pass papers quickly.
+- 🔥 If that coach has a problem, **everyone** is stuck together.
+
+**🛡️ Option 2 — Spread: each person in a different coach**
+
+- 🚃 No two people share a coach. A coach problem hits only **one** person.
+- 📏 The limit is **7 people per train**. So this works only for a small, important group.
+
+<p align="center"><img src="./img/05-placement-group-spread.png" alt="A spread placement group: seven instances in one Availability Zone, each in its own separate box of hardware" width="520"/></p>
+
+> 🖼️ *Seven instances in one AZ, each on its own hardware. Seven is the limit per AZ for a spread group.* Source: [Placement strategies for your placement groups](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-strategies.html) · License: CC BY-SA 4.0
+
+**🧱 Option 3 — Partition: each team in its own coach**
+
+- 👥 People sit in **teams**. Each team gets its own coach. A train can hold up to **7 teams**.
+- 🔥 A coach problem hits **one team**, not all.
+- 📋 The manager must plan it: two people who back up each other's work sit in **different** coaches.
+
+<p align="center"><img src="./img/05-placement-group-partition.png" alt="A partition placement group: one Availability Zone with three partitions, each partition holding several instances" width="520"/></p>
+
+> 🖼️ *Three partitions in one AZ. Many instances share a partition, but partitions do not share racks.* Source: [Placement strategies for your placement groups](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-strategies.html) · License: CC BY-SA 4.0
+
+> 🎯 **In one line:** cluster = **speed**, spread = **safety for a few**, partition = **safety for many, in groups**.
+
+Now in exact terms:
+
 🧩 A placement group tells AWS **how close together** to put your instances.
 
 | Strategy | Layout | Gives you | Costs you | Use for |
@@ -99,6 +136,24 @@ size `xlarge`. In a design round you only need the family.
 > two AZs and replicate between them.
 
 ### 1.4 Purchase options — a design trade-off, not a pricing detail
+
+#### 📖 Story first — renting desks in a co-working space
+
+A company needs desks for its staff. The co-working space offers four deals.
+
+- 🪑 **Day pass at full price** — come any day, leave any day. No promise. *(On-demand)*
+- 📝 **1-year or 3-year contract** — up to about 72% cheaper. You pay even on days you do not come. *(Reserved Instances / Savings Plans)*
+- 🏷️ **Empty desks, up to about 90% cheaper** — but when the owner needs the desk back, you get **2 minutes** to pack up and leave. *(Spot)*
+- 📅 **Book 50 desks in one branch for a known event day** — normal price, but the desks are sure to be there. *(Capacity Reservation)*
+
+The smart company mixes them:
+- 📝 Regular staff → contract desks.
+- 🪑 Extra people on busy days → day passes.
+- 🏷️ Work that can stop, save and start again later → cheap empty desks.
+
+> ⚠️ Never put work you cannot save on a cheap desk. Two minutes is not enough to finish it.
+
+Now in exact terms:
 
 | Option | 💰 Discount vs on-demand | Commitment | Can AWS take it back? | Fits |
 |---|---|---|---|---|
@@ -257,6 +312,20 @@ queue workers and batch. The diagram is in §1.4.
 
 ### 2.3 Cooldown, warm-up and health-check grace
 
+#### 📖 Story first — a kitchen manager who hires cooks
+
+A tiffin kitchen hires more cooks when orders pile up. A new cook needs a few minutes to wash hands and set up a station.
+
+- ⏳ **Grace period** — "Do not judge a new cook for the first 5 minutes (300 s)." If the manager checks too early, the new cook looks idle. The manager sends them away and hires another. This repeats forever.
+- 🔥 **Warm-up** — when the manager checks how busy the kitchen is, they **leave out** cooks who are still setting up. Otherwise the kitchen looks overloaded, and the manager hires too many cooks.
+- 🕰️ **Cooldown** — an older, simpler rule: "After I hire someone, I ignore all complaints for 5 minutes."
+
+Two ways to check that a cook is fine:
+- 🚪 "Is the cook in the building?" *(EC2 health check)* — a cook asleep at the station still passes.
+- 🍛 "Can the cook make a dosa right now?" *(ELB health check)* — this finds the sleeping cook.
+
+Now in exact terms:
+
 | Setting | 📏 Default | What it does |
 |---|---|---|
 | **Cooldown** | 300 s | Used by **simple scaling** only. After a scaling action, the ASG ignores new alarms until the cooldown ends |
@@ -274,6 +343,17 @@ queue workers and batch. The diagram is in §1.4.
 | **ELB (Elastic Load Balancing) health check** | Uses the load balancer's HTTP check | ✅ **Turn this on** for any web tier. Otherwise the ASG keeps an instance whose app is dead |
 
 ### 2.4 Lifecycle hooks and warm pools
+
+#### 📖 Story first — the apartment security guard's shift
+
+An apartment society adds and removes security guards as needed.
+
+- 🚀 A **new guard** arrives. Before going on duty, they **stop at the office**: collect keys, read the visitor list. Only then do they start at the gate. *(`Pending:Wait`, then `InService`)*
+- 🛑 A **guard goes off duty**. Before leaving, they **stop for a handover**: finish the visitor at the gate, write the logbook, return the keys. *(`Terminating:Wait`, then `Terminated`)*
+- ⏱️ Each stop has a time limit. By default it is **1 hour**.
+- ⚡ **Warm pool** — some guards have **already** finished the office briefing. They wait in the rest room in uniform. When the society needs a guard, one starts in seconds, not minutes.
+
+Now in exact terms:
 
 - 🪝 **Lifecycle hooks** pause an instance in `Pending:Wait` or `Terminating:Wait`.
   - 📏 Default timeout is **1 hour**.
@@ -465,6 +545,21 @@ This section is about choosing and running the AWS load balancers.
 
 ### 3.3 Sticky sessions — and why to avoid them
 
+#### 📖 Story first — your file is in one clerk's drawer
+
+A bank has 5 counters. Each customer's file sits in the drawer of **one** clerk. So the customer must always go back to **that** clerk.
+
+- ⚖️ Clerk 2 has many busy customers. Clerk 4 sits idle. The bank cannot move the work.
+- 📈 The bank opens a 6th counter. Only **new** customers go there. Clerk 2 is still overloaded.
+- 🤒 Clerk 2 goes home sick. The files in the drawer are gone. Those customers must start again.
+- 🚪 The bank wants to close counter 2 for the day. It must wait for the last customer of clerk 2.
+
+**The fix:**
+- 🗄️ Keep all files in **one shared record room**. Any clerk can fetch any file. *(Redis or DynamoDB)*
+- 📘 Or give each customer a **signed passbook** they bring every time. *(A JWT)*
+
+Now in exact terms:
+
 🧩 **What it is:** sticky sessions send one client to the same target every time.
 
 - The ALB does this with a cookie (`AWSALB` for duration-based; an app cookie for
@@ -497,6 +592,24 @@ deregistration delay.
   delay only gives time; it does not move the connection.
 
 ### 3.5 Cross-zone load balancing
+
+#### 📖 Story first — two buildings, one receptionist in each
+
+An office has **two buildings**. Each building has **one receptionist** at the door. Visitors are split **50/50** between the two receptionists.
+
+- 🏢 Building A has **2 clerks**. Building B has **8 clerks**. 100 visitors arrive.
+
+**🚫 Rule OFF — "send visitors only to clerks in your own building":**
+- Each receptionist gets 50 visitors.
+- Building A: 50 ÷ 2 = **25 visitors per clerk**. 🔥
+- Building B: 50 ÷ 8 = **6.25 visitors per clerk**.
+- The two clerks in A are overloaded. The eight in B are half idle.
+
+**✅ Rule ON — "send visitors to any clerk, in either building":**
+- 100 ÷ 10 = **10 visitors per clerk**. Everyone gets the same share.
+- 🚶 But some visitors now walk to the other building. That takes a little time. For an NLB, AWS also charges for that walk (inter-AZ data).
+
+Now in exact terms:
 
 ```mermaid
 graph TB
@@ -619,6 +732,22 @@ use signed JWTs. Then the tier is stateless and stickiness can be turned off.
 ## 4. Containers — ECS vs EKS vs Fargate
 
 ### 4.1 The two questions
+
+#### 📖 Story first — a tiffin delivery business
+
+A tiffin service must answer **two separate questions**.
+
+**🎛️ Question 1 — who plans the deliveries?** *(the orchestrator)*
+- 📒 **Its own simple planning book** — easy to learn, but it works only in this business. *(ECS)*
+- 📚 **A standard planning system that the whole industry uses** — harder to learn, but staff who know it can work anywhere. Many ready-made tools work with it. *(EKS — Kubernetes)*
+
+**🛵 Question 2 — whose vehicles carry the tiffins?** *(the capacity)*
+- 🛵 **Its own scooters** — cheaper when they are busy all day. But someone must service them and decide how many to buy. *(EC2)*
+- 🚕 **Book a ride for each delivery** — no vehicles to look after. Each trip costs more, and you wait a little for the ride to arrive. *(Fargate)*
+
+> 🎯 The two answers do not depend on each other. Any planner works with any vehicle — so there are 4 combinations.
+
+Now in exact terms:
 
 🧭 Containers on AWS are two separate choices:
 
@@ -776,6 +905,27 @@ without the Fargate limits.
 
 ### 5.3 Concurrency — the number that matters
 
+#### 📖 Story first — a customer helpline
+
+A company runs a helpline. The building has **1,000 seats** for agents. **All teams share** these seats.
+
+- 📞 **200 calls** come in each second. Each call takes **half a second**. So at any moment, **100 agents** are busy. That number is the **concurrency**.
+- 🔥 One day the sales team runs a big offer. Sales calls fill **all 1,000 seats**. Payment calls hear "line busy". *(The noisy-neighbour failure)*
+
+The manager has two tools:
+- 🔒 **Reserved seats** — "100 seats are only for the payments team." Nobody else can take them. The payments team also **cannot use more** than 100. *(Reserved concurrency)*
+- ⚡ **Agents already logged in** — "Keep 50 agents seated, headsets on, system open." They answer at once. The company pays them **even when no call comes**. *(Provisioned concurrency)*
+
+<p align="center"><img src="./img/05-lambda-concurrency-ten-requests.png" alt="Ten requests over time handled by six Lambda execution environments, A to F. Each new environment runs Init before Invoke; later requests reuse a free environment and run Invoke only" width="520"/></p>
+
+> 🖼️ *Ten requests, six environments (A–F). Each new environment runs Init first. Requests 6, 7, 8 and 10 reuse a free environment, so they skip Init.* Source: [Understanding Lambda Event Function scaling](https://docs.aws.amazon.com/lambda/latest/dg/lambda-concurrency.html) · License: CC BY-SA 4.0
+
+<p align="center"><img src="./img/05-lambda-reserved-vs-provisioned.png" alt="Timeline comparing reserved and provisioned concurrency: with reserved concurrency each request after an idle gap runs Init then Invoke; with provisioned concurrency Init runs before the first request and both requests run Invoke only" width="520"/></p>
+
+> 🖼️ *Reserved concurrency only keeps seats. After idle time, Lambda removes the environment, so request 2 runs Init again. Provisioned concurrency runs Init early, so both requests start at once.* Source: [Understanding Lambda Event Function scaling](https://docs.aws.amazon.com/lambda/latest/dg/lambda-concurrency.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
+
 > 📏 **Concurrency = requests per second × average duration in seconds.**  
 > 200 RPS × 0.5 s = 100 concurrent executions.
 
@@ -790,6 +940,25 @@ without the Fargate limits.
 > 🛡️ **Fix:** reserved concurrency on critical functions, or separate AWS accounts per workload.
 
 ### 5.4 Cold starts
+
+#### 📖 Story first — the morning tea stall
+
+A tea stall opens in the morning. The first customer waits while the owner:
+
+1. 📦 brings the supplies *(download code)*,
+2. 🔥 lights the stove *(start the runtime)*,
+3. 🫖 boils the milk and tea *(run the init code)*.
+
+- ☕ The next customers get tea at once from the hot pot. *(A warm start)*
+- 💤 After a long quiet time, the stall closes. The next customer waits again.
+- 👥 A rush comes. The owner opens **new stalls**. Each new stall must light its own stove.
+
+Ways to cut the wait:
+- 🧊 **Keep a flask of ready tea** for new stalls to pour from. *(SnapStart)* ⚠️ But if the flask stall had a token book starting at 1, every copy starts at 1 too. Duplicate tokens. Each stall must start its own token book. *(The `afterRestore` hook)*
+- 🔥 **Pay to keep some stoves lit all day.** *(Provisioned concurrency)*
+- 📦 **Carry fewer supplies.** *(Smaller packages)*
+
+Now in exact terms:
 
 🧩 **What it is:** a cold start happens when Lambda must create a new execution environment:
 

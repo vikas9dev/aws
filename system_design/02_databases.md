@@ -61,13 +61,73 @@ It is **AWS-specific**.
 - 🧑‍💻 The team already knows SQL and the ORM (JPA/Hibernate).
 
 ❌ **Do NOT use it when:**
-- 📈 Writes must scale past one machine → shard by hand, or use DynamoDB / Aurora DSQL (Distributed SQL).
+- 📈 Writes must scale past one machine → Aurora Limitless (managed sharding, §3.7), DynamoDB, or Aurora DSQL (Distributed SQL). Sharding RDS by hand is the last choice.
 - ⚡ You need single-digit-ms reads at any scale with a known key → DynamoDB.
 - 📊 The workload is analytics over billions of rows → Redshift.
 
 ### 1.2 Multi-AZ vs Read Replicas — the core distinction
 
 > 💡 **Key idea:** These two features look similar. They solve **different** problems.
+
+#### 📖 First, a story — the bank branch and its ledger
+
+A busy bank branch has **one head clerk**. Only the head clerk can write in the main ledger
+(deposits, withdrawals). Customers also come to ask "what is my balance?".
+
+In this story:
+- 🏢 a **building** = an Availability Zone (AZ)
+- 📒 the **ledger** = the database
+- ✍️ **writing a line** = a write
+- 🙋 a **balance question** = a read
+
+The branch manager has three ways to protect and help the head clerk.
+
+**🛡️ Option 1 — Multi-AZ instance: one silent backup clerk**
+
+- 🏢 A **backup clerk** sits in **another building** with a copy of the ledger.
+- ✍️ When the head clerk writes a line, the backup writes the same line **at the same time**. The head clerk **waits** until the backup has written it (synchronous). So the backup never misses a line.
+- 🤐 The backup **never talks to customers**. All balance questions still go to the head clerk.
+- 🔥 If the head clerk's building has a fire, the backup **takes over by itself**. Customers must walk to the new counter, so service stops for about **1–2 minutes**. **No line is lost.**
+
+<p align="center"><img src="./img/02-rds-multi-az-instance.png" alt="RDS Multi-AZ DB instance: clients read and write the primary DB instance in one Availability Zone, which replicates synchronously to a standby replica with no read access in another Availability Zone" width="520"/></p>
+
+> 🖼️ *Clients talk only to the primary. The standby in another AZ gets every write at the same time, but nobody can read from it.* Source: [Multi-AZ DB instance deployments](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZSingleStandby.html) · License: CC BY-SA 4.0
+
+**🛡️📈 Option 2 — Multi-AZ DB cluster: two backup clerks who also answer questions**
+
+- 🏢🏢 **Two backup clerks**, each in a **different building**.
+- ✍️ The head clerk waits until **at least one** of them has written the line (semi-synchronous). A written line is never lost.
+- 🙋 Both backups **answer balance questions**. So the head clerk is less busy.
+- 🔥 If the head clerk's building has a fire, one backup takes over **faster** — in **under ~35 seconds**.
+
+<p align="center"><img src="./img/02-rds-multi-az-cluster.png" alt="RDS Multi-AZ DB cluster: one writer DB instance and two reader DB instances in three Availability Zones; clients send reads and writes to the writer and reads to both readers" width="520"/></p>
+
+> 🖼️ *One writer and two readers in three AZs. Clients can read from the readers too.* Source: [Multi-AZ DB cluster deployments](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/multi-az-db-clusters-concepts.html) · License: CC BY-SA 4.0
+
+**📈 Option 3 — Read replica: helpers who copy the ledger a little later**
+
+- 📋 **Helpers** (up to 15) keep their own copy of the ledger. They copy new lines **when they get time**. The head clerk **does not wait** for them (asynchronous).
+- 🙋 Their only job is to **answer balance questions**. This takes load off the head clerk.
+- ⏳ Their copy can be a **few seconds old** (replica lag). A customer who just deposited money may see the old balance.
+- 🔥 If the head clerk's building has a fire, **nobody takes over by itself**. The manager must **choose a helper and promote** them by hand. Lines the helper had not yet copied are **lost**.
+- 🌍 A helper can even sit in **another city** (another Region).
+
+<p align="center"><img src="./img/02-rds-read-replica.png" alt="RDS read replica: clients read and write the RDS DB instance, which replicates asynchronously to a read replica in another Availability Zone that clients use for read access" width="520"/></p>
+
+> 🖼️ *The replica gets writes a little later (asynchronous). Clients use it only for reads.* Source: [Working with DB instance read replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html) · License: CC BY-SA 4.0
+
+**🧠 Remember it with two questions:**
+
+| | Does it **answer reads**? | Does it **take over by itself**? | Can it **lose lines**? |
+|---|---|---|---|
+| 🛡️ 1 silent backup clerk (Multi-AZ instance) | ❌ No | ✅ Yes, 1–2 min | ❌ No |
+| 🛡️📈 2 backup clerks (Multi-AZ cluster) | ✅ Yes | ✅ Yes, < 35 s | ❌ No |
+| 📈 Helpers (read replica) | ✅ Yes | ❌ No — manual promote | ⚠️ Yes, the lag |
+
+> 🎯 **In one line:** Multi-AZ is **insurance** (someone ready to take over). A read replica is
+> **extra hands** (someone to answer questions). The Multi-AZ cluster gives a bit of both.
+
+Now the same thing in exact AWS terms:
 
 | | 🛡️ **Multi-AZ (instance)** | 🛡️ **Multi-AZ DB cluster** | 📈 **Read Replica** |
 |---|---|---|---|
@@ -118,6 +178,21 @@ graph LR
 - ⚡ The 60–120 s window is mostly detection + DNS. RDS Proxy (§2) or the AWS JDBC Driver shortens it.
 
 ### 1.4 Replica lag — the main failure mode of read replicas
+
+#### 📖 Story first — the order that "disappeared"
+
+**ShopKart** (a made-up shopping site) loads its "My orders" page from a **read replica**, to keep load off the primary.
+
+1. 💳 Priya pays for a phone at 9:00:00 PM. The order row is written to the **primary**.
+2. ➡️ The app sends her straight to "My orders". This page reads from the **replica**.
+3. ⏳ It is sale night, so the replica is **3 seconds behind**. It has not copied her order yet.
+4. 😟 The page shows **no new order**. Priya thinks the payment failed and **buys the phone again**.
+5. 📞 Next day: two phones, two charges, one angry customer, one refund ticket.
+
+Nothing was lost. The replica was just **behind** — that gap is **replica lag**.
+The fix is simple: a page that shows **what the user just wrote** must read from the **primary**.
+
+Now in exact terms:
 
 📏 **Definition:** Replica lag = how far the replica is behind the primary. CloudWatch metric: `ReplicaLag` (seconds).
 
@@ -243,6 +318,44 @@ Replication to read replicas is asynchronous. The read after the write can hit a
 
 ### 2.1 The problem: connection storms
 
+#### 📖 Story first — a shopping site on Diwali sale night
+
+**The setup:**
+- 🛒 **ShopKart** (the shop from §1.4) now runs on API Gateway → **Lambda** → **Aurora PostgreSQL**.
+- 🔢 Say the database allows **500 connections** (`max_connections`). Each connection uses DB memory.
+- 🧩 Each Lambda execution environment opens **one DB connection** when it starts. It keeps that connection while it stays warm, often for minutes.
+
+**A normal day:** about 30 Lambda environments are warm, so the DB sees 30 connections. No problem.
+
+**Diwali sale, 8:00 PM:**
+1. 📈 Traffic jumps 30×. Lambda scales to **1,000 environments** in under a minute.
+2. 🔌 All 1,000 try to open a new connection at the same time. Each one needs a TLS handshake + a password check.
+3. 🔥 The DB spends its CPU on these logins, not on queries. Checkout gets slow.
+4. ❌ Environment number 501 gets **"too many connections"**. The customer sees an error on the payment page, in the busiest hour of the year.
+
+**The waste hidden in this:** one checkout request takes about **200 ms**, but it runs SQL for only about **10 ms**. For the other 190 ms, it calls the payment service and builds the response. The connection sits **open and idle** all that time, and between requests too. So the DB is full of connections that are doing nothing.
+
+**The fix — put RDS Proxy in the middle:**
+- 🔁 The Lambdas now connect to the **proxy endpoint**. This is only a change to the connection string; the code stays the same.
+- 🧰 The proxy keeps about **100 warm connections** to Aurora. It opens them once, not on every scale-up.
+- ⏱️ A Lambda borrows a DB connection **only for one transaction** (about 10 ms), then gives it back.
+- ✅ 1,000 Lambdas × 10 ms of SQL in each 200 ms request → only about **50 are using the DB at any moment**. 100 shared connections are enough.
+
+**8:30 PM — the writer fails:**
+- 🚒 Aurora fails over to a new writer.
+- Without the proxy, every Lambda's connection breaks. All 1,000 reconnect together and wait for DNS to point to the new writer. That is a second storm.
+- With the proxy, the Lambdas stay connected to the proxy. The proxy sends traffic to the new writer itself.
+
+**The trap a developer adds later:**
+- 📌 Someone adds `SET search_path = shop` at the start of each session. The proxy cannot share a connection that holds session settings. So it **pins** each Lambda to its own DB connection.
+- 📉 Now the pool stops helping, and the storm is back. The metric `DatabaseConnectionsCurrentlySessionPinned` shows this.
+
+<p align="center"><img src="./img/02-rds-proxy-overview.png" alt="Lambda, EC2 and other apps open many connections to Amazon RDS Proxy, which keeps fewer, managed connections to the Amazon RDS database" width="720"/></p>
+
+> 🖼️ *Many app connections come in to the proxy. The proxy keeps fewer, managed connections to the database.* Source: [Amazon RDS Proxy](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-proxy.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
+
 🧩 **Problem:** A relational database handles a limited number of connections.
 Each connection costs memory on the DB. `max_connections` depends on instance memory.
 
@@ -326,6 +439,24 @@ There the app pool already does the job.
 ## 3. Aurora — Relational on Distributed Storage
 
 ### 3.1 The idea: separate compute from storage
+
+#### 📖 Story first — clerks who share one ledger kept in 6 lockers
+
+In plain RDS (§1.2), **every clerk keeps their own ledger**. The backup copies each line into their own book.
+Aurora works differently:
+
+- 👥 The **clerks** (writer and readers) keep **no ledger of their own**. They only do the work: take requests, think, answer. This is **compute**.
+- 🗄️ There is **one shared ledger**, kept in **6 lockers in 3 buildings** — 2 lockers per building. This is **storage**.
+- ✍️ When the head clerk writes a line, it goes to all 6 lockers. The write **counts as done when 4 of the 6** say "saved". The clerk does not wait for the slow ones.
+- 📖 To read safely, it is enough to check **3 of the 6** lockers.
+- 🔥 If a whole building burns (2 lockers lost), **4 are left**. Writing goes on as normal.
+- ⚡ A new reader clerk can start work **at once**. There is nothing to copy — they read the same shared lockers.
+
+**Why this matters:** in RDS, the backup and each helper must copy everything into their own book.
+In Aurora, nobody copies the ledger. They all read the same lockers. This is why Aurora replicas
+have very little lag and failover is faster.
+
+Now in exact terms:
 
 🧩 **The idea:** Aurora is MySQL- or PostgreSQL-compatible. The SQL engine is normal.
 The **storage layer** is new: one shared, distributed volume for the whole cluster.
@@ -434,13 +565,111 @@ graph TB
 | | 🧩 You need an engine Aurora does not support (Oracle, SQL Server) |
 
 > ⚠️ **What Aurora does not fix:** it still has **one writer**. Write throughput is limited by one instance.  
+> 🔗 For more write capacity in one Region, see **Aurora Limitless** (§3.7).  
 > 🔗 For multi-writer SQL across Regions, AWS now offers **Aurora DSQL** (GA: General Availability in 2025, PostgreSQL-compatible, active-active, optimistic concurrency).
 
 🎤 **How to say it in an interview:**
 > "I'd choose Aurora PostgreSQL over plain RDS. Its storage keeps six copies across three AZs
 > with a 4-of-6 write quorum, so losing an AZ does not stop writes. Failover to a replica is
-> usually under 30 seconds. It still has one writer. If writes outgrow one instance, I'd shard or
-> move that access pattern to DynamoDB."
+> usually under 30 seconds. It still has one writer. If writes outgrow one instance, I'd shard
+> with Aurora Limitless on a clear shard key, or move that key-based access pattern to DynamoDB."
+
+### 3.7 Aurora Limitless Database — managed sharding
+
+🧩 **Problem:** Aurora has one writer. When writes or data outgrow one instance, you must shard.
+Sharding by hand means your code routes queries and you move data when you add shards.
+**Aurora Limitless Database** does the sharding for you.
+
+- 🐘 **Aurora PostgreSQL only.** Generally available since late 2024.
+- 🧭 A **router** layer takes each query and sends it to the right **shard**. The app sees one database endpoint.
+- ⚙️ Routers and shards scale like Serverless v2 (in ACUs). AWS adds capacity; you set the limits.
+- 🔁 Transactions can span shards. The router coordinates them.
+
+| Table type | What it means | Use it for |
+|---|---|---|
+| ✂️ **Sharded table** | Rows are split across shards by a **shard key** you choose | Big, write-heavy tables: `loan_application` by `customer_id` |
+| 🤝 **Collocated table** | Sharded on the same key as another table, so matching rows sit on the same shard | Child tables: `loan_document` with its `loan_application` |
+| 📚 **Reference table** | A full copy on every shard | Small, rarely changed lookups: product codes, branch list |
+| 🗃️ **Standard table** | Not sharded; lives in one place | Small tables that are not worth sharding |
+
+```mermaid
+graph LR
+    A["App<br/>one endpoint"] --> R["Router"]
+    R -->|"customer_id 1..N"| S1["Shard 1"]
+    R --> S2["Shard 2"]
+    R --> S3["Shard 3"]
+    R -.->|"cross-shard join"| X["Slower:<br/>touches all shards"]
+
+    classDef info fill:#3B82F6,stroke:#3B82F6,color:#fff
+    classDef success fill:#059669,stroke:#059669,color:#fff
+    classDef warn fill:#D97706,stroke:#D97706,color:#fff
+
+    class A,R info
+    class S1,S2,S3 success
+    class X warn
+```
+
+> ⚠️ **What it does not fix:** the **shard key is still your choice.**
+> - A key with few values or one big tenant gives a **hot shard**, the same problem as a hot DynamoDB partition (§4.3).
+> - A query without the shard key goes to **every** shard. So does a join between tables that are not collocated. Both are slower.
+> - Check feature support and Region availability in the AWS docs before you rely on it.
+
+✅ **Use it when:** relational data, writes really outgrow one Aurora writer, and most queries carry one clear key (`customer_id`, `tenant_id`).  
+❌ **Do NOT use it when:** one writer is still enough (most systems), or the access is pure get/put by key → DynamoDB is simpler.
+
+<details>
+<summary><strong>🤔 Doubt: If we need sharding, is RDS a good choice, or do we have to use Aurora DSQL?</strong></summary>
+
+**Short answer:** RDS cannot shard by itself. Aurora DSQL is one option, but it is not the usual answer to "I need sharding". There are four real choices.
+
+**1. RDS — sharding is your job.** RDS has **one writer per database**. To shard, you run several RDS instances and your app does the routing (for example `customer_id % N`). You own the hard parts:
+- 🔁 Moving data when you add shards (resharding).
+- 🔗 Joins across shards.
+- ⚠️ Transactions across shards — no ACID across instances.
+
+It works, but it costs a lot of ongoing work. Choose it only if you must stay on plain RDS.
+
+**2. First ask: do you need sharding at all?**
+
+| The real problem | Fix — no sharding needed |
+|---|---|
+| 📖 Too many reads | Read replicas, or a cache |
+| ✍️ Too many writes | A bigger single writer goes very far |
+| 🗂️ Too much data | Aurora storage grows to 128 TiB (§3.1) |
+
+Shard only when **write throughput** or **data size** goes past one writer.
+
+**3. Aurora Limitless — AWS's managed sharding (§3.7).** This is the direct answer to "managed sharding on AWS". You still choose the shard key. AWS runs the routers and the shards, and transactions can span shards.
+
+**4. Aurora DSQL — distributed SQL, not sharding you control.**
+- 🌍 Serverless, PostgreSQL-compatible. It scales by itself, so there is **no shard key** to choose.
+- ✍️ Main strength: **active-active writes across Regions**.
+- ⚠️ It uses **optimistic concurrency**. When two transactions change the same rows, one fails at commit. Your code must retry it.
+- ⚠️ It supports only part of PostgreSQL, and it limits transaction size and time. Check the current limits in the AWS docs.
+- 🎯 Pick it for multi-Region writes with SQL — not just for more write capacity in one Region.
+
+**And DynamoDB:** if every access is by key, DynamoDB shards by itself and has no write ceiling. Best when you don't need joins.
+
+| Need | Pick |
+|---|---|
+| Reads too high | Read replicas / cache |
+| Writes too high, key-based access | 🔑 DynamoDB |
+| Writes too high, relational, one clear shard key | ✂️ Aurora Limitless |
+| Multi-Region active-active writes with SQL | 🌍 Aurora DSQL |
+| Must stay on plain RDS | 🧑‍💻 Shard by hand (last choice) |
+
+🎤 **How to say it in an interview:**
+> "First I check if I really need sharding. Read load goes to replicas or a cache, and one
+> Aurora writer scales far. If writes really outgrow one node: for key-based access I use
+> DynamoDB. For relational data with one clear shard key, like `customer_id`, I use Aurora
+> Limitless. If I also need multi-Region active-active writes, I look at Aurora DSQL and accept
+> that some transactions fail and need a retry. Sharding RDS by hand is the last choice, because
+> resharding and cross-shard transactions become my problem."
+
+---
+
+</details>
+<br/>
 
 ### Interview questions
 
@@ -485,6 +714,19 @@ graph TB
 - ❓ The access patterns are still unknown.
 
 ### 4.2 Keys and partitions
+
+#### 📖 Story first — a post office that sorts letters into bins
+
+- 📮 A huge post office gets millions of letters. It has many **sorting bins**, and each bin has its own worker.
+- 🔢 A machine reads the **PIN code** on each letter and uses a fixed rule to pick **one bin**. The same PIN code always goes to the same bin. The PIN code is the **partition key**. The bin is the **partition**.
+- 📅 Inside one bin, the letters are kept **in date order**. So "all letters for PIN 560001 from last week" is fast. The date is the **sort key**.
+- 🔎 To find a letter quickly, you must **give the PIN code**. Without it, someone must search every bin (a **Scan**, §4.6).
+- 🐢 Each bin worker has a **speed limit**: about 3,000 reads and 1,000 writes per second.
+- 🔥 If half of all letters have the **same PIN code**, one bin worker is buried while the others are idle. That is a **hot partition** (§4.3).
+
+> 🎯 **The one rule to remember:** choose a partition key with **many different values** that are used **about equally** — like `user_id`, not `status`.
+
+Now in exact terms:
 
 | Term | Meaning |
 |---|---|
@@ -554,6 +796,19 @@ graph LR
 
 ### 4.5 On-demand vs provisioned
 
+#### 📖 Story first — a mobile data plan
+
+| | ⚡ **Pay per GB** (On-demand) | 🎛️ **Fixed monthly plan** (Provisioned) |
+|---|---|---|
+| What you do | Nothing. You pay for what you use. | You choose a limit in advance, for example 2 GB/day. |
+| Normal days | 💰 Costs more per GB | 💰 Cheaper per GB |
+| A sudden big day | ✅ Works — up to about **2×** your earlier busiest day, at once | ⚠️ You hit the limit and get **slowed down** (throttled) until the plan grows |
+| Best for | You don't know your usage yet | You use about the same amount every day |
+
+In DynamoDB, "data" is **reads and writes**, counted in RCU and WCU (§4.2).
+
+Now in exact terms:
+
 | | ⚡ **On-demand** | 🎛️ **Provisioned (+ auto scaling)** |
 |---|---|---|
 | You set | Nothing (optional max throughput) | RCU / WCU, plus a target usage % |
@@ -577,6 +832,25 @@ graph LR
 - ⚠️ A **filter expression** runs *after* the read. You still pay for every item read.
 
 ### 4.7 LSI vs GSI
+
+#### 📖 Story first — a second way to find the same data
+
+A table can only be searched fast by its **partition key** (§4.2). Say the `GameScores` table uses `UserId`.
+"All games of user 101" is fast. But "the top scores in *Galaxy Invaders*" is not — the data is filed by user, not by game.
+A **secondary index** is a second filing system for the same data.
+
+- 📁 **LSI (Local)** — **same drawer, different order.** You keep filing by `UserId`. Inside each user's folder, you keep a second copy **sorted another way** (for example by score). It must be planned **when the cabinet is built** (at table creation).
+- 🗂️ **GSI (Global)** — **a whole new cabinet.** A clerk keeps a separate cabinet filed by **another key** (for example `GameTitle`). The clerk copies each change into it **a little later**. So for a short time it can be out of date.
+
+<p align="center"><img src="./img/02-dynamodb-gsi-base-table.png" alt="GameScores table with partition key UserId and sort key GameTitle, showing users 101, 102 and 103 with their scores, dates, wins and losses" width="520"/></p>
+
+> 🖼️ *The base table is filed by `UserId`. Finding the top score of one game would mean reading every user.* Source: [Using Global Secondary Indexes in DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html) · License: CC BY-SA 4.0
+
+<p align="center"><img src="./img/02-dynamodb-gsi-index.png" alt="GameTitleIndex, a global secondary index with partition key GameTitle and sort key TopScore, holding the same items regrouped by game" width="260"/></p>
+
+> 🖼️ *The GSI `GameTitleIndex` holds the same items, filed by `GameTitle` and sorted by `TopScore`. Now "top scores in Galaxy Invaders" is one fast query.* Source: [Using Global Secondary Indexes in DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
 
 💡 Secondary indexes give you a second access pattern.
 
@@ -651,6 +925,18 @@ graph LR
 
 ### 5.1 Conditional writes — optimistic locking and idempotency
 
+#### 📖 Story first — booking the last train seat
+
+- 💺 Seat 42 on a train is **empty**. Two people, Asha and Ravi, try to book it at the same moment.
+- ❌ **Without a condition:** both bookings say "put my name on seat 42". The second one quietly **overwrites** the first. Asha thinks she has the seat, but the chart shows Ravi.
+- ✅ **With a condition:** each booking says "put my name on seat 42 **only if it is still empty**". DynamoDB checks and writes in **one step**. Asha's booking wins. Ravi's booking is **refused** with an error, so Ravi knows to pick another seat.
+
+The same idea gives you two more tools:
+- 🆔 **Insert once (idempotency):** "save this payment **only if** this request id is not saved yet". If the app retries, the second try is refused and the customer is not charged twice.
+- 🔢 **Version check (optimistic locking):** "update this account **only if** it is still version 7, the one I read". If someone changed it in between, you read again and retry.
+
+Now in exact terms:
+
 🧩 **How it works:**
 - ✅ A **condition expression** makes a write succeed only if a check on the current item passes.
 - ❌ If the check fails, DynamoDB returns `ConditionalCheckFailedException` and writes nothing.
@@ -705,6 +991,19 @@ UpdateItem  Key = { pk: "ACCOUNT#42" }
 
 ### 5.4 DynamoDB Streams
 
+#### 📖 Story first — the bank's change register
+
+- 📓 Next to the main ledger, the bank keeps a **change register**. Every time a line in the ledger is added, changed or removed, one entry goes into the register: "account 42 changed from ₹10,000 to ₹7,000".
+- 🔢 For **one account**, the entries are always **in order**. Across different accounts there is no fixed order.
+- 🗑️ The register keeps entries for only **24 hours**. Then they are thrown away.
+- 👀 Other teams read the register and react: send an SMS to the customer, update the search system, clear a cache.
+
+The key benefit: the ledger change and the register entry happen **together**.
+You never get "balance changed, but no SMS was ever planned" — the register entry is part of the same write.
+That register is **DynamoDB Streams**.
+
+Now in exact terms:
+
 🧩 **What it is:** Streams give you an ordered log of item changes (insert, modify, remove).
 
 - 📏 Retention: **24 hours**.
@@ -748,6 +1047,20 @@ UpdateItem  Key = { pk: "ACCOUNT#42" }
 - 🛡️ DAX runs inside a VPC on nodes you size. A node failure triggers failover to a replica node.
 
 ### 5.6 Global Tables
+
+#### 📖 Story first — two branches in two cities, one account
+
+- 🏙️ A bank has a branch in **Mumbai** and a branch in **Delhi**. Each keeps a full copy of the ledger. Both can write in it. They send each other their changes, and each change arrives about **1 second later**.
+- ✅ Most of the time this is great. Customers in each city get fast service at their local branch.
+- ⚠️ Now the **same account** is changed in both cities **in the same second**:
+  - Mumbai sets the address to "Pune".
+  - Delhi sets the address to "Noida".
+- 🕒 When the copies meet, the rule is **"the later timestamp wins"**. Delhi's change was a little later, so the address becomes "Noida". **Mumbai's change disappears with no error.**
+
+This is **last writer wins** — the main risk of the default Global Tables mode.
+The safe habit: let **one Region own each item** (for example, an account is always written in its home Region).
+
+Now in exact terms:
 
 🧩 **What it is:** Global Tables replicate one table to several Regions. 🌍 Every Region accepts writes (multi-active).
 
@@ -846,6 +1159,7 @@ UpdateItem  Key = { pk: "ACCOUNT#42" }
 |---|---|---|
 | Relational data, joins, ACID, moderate scale | 🗃️ **RDS** (PostgreSQL / MySQL) | Simple, cheap, known. Multi-AZ for HA. |
 | Same, but large, read-heavy, fast failover, multi-Region DR | 🗃️ **Aurora** | 6-copy storage, 15 low-lag replicas, Global Database. |
+| Relational, writes outgrow one writer, one clear shard key | ✂️ **Aurora Limitless** | Managed sharding for Aurora PostgreSQL. You still pick the shard key. |
 | Relational, active-active across Regions | 🌍 **Aurora DSQL** | Distributed SQL, multi-Region writes. Newer; check feature gaps. |
 | Get / put by key, huge or spiky scale | 🔑 **DynamoDB** | Single-digit ms, no servers. Needs known access patterns. |
 | Microsecond reads of hot keys, sessions, counters, leaderboards | 🧠 **ElastiCache** (Valkey / Redis OSS, open source) | In-memory. See [04_caching_and_edge.md](04_caching_and_edge.md). |

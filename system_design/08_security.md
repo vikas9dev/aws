@@ -61,6 +61,33 @@ Each main section answers six things:
 
 ## 1. IAM for services — roles, never access keys
 
+#### 📖 Story first — the hotel key card
+
+Ravi runs a hotel. Staff need to open rooms. There are two ways to give them access.
+
+**🔑 Way 1 — a metal master key (an access key)**
+
+- 🔑 Each cleaner gets a **metal key** cut at a locksmith. It never stops working.
+- 🕳️ One cleaner loses it at a bus stop. Anyone who finds it can open rooms for **months**.
+- 😟 Nobody knows it is lost until something goes missing.
+
+**💳 Way 2 — a key card from the front desk (an IAM role)**
+
+- 🧹 The hotel defines a **job**: "Floor 3 cleaner". The job says which doors it may open.
+- 💳 When a cleaner starts a shift, the front desk prints a **key card** for that job. It works only for a few hours.
+- 🔁 Before the card stops working, the desk prints a fresh one. The cleaner does not even notice.
+- 🕳️ If a card is lost, it stops working on its own at the end of the shift.
+
+In this story:
+- 🧹 the **job** = the IAM role
+- 🏨 the **front desk** = STS
+- 💳 the **key card** = temporary credentials (1 hour by default, 12 hours at most)
+- 🔁 the **fresh card before expiry** = the SDK's credential chain refreshing them
+
+> 🎯 **In one line:** give the code a *job*, not a *key*. The job hands out short-lived cards.
+
+Now in exact terms:
+
 🧩 **Problem:** Your code calls AWS APIs (S3, SQS (Simple Queue Service), DynamoDB). It needs credentials. Long-lived access keys in config files leak through git, logs, images and laptops.
 
 > 💡 **The rule:**  
@@ -189,6 +216,35 @@ Each main section answers six things:
 
 ## 2. Kubernetes on AWS — IRSA vs EKS Pod Identity
 
+#### 📖 Story first — one apartment building, many flats
+
+An apartment building has many flats. Each flat runs a different small business.
+
+In this story:
+- 🏢 the **building** = an EKS node (one EC2 instance)
+- 🚪 a **flat** = a pod
+- 📛 the **flat number** = the Kubernetes service account
+- 🪪 a **pass** = an IAM role's credentials
+
+**⚠️ The problem — one common pass for the whole building**
+
+- 🪪 The building has **one common pass** (the node's instance role).
+- 🏦 Flat 101 needs the bank vault. Flat 102 needs the warehouse. So the common pass opens **both**.
+- 😟 Now every flat can open the bank vault and the warehouse. One bad tenant can open everything.
+
+**✅ The fix — a pass per flat number. Two ways to get it:**
+
+| | 📮 IRSA | 🛎️ Pod Identity |
+|---|---|---|
+| Who gives the pass | The flat posts a signed letter to the **city office** (STS) | A **desk in the lobby** (the Pod Identity Agent on each node) |
+| The rule for the pass | Names **this exact building** and the flat number | Trusts "any lobby desk", plus a **register** (association): flat → pass |
+| Move to a new building | ⚠️ Rewrite the rule | ✅ Nothing changes |
+
+- 🔍 **What the lobby desk really does:** the Pod Identity Agent does not make the pass itself. It asks the **EKS Auth API** (`AssumeRoleForPodIdentity`), which checks the register and returns the credentials.
+- 🕳️ **The trap:** a flat with no pass of its own can still use the **common pass**. So keep the common pass weak, and block flats from reaching that office.
+
+Now in exact terms:
+
 🧩 **Problem:** Many pods share one EKS node.
 - ⚠️ If they all use the **node's** instance role, every pod gets the union of all permissions.
 - ✅ You need a role **per pod** (per service account).
@@ -236,6 +292,39 @@ Each main section answers six things:
 
 ### Two ways to cross accounts
 
+#### 📖 Story first — two offices and a courier company
+
+A company has two offices: **Office A** (Pune) and **Office B** (Chennai). Priya works in Office A. They need something in Office B.
+
+**🎭 Way 1 — swap your badge for a Chennai badge (AssumeRole)**
+
+- 📋 Office B keeps a list: "Staff from Office A may take a **Chennai badge**" (the trust policy).
+- 🪪 Priya hands in the Pune badge at the Chennai desk and gets a Chennai badge.
+- 🚪 It opens **many** Chennai doors. But while Priya wears it, the **Pune** doors do not open.
+
+**📜 Way 2 — your name on one room's guest list (resource-based policy)**
+
+- 🚪 One Chennai room puts "Priya from Pune" on its **own guest list**.
+- 🪪 Priya keeps the Pune badge, and walks into that **one room** only.
+
+<p align="center"><img src="./img/08-iam-cross-account-role.png" alt="A Production account has a role UpdateApp and an S3 bucket productionapp; a developer in the Development account asks for the role, STS returns role credentials, and the developer updates the bucket with them" width="520"/></p>
+
+> 🖼️ *Way 1 in AWS: the developer from one account assumes a role in the other account, gets STS credentials, and uses them on the bucket.* Source: [Access for an IAM user in another AWS account that you own](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_common-scenarios_aws-accounts.html) · License: CC BY-SA 4.0
+
+**🛵 The trap with outside vendors — the confused courier (confused deputy)**
+
+- 🛵 A courier company picks up goods for many customers. You told them: "You may collect from my warehouse."
+- 🦹 Another customer of the same courier books a pickup and gives **your warehouse address**.
+- 😟 The courier is honest but confused. They collect your goods and hand them to the wrong customer.
+- 🔢 **The fix:** the courier company gives each customer a **unique code** (the external ID). Your guard opens the gate only for **your** code.
+- ✅ The other customer's booking carries **their** code. So your guard says no.
+
+<p align="center"><img src="./img/08-iam-external-id.png" alt="Your account trusts Example Corp's account only if the external ID matches; Example Corp assumes your role with your external ID; another AWS account that gives your role ARN to Example Corp is blocked because its external ID does not match" width="560"/></p>
+
+> 🖼️ *The vendor always sends the external ID of the customer who asked. Another customer's request carries the wrong ID, so your role refuses it.* Source: [The confused deputy problem](https://docs.aws.amazon.com/IAM/latest/UserGuide/confused-deputy.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
+
 | | 🎭 **AssumeRole into the other account** | 📜 **Resource-based policy** (S3, SQS, SNS (Simple Notification Service), KMS, Lambda) |
 |---|---|---|
 | How | Account B has a role. Its trust policy allows account A. A calls `sts:AssumeRole` | The resource in B lists A's role as a `Principal` |
@@ -246,6 +335,28 @@ Each main section answers six things:
 > This stops the **confused deputy** problem — another customer of the vendor tricking it into using your role.
 
 ### Policy evaluation — the rules to say
+
+#### 📖 Story first — the guard at a housing society gate
+
+A housing society has one guard at the gate. A visitor wants to enter. The guard follows fixed rules, in this order:
+
+- 🚫 **No name on any list → no entry.** The guard's default answer is "no".
+- ⛔ **Name on the banned list → no entry.** Even if a resident invited them. The banned list always wins.
+- 🧱 **Society rules only take away.** "No visitors after 10 PM" never lets anyone in. It only blocks people who were invited.
+- 🏠 **Someone from the same society:** their own pass **or** an invitation from the flat is enough.
+- 🤝 **An outsider:** both sides must agree. Their own company sends them, **and** the flat invites them.
+- 🔐 **The locker room is special.** Only the locker room's own list counts. A general invitation does not open it.
+
+In this story:
+- ⛔ the **banned list** = an explicit `Deny`
+- 🧱 **society rules** = SCPs, RCPs and permission boundaries
+- 🔐 the **locker room** = a KMS key and its key policy
+
+<p align="center"><img src="./img/08-iam-scp-effective-permissions.png" alt="Two overlapping boxes, an identity-based policy and an Organizations SCP or RCP; only the checkmarks inside both boxes are labelled effective permissions" width="260"/></p>
+
+> 🖼️ *A guardrail never adds a tick. You get only what is allowed in both boxes.* Source: [Policy evaluation logic](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
 
 1. 🚫 **Default is deny** (implicit deny).
 2. ⛔ **An explicit `Deny` anywhere wins.** Nothing overrides it.
@@ -321,6 +432,36 @@ Each main section answers six things:
 
 ## 4. Cognito — user authentication for the app
 
+#### 📖 Story first — the office reception and the store room
+
+Meena visits an office building. Two different desks help them.
+
+**👤 Desk 1 — reception checks who you are (User Pool)**
+
+- 🪪 Meena shows an Aadhaar card, or a company letter (social or corporate login).
+- 🏷️ Reception prints a **visitor badge** with Meena's name and a stamp. It works for **1 hour**.
+- 🚪 Every office door has a guard. The guard checks the stamp and the time, and lets Meena in.
+- 🔁 Meena also gets a **renewal slip** (valid for 30 days). It prints a new badge when the old one runs out.
+- ⚠️ If someone steals the badge, it still works until its hour is over.
+
+**🔑 Desk 2 — swap the badge for a store-room key (Identity Pool)**
+
+- 📦 The building's **store room** is run by building management, not by the office.
+- 🔁 Meena shows the badge at a second desk and gets a **temporary store-room key**.
+- 🎯 The key opens only Meena's own shelf.
+
+In this story:
+- 🏷️ the **visitor badge** = a JWT (ID / access token)
+- 🚪 the **door guard** = API Gateway or your service checking the JWT
+- 📦 the **store room** = AWS services like S3
+- 🔑 the **store-room key** = temporary AWS credentials from STS
+
+<p align="center"><img src="./img/08-cognito-user-and-identity-pool.png" alt="An app authenticates with a Cognito user pool, which can federate to social sign-in, OIDC, SAML or custom providers, and gets tokens; the app exchanges the tokens with an identity pool for AWS credentials; then it calls other AWS services such as DynamoDB, S3 and API Gateway with those credentials" width="520"/></p>
+
+> 🖼️ *Step 1 is the user pool (who you are). Step 2 is the identity pool (a key for AWS). Most apps need only step 1.* Source: [Common Amazon Cognito scenarios](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-scenarios.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
+
 🧩 **Problem:** Your app's end users must sign up, sign in, reset passwords and use MFA (Multi-Factor Authentication). You do not want to build that, and you want standard tokens your APIs can verify.
 
 | | 👤 **User Pool** | 🔑 **Identity Pool** |
@@ -391,6 +532,27 @@ Each main section answers six things:
 - 🔭 Every call goes to **CloudTrail**.
 
 ### Envelope encryption
+
+#### 📖 Story first — the bank and the sealed envelope
+
+Arjun wants to lock a big trunk of family papers at home. The bank keeps a **master key** in its strong room. That key never leaves the bank.
+
+- 🧳 The trunk is too big to carry to the bank. (KMS `Encrypt` takes at most 4 KB.)
+- 🔑 So Arjun asks the bank for a **new small key**. The bank gives it **twice**:
+  - 🗝️ one **loose key**, and
+  - ✉️ a copy of the same key, sealed in an **envelope** that only the master key can open.
+- 🔒 At home, Arjun locks the trunk with the loose key.
+- 🔥 Arjun burns the loose key. Arjun tapes the sealed envelope to the trunk.
+- 📖 **To open it later:** take only the envelope to the bank. The bank opens it with the master key and gives back the small key. Arjun opens the trunk at home.
+- 🦹 A thief who steals the trunk also gets the envelope. But the envelope is useless without the bank.
+
+In this story:
+- 🏦 the **bank's master key** = your KMS key
+- 🗝️ the **loose key** = the plaintext data key
+- ✉️ the **sealed envelope** = the encrypted data key
+- 🧳 the **trunk** = your data
+
+Now in exact terms:
 
 📏 `Encrypt` takes at most **4 KB**. So you do not send data to KMS. Instead:
 
@@ -506,6 +668,35 @@ Each main section answers six things:
 
 ### How rotation works (single-user vs alternating users)
 
+#### 📖 Story first — changing the door code of an office
+
+An office door has a code lock. For safety, the code must change every month. Staff look up the current code on a **notice board**.
+
+**🧍 Single user — one door, change its code**
+
+- ✍️ The manager writes the new code on a slip, but does not pin it up yet.
+- 🔒 The manager changes the code on the door.
+- 📌 Then the manager pins the new code on the notice board.
+- ⚠️ Between those two steps, someone who arrives with the old code **cannot get in**. People already inside are fine.
+
+**👥 Alternating users — two doors, change the one not in use**
+
+- 🚪 The office has **Door A** and **Door B**. Today the notice board says "use Door A".
+- 🔒 The manager changes the code of **Door B**, which nobody is using. Then the board says "use Door B".
+- ✅ Door A's old code **still works**. Late staff with the old note still get in.
+- 🔁 Next month, the manager changes Door A, and so on.
+
+In this story:
+- 🚪 a **door** = a DB user
+- 📌 the **notice board** = the secret in Secrets Manager
+- 🏷️ the **slip** = `AWSPENDING`, the **pinned code** = `AWSCURRENT`, the **last code** = `AWSPREVIOUS`
+
+<p align="center"><img src="./img/08-secrets-alternating-users.png" alt="A secret named MySecret holds two versions: MyUser with passwordA labelled AWSPREVIOUS, and MyUser_clone with passwordB labelled AWSCURRENT" width="420"/></p>
+
+> 🖼️ *Two DB users in one secret. The label moves to the new one, and the old one keeps its password.* Source: [Lambda function rotation strategies](https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotation-strategy.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
+
 - 🏷️ Rotation uses **staging labels**: `AWSCURRENT`, `AWSPENDING`, `AWSPREVIOUS`.
 - 🔁 **Steps:** create the new secret (`AWSPENDING`) → set it in the DB → test it → move `AWSCURRENT` to it.
 
@@ -601,6 +792,25 @@ Each main section answers six things:
 
 ### Where to end TLS
 
+#### 📖 Story first — sealed letters at an office reception
+
+Customers send **sealed letters** to a big office. A reception desk receives every letter first.
+
+- 📬 **Reception opens it (end at ALB).** Reception reads it, checks it for danger, and sends it on. Inside the building, it travels **open**.
+- ✉️ **Reception opens it, then seals it again (re-encrypt).** Reception reads and checks it. Then it puts the letter in a **new** sealed envelope. It is never open in the corridor.
+- 📦 **Reception does not open it (NLB passthrough).** Reception only reads the room number on the outside. Only the department can open it. Reception cannot check for danger, or send it by what the letter says.
+- 🪪 **Reception also checks the sender's ID (mTLS).** Only senders with an approved ID card may send letters at all.
+
+In this story:
+- ✉️ the **sealed letter** = an HTTPS request
+- 🛎️ the **reception** = the load balancer
+- 🔍 **checking for danger** = WAF
+- 🧭 **sending by content** = L7 routing on path or header
+
+> 🎯 **In one line:** whoever opens the letter can read it, check it and route it. Whoever cannot open it can only pass it on.
+
+Now in exact terms:
+
 | Option | How | ✅ Gain | ❌ Lose |
 |---|---|---|---|
 | **End at ALB** | HTTPS listener, HTTP to targets | Simple; ALB can route on path/header; WAF (Web Application Firewall) sees the request | Plain text inside the VPC |
@@ -666,6 +876,33 @@ Each main section answers six things:
 | ✏️ **Custom** | Match headers, URI, query string, body; size limits |
 
 ### Rate-based rules — the numbers
+
+#### 📖 Story first — the guard with a tally counter at a mall gate
+
+A mall guard stops people who come in too often. Such visitors may be shoplifters.
+
+- 🔢 The guard keeps a **tally** for each visitor, over the last few minutes.
+- 🚫 If one visitor comes in more than the limit, the guard blocks that visitor for a while.
+- 🎯 The guard can be strict at the jewellery shop and relaxed at the food court.
+- ⏱️ The guard counts by eye, not with a stopwatch. So the count is **close, not exact**, and the block comes a little late.
+
+**⚠️ The tour bus problem**
+
+- 🚌 A tour bus arrives. The guard counts people by the **bus number**, not by face.
+- 😟 Fifty honest tourists look like one visitor who came in fifty times. The whole bus gets blocked.
+- ✅ **The fix:** count by each person's own ticket, not the bus number.
+
+In this story:
+- 🔢 the **tally per visitor** = the aggregation key (source IP by default)
+- 🎯 **strict at one shop** = a scope-down to `/login`
+- 🚌 the **bus number** = one shared IP behind a proxy or NAT
+- 🎫 the **person's own ticket** = the forwarded IP or a header key
+
+> ⚠️ **A ticket can be fake.** The client can write any value in `X-Forwarded-For`. Trust the forwarded IP only when **your own proxy or CDN** (for example CloudFront) sets it. Otherwise an attacker changes it on every request and is never counted.
+
+> 🎯 **In one line:** WAF is the rough gate guard. Exact per-customer quotas belong in your app.
+
+Now in exact terms:
 
 | Item | Value |
 |---|---|

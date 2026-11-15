@@ -83,6 +83,22 @@ backups, logs, exports, ML datasets, static web assets.
 
 ### 1.3 Consistency — strong read-after-write
 
+#### 📖 Story first — the parcel office with one register
+
+- 📦 A railway parcel office keeps **one register** for all parcels.
+- ✍️ You hand in a parcel. The clerk writes it in the register, then gives you a receipt.
+- 🙋 Your friend asks at the counter one second later. The clerk checks the same register, so your friend sees the parcel. Nobody says "come back later".
+- ⚖️ Two people drop a parcel for the **same shelf number** at the same time. The later entry wins. The earlier parcel is replaced.
+- 🔒 To stop this, you can add a condition to your drop:
+  - "Accept my parcel **only if this shelf is empty**."
+  - "Replace the parcel **only if it still has token 42**."
+- 🌍 A copy of the register goes to an office in another city by courier. That copy can be a few minutes behind.
+
+In this story, the receipt is a successful `PUT`. The shelf number is the key, and token 42 is the ETag.
+The courier copy is cross-Region replication.
+
+Now in exact terms:
+
 ✅ Since **December 2020**, S3 is **strongly consistent** for all operations, at no extra cost:
 
 | After a successful… | This call… | Returns |
@@ -149,6 +165,20 @@ backups, logs, exports, ML datasets, static web assets.
 
 ### 2.1 Request-rate limits per prefix
 
+#### 📖 Story first — one counter per address group
+
+- 🏤 A big post office sorts work by the **start of the address**. All "Andheri/..." letters go to one counter.
+- ⏱️ One counter can take in **3,500** new letters and hand out **5,500** letters each second.
+- 📈 There is **no limit on counters**. Ten address groups get ten counters, so ten times the work.
+- 🚨 Now every letter starts its address with **the current time**. All new letters go to the "now" counter. The other counters sit idle.
+- 🐢 The post office opens a new counter when one gets too busy. This takes time. Until then the clerk says "slow down".
+- ✅ The fix: start each address with a **short random code**. Letters spread over many counters from the start.
+
+The story keeps one counter per address group. In exact terms, S3 splits **key ranges** into partitions as load grows.
+The "slow down" reply is `503 Slow Down`, and the random code is a hash prefix.
+
+Now in exact terms:
+
 🧩 A **prefix** is the part of the key before the object name. For `invoices/2026/10/abc.pdf`,
 the prefix is `invoices/2026/10/`.
 
@@ -169,6 +199,19 @@ the prefix is `invoices/2026/10/`.
 > need it (for example, 50,000 writes/s of telemetry).
 
 ### 2.2 Multipart upload
+
+#### 📖 Story first — a sofa set sent in numbered boxes
+
+- 🛋️ You send a big furniture order by courier. It is too big for one van.
+- 📦 You pack it in **numbered boxes** (part 1, part 2, ...). Several vans carry boxes **at the same time**.
+- 🔁 One van breaks down. You resend **only that box**, not the whole order.
+- ✅ At the end you tell the warehouse: "All boxes sent. Put the set together." Only then does the sofa set appear in the stock list.
+- 💰 Suppose you forget that last message. The boxes stay in the warehouse. Nobody sees them in the stock list, but the warehouse **still charges rent**.
+- 🧹 So you give the warehouse a standing rule: "Throw away unfinished orders after N days."
+
+The last message is `CompleteMultipartUpload`. The standing rule is a lifecycle rule.
+
+Now in exact terms:
 
 - 📏 **Required** above 5 GB; **recommended** above ~100 MB.
 - ⚡ Parts upload **in parallel** and **retry one at a time**.
@@ -228,6 +271,19 @@ timestamp, so all writes hit one prefix.
 - 📏 It limits how many uploads one server can handle.
 
 ### 3.2 The pattern
+
+#### 📖 Story first — a gate pass for the delivery person
+
+- 🏢 Your apartment has a **security guard** (S3). The guard lets in only people with a valid pass.
+- 📦 A courier must drop a parcel at flat **B-402**. You do not want to walk down and carry it up yourself. You are the API server.
+- 📝 So you write a **gate pass**: "Flat B-402, drop one parcel, valid for 5 minutes". You sign it.
+- 🛂 The guard checks your signature and the time. The courier goes **straight to B-402**. You never touch the parcel.
+- 🏷️ **You** write the flat number on the pass, not the courier.
+- 🚫 The pass works for one flat, until it expires. Anyone who finds a lost pass can use it in that time. So keep the time short.
+- ⚠️ The pass says nothing about **parcel size**. To limit size, you need a pass with written rules (a presigned POST with a policy).
+- ❗ Your signature counts only if **you** may enter B-402. If not, the guard turns the courier away (S3 returns 403).
+
+Now in exact terms:
 
 💡 A **presigned URL** is a normal S3 URL with a signature and an expiry time.
 
@@ -310,6 +366,19 @@ sequenceDiagram
 ## 4. Storage Classes and Lifecycle — Cost as a Design
 
 ### 4.1 The classes
+
+#### 📖 Story first — where a family keeps its things
+
+- 🍳 **Kitchen shelf** (Standard): things used every day. You grab them in a second. No fee to take them out.
+- 🪜 **Loft** (Standard-IA): things used about once a month. Still quick to reach, but you pay a small fee each time you climb the ladder. Use the loft daily, and the fees cost more than the shelf.
+- 🔐 **Locked box in the loft** (Glacier Instant Retrieval): used about once a quarter. Cheaper rent, a bigger fee per trip, but still quick.
+- 🧳 **Storage room across town** (Glacier Flexible, Deep Archive): very cheap rent. To get something back, you call first and wait minutes to hours. For the farthest room, up to 48 hours.
+- 📝 Each loft or room has a **minimum rent period**: 30, 90 or 180 days. Take a thing out early and you still pay for the rest.
+- 📦 The loft bills each item as **at least one standard box** (128 KB). Thousands of tiny items cost more there than on the shelf.
+- 🧭 A **smart helper** (Intelligent-Tiering) watches what you use and moves things for you. The helper takes a small monthly fee per item.
+- 🏠 **One Zone-IA** is a loft in only one house (one AZ). If that house burns, those things are gone. Keep there only what you can get again.
+
+Now in exact terms:
 
 💡 All classes have 11-nines durability. They differ in **availability, retrieval time, minimum
 storage time and retrieval fee**.
@@ -485,6 +554,21 @@ storage time, number of AZs and retrieval fee. The full table is in
 
 ### 5.1 Versioning
 
+#### 📖 Story first — a register where nothing is erased
+
+- 📒 An office keeps a document register. The clerk **never erases** a page.
+- ✍️ You change a document. The clerk puts the new copy **on top**. The old copy stays below, with its own number.
+- 🗑️ You "delete" a document. The clerk puts a slip on top that says **"deleted"**. Ask for the document now, and you get "not found". But all the older copies are still underneath.
+- ↩️ A wrong change or a wrong delete? Take the older copy, or remove the slip. The document is back.
+- 📈 Each copy takes shelf space. A file changed every minute leaves 1,440 copies a day. So you need a rule that throws away old copies after N days.
+- ⏸️ Once the office works this way, you can **pause** it. You cannot go back to "no copies kept".
+
+<p align="center"><img src="./img/09-s3-versioning-delete-marker.png" alt="A versioning-enabled bucket holds two versions of photo.gif with IDs 121212 and 111111; after a DELETE, S3 adds a delete marker with a new ID on top and both older versions stay in the bucket" width="520"/></p>
+
+> 🖼️ *A DELETE does not remove anything here. S3 adds a delete marker on top, and both older versions of `photo.gif` are still stored.* Source: [How S3 Versioning works](https://docs.aws.amazon.com/AmazonS3/latest/userguide/versioning-workflows.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
+
 - 🧩 Each overwrite creates a **new version**. A delete adds a **delete marker**; older versions
   stay.
 - 🛡️ Protects against **human and application error**, not against disk loss (S3 already does
@@ -610,6 +694,19 @@ graph LR
 
 ### 6.2 Delivery guarantees — design for them
 
+#### 📖 Story first — bank SMS alerts
+
+- 📱 Your bank sends an SMS for every change in your account.
+- 🔁 Sometimes the **same SMS comes twice**. If you add money for each SMS, you add it twice. So you first check the transaction number.
+- 🔀 Sometimes SMS come in the **wrong order**. "Balance ₹500" arrives after "Balance ₹800", but ₹800 is newer. So you compare the sequence number, not the arrival time.
+- ⏱️ An SMS usually comes in seconds. Sometimes it takes a minute or more. Do not make a customer wait at the counter for it.
+- ❌ Very rarely, an SMS **never comes**. So once a day you match your notebook against the bank statement.
+
+The transaction number check is an idempotent handler. The sequence number is the `sequencer` field.
+The daily match is a reconciliation job.
+
+Now in exact terms:
+
 | Guarantee | ⚠️ What it means | 🛡️ Design for it |
 |---|---|---|
 | 🔁 **At least once** | The same event can arrive twice | Handlers must be **idempotent** (key on bucket + key + version ID or `sequencer`) |
@@ -731,6 +828,20 @@ case.
 ## 9. Block vs File vs Object — EBS, Instance Store, EFS, S3
 
 ### 9.1 The three storage models
+
+#### 📖 Story first — three ways to keep your papers
+
+- 💽 **Block = empty shelves that only you use.** You decide how to arrange them (the OS puts a file system on the disk).
+  - 🔑 **EBS** is a locker in your building's basement, wired to your flat. If you move to another flat in the **same building**, the locker can go with you. It cannot leave the building (one AZ).
+  - 🏠 **Instance store** is shelves built into a rented flat. They are the fastest to reach. When you leave the flat, the shelves stay, and your papers are thrown away.
+- 📁 **File = a shared office cupboard with labelled folders.** Many people open it at the same time and see the same folders (EFS).
+- 🪣 **Object = a railway cloakroom.** You hand over a whole bag and get a token. You show the token to get the bag back. You cannot change one paper inside the bag at the counter. You hand in a new bag (S3).
+
+<p align="center"><img src="./img/09-ec2-instance-store.png" alt="Two EC2 hosts, each with its own instance storage disks; instances A and B on host 1 use instance store disks on host 1, and instance E on host 2 uses a disk on host 2" width="520"/></p>
+
+> 🖼️ *Instance store disks sit inside the physical host. An instance can use only the disks of its own host. The data does not follow the instance to another host.* Source: [Instance store temporary block storage for EC2 instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html) · License: CC BY-SA 4.0
+
+Now in exact terms:
 
 | Model | You see | Shared by many machines? | Example |
 |---|---|---|---|
