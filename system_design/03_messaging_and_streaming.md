@@ -9,7 +9,7 @@
 It does not teach queue theory again. For the general ideas, read these first:
 
 - 🔗 Delivery semantics and broker internals: [Alex Xu Vol 2 — Distributed Message Queue](../../system-design/01_insider_guide_Alex_Xu/vol_2/ch04_distributed_message_queue.md)
-- 🔗 Kafka producer, consumer and exactly-once details: [Kafka Interview Questions](../../java/1_interview_questions/17_Kafka_Interview_Questions.md)
+- 🔗 Kafka producer, consumer and exactly-once details: [Kafka Interview Questions](../../system-design/iq/04_Kafka_Interview_Questions.md)
 
 > 📏 **Numbers checked against AWS docs on 31 Oct 2026.**  
 > - 📨 SQS (Simple Queue Service) max message is **1 MiB**. The old limit was **256 KiB**. AWS raised it in Aug 2025.  
@@ -1071,7 +1071,7 @@ Now in exact terms:
 - ❌ You cannot reduce a topic's partition count.
 - 🌐 MSK runs inside your **VPC** (Virtual Private Cloud), so clients need network access and the right security groups.
 
-🔗 Kafka internals are in [Kafka Interview Questions](../../java/1_interview_questions/17_Kafka_Interview_Questions.md).
+🔗 Kafka internals are in [Kafka Interview Questions](../../system-design/iq/04_Kafka_Interview_Questions.md).
 
 ---
 
