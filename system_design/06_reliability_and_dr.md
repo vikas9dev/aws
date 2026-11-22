@@ -100,7 +100,7 @@ Now in exact terms:
 <details>
 <summary>Answer</summary>
 
-❌ **No.** The corruption replicated to the other Region within about a second.
+❌️ **No.** The corruption replicated to the other Region within about a second.
 
 - 🧩 Global Tables protect against a Region failure, not against bad writes.
 - 🔁 I recover with **point-in-time recovery** (DynamoDB PITR keeps up to 35 days).
@@ -129,7 +129,7 @@ Now in exact terms:
 |---|---|---|
 | 🛡️ Protects against | Power/network/flood failure of one data center group | Full Region outage, Region-wide service failure, large regulatory or geo needs |
 | ⚡ Latency between sites | Single-digit ms (often about 1–2 ms) | Tens to hundreds of ms (for example, Mumbai ↔ Virginia ≈ 180–200 ms round trip) |
-| 🗃️ Synchronous replication? | ✅ **Practical** (RDS Multi-AZ, Aurora storage, EBS (Elastic Block Store), S3) | ❌ **Not in practice** — sync writes across Regions add a full round trip to every write |
+| 🗃️ Synchronous replication? | ✅ **Practical** (RDS Multi-AZ, Aurora storage, EBS (Elastic Block Store), S3) | ❌️ **Not in practice** — sync writes across Regions add a full round trip to every write |
 | ⚠️ Data loss on failover | Usually zero | Usually equal to replication lag (≈ 1 s for Aurora Global / DynamoDB Global Tables) |
 | 💰 Cost | ≈ 1.5× compute (N+1 capacity) + inter-AZ data transfer | ≈ 2× everything + cross-Region data transfer + much more engineering |
 | ⚙️ Complexity | Mostly managed by AWS services | You own routing, data conflicts, config drift, failover runbooks |
@@ -143,7 +143,7 @@ Now in exact terms:
 - 🌍 users are on several continents and need low latency, or
 - 📜 a regulator demands it.
 
-❌ **Avoid it when:**
+❌️ **Avoid it when:**
 
 - 🙈 you only want to "be safe". Most outages are bad deploys and config changes, not Region failures. A second Region does not help if you deploy the same bad change to both.
 - ⚖️ the data model needs strong consistency on every write. It is also a bad fit if the team cannot handle conflict design (see §6).
@@ -251,8 +251,8 @@ A tiffin service cooks 500 lunches a day in one kitchen in Andheri. What if that
 
 | | Can it send a lunch at once? | Time to full speed | Cost |
 |---|---|---|---|
-| 💾 Recipes in a locker | ❌ No | A day or more | 💲 |
-| 💡 Stocked fridge, stoves off | ❌ No | Tens of minutes | 💲💲 |
+| 💾 Recipes in a locker | ❌️ No | A day or more | 💲 |
+| 💡 Stocked fridge, stoves off | ❌️ No | Tens of minutes | 💲💲 |
 | 🔥 One cook working | ✅ Yes, a few | Minutes | 💲💲💲 |
 | 🚀 Two full kitchens | ✅ Yes, all | Near zero | 💲💲💲💲 |
 
@@ -290,7 +290,7 @@ _⚖️ Left to right: lower RPO/RTO, higher cost, more complexity._
 
 ### Pilot light vs warm standby — the difference people miss
 
-- ❌ **Pilot light cannot serve a single request** until you start servers and scale up.
+- ❌️ **Pilot light cannot serve a single request** until you start servers and scale up.
 - ✅ **Warm standby can serve traffic right away**, at reduced capacity. You only need to scale up.
 - 🧪 Warm standby is also easy to **test continuously** — you can send 1% of real traffic to it.
 
@@ -404,7 +404,7 @@ Now in exact terms:
 |---|---|---|---|
 | 🎯 **Write global** | All writes go to one primary Region. Other Regions are read-only. | Aurora Global DB (+ write forwarding) | ✅ None. But writes from far users pay cross-Region latency. |
 | 🏠 **Write partitioned** | Each user (or tenant) has a **home Region**. Their writes always go there. | DynamoDB Global Tables or S3 bi-directional replication, plus routing by user ID | ✅ None, while the home rule holds. A failover moves the home and needs care. |
-| 🌍 **Write local** | Any Region accepts any write. | DynamoDB Global Tables (MREC) | ❌ **Yes.** Last-writer-wins on timestamp → **lost updates**. |
+| 🌍 **Write local** | Any Region accepts any write. | DynamoDB Global Tables (MREC) | ❌️ **Yes.** Last-writer-wins on timestamp → **lost updates**. |
 
 ```mermaid
 graph LR
@@ -429,7 +429,7 @@ graph LR
 
 ### How to design around it
 
-1. ❌ **Do not write-local money or inventory.** Use write global or a home Region for those entities. Use write local only for data where the last value is fine (profile, preferences, session, "last seen").
+1. ❌️ **Do not write-local money or inventory.** Use write global or a home Region for those entities. Use write local only for data where the last value is fine (profile, preferences, session, "last seen").
 2. 💡 **Make updates commutative.** Store events (append-only) instead of overwriting a total. Add, not set: `ADD balance :x` still conflicts across Regions, but an append-only ledger with unique IDs does not.
 3. 🔁 **Idempotency keys** on every write, so a retried or replayed write does not apply twice.
 4. ⚖️ **Need strong consistency across Regions?** DynamoDB MRSC or a write-global database. Accept the cross-Region latency on every write. There is no free option. This is PACELC: you pay latency for consistency, even with no partition.
@@ -452,7 +452,7 @@ graph LR
 - 🗃️ Store the balance as an **append-only ledger** with unique transaction IDs. Compute the balance from it.
 - ⚖️ Use DynamoDB **MRSC** for strong consistency, and accept higher write latency.
 
-❌ I would not use write-local for money.
+❌️ I would not use write-local for money.
 
 ---
 
@@ -468,7 +468,7 @@ graph LR
 - 🏢 The **head office** hires cashiers, opens counters and changes rules. Its work has many steps and approvals. This is the **control plane**.
 - 🌧️ On a flood day, one branch closes. Every bank in the city calls the hiring agency at once. The head office is **slow** or cannot be reached.
 - 📏 On the busiest day, customers need **300 cashiers**.
-  - ❌ **Plan A — 100 per branch.** One branch closes → 200 left. They must hire 100 more **during the flood**, through the slow head office.
+  - ❌️ **Plan A — 100 per branch.** One branch closes → 200 left. They must hire 100 more **during the flood**, through the slow head office.
   - ✅ **Plan B — 150 per branch.** One branch closes → **300 left**. Nobody needs to call anyone. This is **static stability**.
 - 💰 The price of Plan B: the bank pays 450 cashiers every day — **150%** of what it needs.
 
@@ -497,7 +497,7 @@ Now in exact terms:
 
 | Design | Normal | When one AZ fails | Statically stable? |
 |---|---|---|---|
-| 100 per AZ (300 total) | ✅ | 200 left. Must launch 100 more — a control plane action, during the event, competing with everyone else | ❌ |
+| 100 per AZ (300 total) | ✅ | 200 left. Must launch 100 more — a control plane action, during the event, competing with everyone else | ❌️ |
 | 150 per AZ (450 total) | ✅ (67% busy) | 300 left — enough for peak with no action | ✅ |
 
 > 💰 **Cost:** the price is **N+1 capacity**. With 3 AZs you run **150%** of peak. With 2 AZs you would need **200%**. This is one reason to use 3 AZs, not 2.
@@ -524,7 +524,7 @@ Now in exact terms:
 📏 **Example:** with three AZs and a peak need of 300 instances, I run 150 in each AZ.
 
 - ✅ **150 per AZ:** if one AZ fails, the other two still have 300 — no scaling needed.
-- ❌ **100 per AZ:** I would need Auto Scaling to launch 100 more during the event. That is a control plane action, and control planes are the least reliable part during a large event.
+- ❌️ **100 per AZ:** I would need Auto Scaling to launch 100 more during the event. That is a control plane action, and control planes are the least reliable part during a large event.
 
 ---
 
@@ -582,7 +582,7 @@ _🛡️ If cell 2 fails (red), only its customers are hurt — about 1/N of all
 | 💰 Cost | More fixed overhead per cell; cross-cell queries and moving customers between cells are hard. |
 
 - ✅ **Use when:** large multi-tenant services where one tenant's failure must not hurt others (AWS itself uses cells for many services).
-- ❌ **Avoid when:** a small system — one well-built Multi-AZ stack is simpler and good enough.
+- ❌️ **Avoid when:** a small system — one well-built Multi-AZ stack is simpler and good enough.
 
 ### Shuffle sharding
 
@@ -590,7 +590,7 @@ _🛡️ If cell 2 fails (red), only its customers are hurt — about 1/N of all
 
 - 🎫 A station has **8 ticket counters**. Passenger groups (customers) are assigned to counters.
 - 💥 One passenger has a strange request that **freezes the computer** at any counter they visit. This is the **poison pill**.
-- ❌ **Fixed pairs:** the 8 counters work as 4 fixed pairs. A quarter of the groups use each pair. The bad passenger freezes both counters of their pair → **25%** of all groups are stuck.
+- ❌️ **Fixed pairs:** the 8 counters work as 4 fixed pairs. A quarter of the groups use each pair. The bad passenger freezes both counters of their pair → **25%** of all groups are stuck.
 - ✅ **Own random pair:** each group gets **its own random pair** from the 8 counters. There are **28** possible pairs.
   - The bad passenger still freezes their 2 counters.
   - Another group is fully stuck only if it has the **exact same pair** — about 1 in 28.
@@ -600,7 +600,7 @@ _🛡️ If cell 2 fails (red), only its customers are hurt — about 1/N of all
 
 Now in exact terms:
 
-- ❌ **Normal sharding:** 8 workers in 4 shards of 2. A poison customer kills its shard → **25%** of customers are down.
+- ❌️ **Normal sharding:** 8 workers in 4 shards of 2. A poison customer kills its shard → **25%** of customers are down.
 - ✅ **Shuffle sharding:** give **each customer its own random pair** of the 8 workers. There are C(8,2) = **28** possible pairs.
   - A poison customer kills its 2 workers.
   - Another customer is fully down only if it has the **exact same pair** — a chance of about 1 in 28.

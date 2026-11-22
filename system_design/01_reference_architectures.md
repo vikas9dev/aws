@@ -81,7 +81,7 @@
 
 - 🏦 A small bank has **one counter**. The clerk keeps each customer's half-filled form **on their own desk**. This works, until the clerk falls sick. Then the whole bank stops.
 - 👥 The bank opens **many counters**. A guard at the door (the load balancer) sends each customer to a free counter.
-- ❌ **New problem:** you start a form at counter 1. Next time the guard sends you to counter 3. Your half-filled form is still on desk 1.
+- ❌️ **New problem:** you start a form at counter 1. Next time the guard sends you to counter 3. Your half-filled form is still on desk 1.
 - 🔁 **Fix A — "always go to the same counter"** (sticky sessions). It works, until clerk 1 goes home. Your form leaves with them. Some counters also get long queues.
 - ✅ **Fix B — a shared form cabinet** behind all counters (ElastiCache). Any clerk can pick up your form. Now a clerk can go home at any time, and nothing is lost.
 - 📒 The final account book goes into the bank's **strong room** (Aurora). Photos go to a **shared store room** (S3), not a drawer in one desk (EBS).
@@ -135,7 +135,7 @@ graph LR
 
 ### Why each component
 
-| Component | ✅ Why | ❌ Rejected option |
+| Component | ✅ Why | ❌️ Rejected option |
 |---|---|---|
 | 🌐 ALB | L7 routing, health checks, TLS termination, one stable endpoint | DNS round-robin — no health checks, TTL delays |
 | 📈 ASG over 3 AZs | Self-healing + static stability (each AZ sized at 50% of peak) | 2 AZs — need 200% capacity to survive one AZ |
@@ -258,7 +258,7 @@ Now in exact terms:
 
 ### Why each component
 
-| Component | ✅ Why | ❌ Rejected option |
+| Component | ✅ Why | ❌️ Rejected option |
 |---|---|---|
 | 🚪 API Gateway (REST API) | Auth, throttling, usage plans, caching, WAF (Web Application Firewall), request validation | **HTTP API** — cheaper and faster, but no response cache, no usage plans/API keys. Pick it if you do not need those. |
 | 🔐 Cognito | Managed sign-up/sign-in, JWTs, federation | Own auth service — more code, more risk |
@@ -286,7 +286,7 @@ Now in exact terms:
 - 🚉 **5,000 people** reach the ticket hall every second. Each counter serves one person at a time.
 - ⏱️ If each ticket takes **0.1 s**, about **500 counters** are busy at any moment (5,000 × 0.1).
 - 🐢 Now the printer at each counter slows down. Each ticket takes **1 s**. The same crowd now needs **5,000 counters**.
-- ❌ The station has only **1,000 counters**. The extra people are turned away.
+- ❌️ The station has only **1,000 counters**. The extra people are turned away.
 - 🆕 Opening a **new** counter takes setup time (cold start). A free counter just calls the next person.
 
 Note what changed: not the crowd, but **how long each ticket takes**. A slow printer (a slow database) fills all the counters.
@@ -452,7 +452,7 @@ Now in exact terms:
 
 ### Why each component
 
-| Component | ✅ Why | ❌ Rejected option |
+| Component | ✅ Why | ❌️ Rejected option |
 |---|---|---|
 | 🔒 Pre-signed URL | Big files skip your API; S3 handles the bandwidth | Upload via API Gateway — 10 MB limit, pays for Lambda time |
 | 📨 SNS → SQS fan-out | One event, many independent consumers; each queue buffers and retries on its own | **S3 → Lambda directly** — no buffer, and only one consumer per event type/prefix. **App writes to 3 queues** — if it crashes midway, some queues miss the event. |
@@ -526,7 +526,7 @@ Now in exact terms:
 <details>
 <summary>Answer</summary>
 
-- ❌ **S3 → Lambda** gives one consumer per event type and prefix, and no buffer.
+- ❌️ **S3 → Lambda** gives one consumer per event type and prefix, and no buffer.
 - ✅ **SNS → SQS:** one event fans out to several independent queues — thumbnails, metadata, moderation. Each queue buffers bursts, retries on its own, and has its own DLQ. So a slow or broken step does not affect the others.
 - 💡 The publisher sends one message, so it cannot half-succeed like an app writing to three queues.
 
@@ -593,7 +593,7 @@ graph LR
 - 📝 You ask a travel agent for a trip. The agent writes it in the **booking register** as "pending", with a booking number. You get a slip: "request accepted".
 - 👀 The agent's assistant **watches the register**. Each new line starts the work. Nobody has to remember to make a separate phone call (this is the outbox).
 - 🏨 The agent works in order: **hold a hotel room** → **pay for the train tickets** → **book the cab**.
-- ❌ The cab company says "no cabs that day". The agent now **undoes** the done steps, in reverse order: **refund the train tickets** → **release the hotel room**.
+- ❌️ The cab company says "no cabs that day". The agent now **undoes** the done steps, in reverse order: **refund the train tickets** → **release the hotel room**.
 - 🔁 Every call uses the **same booking number**. If the agent calls the hotel twice, the hotel says "already held" and does not hold two rooms.
 - 📒 The agent keeps one notebook with every step and its result. Anyone can see where a trip got stuck.
 
@@ -610,7 +610,7 @@ Now in exact terms:
 
 ### Why each component
 
-| Component | ✅ Why | ❌ Rejected option |
+| Component | ✅ Why | ❌️ Rejected option |
 |---|---|---|
 | 🧭 Step Functions (orchestration) | Saga state, retries with backoff, compensations and history are visible in one place | **Choreography only** (each service reacts to events) — fine for 2–3 steps. With more steps, the flow is hidden across services and hard to debug |
 | ⚙️ **Standard** workflow | Up to 1 year, **exactly-once** step execution, full history; good for business processes | **Express** — up to 5 min, at-least-once, cheaper for high-volume short flows |
@@ -722,7 +722,7 @@ graph LR
 
 ### Why each component
 
-| Component | ✅ Why | ❌ Rejected option |
+| Component | ✅ Why | ❌️ Rejected option |
 |---|---|---|
 | ⚙️ AWS Batch | Managed queue, scheduling, retries, array jobs; you pay only for EC2 | Self-managed scheduler on EC2 |
 | 💰 Spot instances | Up to **90%** cheaper than On-Demand | All On-Demand — safe but 3–10× the cost |
@@ -735,7 +735,7 @@ graph LR
 - 🧱 **First,** a **cluster placement group** (same rack area, lowest latency).
 - ⚡ **Second,** **EFA** (Elastic Fabric Adapter, OS-bypass networking for MPI on Linux).
 
-> ❌ **Bad fit for Spot:** these jobs are poor fits for Spot — one interruption stops the whole job. Run them On-Demand, or with frequent checkpoints.
+> ❌️ **Bad fit for Spot:** these jobs are poor fits for Spot — one interruption stops the whole job. Run them On-Demand, or with frequent checkpoints.
 
 💡 **AWS ParallelCluster** builds this kind of cluster for you.
 
@@ -838,7 +838,7 @@ Now in exact terms:
 
 ### Why each component
 
-| Component | ✅ Why | ❌ Rejected option |
+| Component | ✅ Why | ❌️ Rejected option |
 |---|---|---|
 | 📨 Kinesis Data Streams | Ordered per shard, replay (retention), many consumers on one stream | **SQS** — no replay, no multiple independent readers of the same data. **MSK (Managed Streaming for Apache Kafka)** — choose it if the team already runs Kafka or needs Kafka tools; more to operate |
 | ⚙️ Lambda consumer | Simple real-time processing, scales per shard | Managed Apache Flink — choose it for windowed joins and complex stateful streaming |
@@ -975,7 +975,7 @@ graph LR
 
 ### Why each component
 
-| Component | ✅ Why | ❌ Rejected option |
+| Component | ✅ Why | ❌️ Rejected option |
 |---|---|---|
 | 🏆 Sorted set | Insert/update and rank in **O(log N)**; range read in O(log N + M) | SQL `ORDER BY score LIMIT 100` + `COUNT(*) WHERE score > x` — too slow at 10 M rows and 50k updates/s |
 | 🗃️ ElastiCache (Valkey/Redis OSS) | In-memory, sub-ms, Multi-AZ with auto failover | **Memcached** — no sorted sets, no replication |
@@ -996,7 +996,7 @@ graph LR
 - 🧑‍💼 The office has five clerks, but a register sits on **one clerk's desk**. Only that clerk writes in it.
 - 📈 Results arrive at **50,000 a second**. All of them queue at that one clerk.
 - 🗄️ The desk has lots of free space (memory is fine). The clerk's **hands** are the limit (CPU).
-- ❌ Hiring more clerks does not help. The register cannot be torn into pieces.
+- ❌️ Hiring more clerks does not help. The register cannot be torn into pieces.
 - ✅ **Fix:** keep **one register per region**. To get the national top 100, take each region's top 100 and merge them.
 - 👀 Readers can look at **photocopies** of the register (replicas), so the clerk only writes.
 
@@ -1115,7 +1115,7 @@ Now in exact terms:
 
 ### Why each component
 
-| Component | ✅ Why | ❌ Rejected option |
+| Component | ✅ Why | ❌️ Rejected option |
 |---|---|---|
 | 🌐 CloudFront | Cuts latency for most reads; absorbs spikes; shields origins; WAF at the edge | Serve all reads from the Regions |
 | 🌐 Route 53 latency routing + health checks | Nearest healthy Region per user | **Global Accelerator** — 2 static anycast IPs, TCP/UDP, fast failover without DNS caching; better for non-HTTP or when clients cannot handle DNS changes |

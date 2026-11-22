@@ -88,7 +88,7 @@ graph LR
 - ⚡ You need sub-millisecond latency: sessions, rate limits, leaderboards, feature flags.
 - 🤝 You need shared state across stateless app instances (locks, counters, dedupe keys).
 
-❌ **Do NOT use it when:**
+❌️ **Do NOT use it when:**
 - ⚠️ The cache would be the **only** copy of important data. ElastiCache replication is async; use **MemoryDB** if Redis must be the primary database.
 - 📉 The data is rarely read twice. The hit ratio will be low and you add a hop for nothing.
 - 🗃️ You only need caching for DynamoDB item reads → **DAX** may be simpler.
@@ -98,13 +98,13 @@ graph LR
 | | **Valkey / Redis OSS** | **Memcached** |
 |---|---|---|
 | Data types | Strings, hashes, lists, sets, sorted sets, streams, bitmaps, HyperLogLog | Strings (blobs) only |
-| 🔁 Replication | ✅ Primary + up to **5 replicas** per shard | ❌ None |
-| 🛡️ Multi-AZ (Availability Zone) auto failover | ✅ | ❌ — a lost node loses its keys |
-| 💾 Persistence / backup | ✅ Snapshots | ❌ (serverless Memcached has snapshots) |
+| 🔁 Replication | ✅ Primary + up to **5 replicas** per shard | ❌️ None |
+| 🛡️ Multi-AZ (Availability Zone) auto failover | ✅ | ❌️ — a lost node loses its keys |
+| 💾 Persistence / backup | ✅ Snapshots | ❌️ (serverless Memcached has snapshots) |
 | ⚙️ Threads | Mostly single-threaded command execution (I/O threads help) | **Multi-threaded** — uses all cores of one big node |
 | 📈 Sharding | Cluster mode: server-side hash slots | Client-side (consistent hashing in the client) |
-| Pub/Sub, Lua, transactions | ✅ | ❌ |
-| 🌍 Global Datastore (cross-Region) | ✅ | ❌ |
+| Pub/Sub, Lua, transactions | ✅ | ❌️ |
+| 🌍 Global Datastore (cross-Region) | ✅ | ❌️ |
 
 > 🧭 **Rule:** pick **Redis/Valkey** by default.  
 > Pick **Memcached** only for a simple, large, multi-threaded object cache where losing a node is fine.
@@ -183,7 +183,7 @@ Each primary has its replicas in other AZs (not drawn).
 - 😷 One day the owner falls sick in the middle of the day.
 - 🔁 The manager makes the assistant the new owner. The shop's phone number now rings at the assistant's desk.
 - ⏳ For a short time nobody can record a sale.
-- ❌ The last few sales were written by the owner but not yet copied. They are **gone**, even though those customers already heard "done".
+- ❌️ The last few sales were written by the owner but not yet copied. They are **gone**, even though those customers already heard "done".
 
 Now in exact terms:
 
@@ -207,7 +207,7 @@ Now in exact terms:
 - 🧊 An office shares one fridge. A quarter of the space is kept free for the fridge's own needs. Staff cannot fill it to the top.
 - 🏷️ The default rule: the cleaner may throw out only boxes **with an expiry sticker**. Among them, the box nobody touched for the longest time goes first.
 - 📦 Staff keep adding boxes **without stickers**. The fridge fills up. The cleaner is not allowed to throw out anything.
-- ❌ The next person with a new box is turned away at the door.
+- ❌️ The next person with a new box is turned away at the door.
 - ✅ Fix: change the rule to "**any** box may go, least recently used first". Also put a sticker on every box.
 
 Now in exact terms:
@@ -257,7 +257,7 @@ Now in exact terms:
 - 📨 Pub/Sub and Lua scripts.
 
 ⚠️ **The AOF trap.** Open-source Redis supports AOF (append-only file). **ElastiCache does not**:
-- ❌ AOF is not supported from Redis OSS **2.8.22** onward, never with Multi-AZ, and never on Valkey.
+- ❌️ AOF is not supported from Redis OSS **2.8.22** onward, never with Multi-AZ, and never on Valkey.
 - 💾 ElastiCache gives **snapshots** (manual or scheduled backups, exportable to S3). Use them to restore or to seed a new cluster.
 - 🛡️ On ElastiCache, durability comes from **Multi-AZ with replicas**. If Redis must be a durable primary store, use **MemoryDB**.
 
@@ -411,7 +411,7 @@ Now in exact terms:
 - 📏 **Scale:** hundreds of points of presence (PoPs) plus regional edge caches. (The source notes say 216+ PoPs; AWS now lists 750+ PoPs and 15 regional edge caches.)
 
 ✅ **Use it when:** users are spread across countries, content is reused, or you want WAF and DDoS protection in front of an API.  
-❌ **Do NOT use it for:** non-HTTP traffic (use Global Accelerator). It also adds little when every response is unique and all users sit in one city next to the Region.
+❌️ **Do NOT use it for:** non-HTTP traffic (use Global Accelerator). It also adds little when every response is unique and all users sit in one city next to the Region.
 
 ### 3.2 Request flow
 
@@ -563,7 +563,7 @@ Now in exact terms:
 <details>
 <summary>Answer</summary>
 
-❌ **No.** Invalidations treat the symptom:
+❌️ **No.** Invalidations treat the symptom:
 - 💰 They take seconds to minutes, cost money above 1,000 paths a month, and send a miss burst to the origin.
 - ⚠️ Browsers also cache the file. An invalidation does not clear the browser cache.
 
@@ -581,7 +581,7 @@ Now in exact terms:
 
 🍪 **Signed cookies.**
 - 🎞️ An HLS stream is a playlist plus hundreds of segment files.
-- ❌ A signed URL covers one file, so you would have to sign every segment URL.
+- ❌️ A signed URL covers one file, so you would have to sign every segment URL.
 - ✅ A signed cookie with a custom policy covers a path pattern (`/videos/123/*`) and an expiry.
 
 🔒 **Details:**
@@ -608,8 +608,8 @@ Now in exact terms:
 | ⏱️ Max run time | **Under 1 ms** | **30 s** (all events) |
 | 📏 Memory | 2 MB | 128 MB (viewer), up to 10,240 MB (origin) |
 | 📦 Package size | 10 KB | 50 MB (all events) |
-| 🌐 Network / file access | ❌ | ✅ — can call other services |
-| Request body access | ❌ | ✅ |
+| 🌐 Network / file access | ❌️ | ✅ — can call other services |
+| Request body access | ❌️ | ✅ |
 | 📈 Scale | Millions of requests per second | 10,000 per second per Region (default) |
 | 🗃️ Data store | CloudFront KeyValueStore (small, read-only at the edge) | Anything it can call |
 | 🚀 Deploy from | — | `us-east-1`, then replicated |
@@ -685,10 +685,10 @@ Now in exact terms:
 | | 🌍 **CloudFront** | 🚀 **Global Accelerator** |
 |---|---|---|
 | Layer | 7 (HTTP/HTTPS, WebSocket) | 4 (TCP/UDP) |
-| Caching | ✅ | ❌ |
+| Caching | ✅ | ❌️ |
 | Entry | DNS name, IPs change | 2 static anycast IPs |
 | 🛡️ Failover | Origin groups (GET/HEAD/OPTIONS) | Endpoint health checks, any traffic, seconds |
-| Edge compute, WAF | ✅ | ❌ (Shield yes) |
+| Edge compute, WAF | ✅ | ❌️ (Shield yes) |
 | ✅ Best for | Websites, APIs, media | Games, VoIP, IoT, static IP needs, fast multi-Region failover |
 
 ### 5.4 How it fails, and what it does not do
@@ -745,11 +745,11 @@ Now in exact terms:
 | | **CNAME** (Canonical Name) | **Alias (Route 53 extension)** |
 |---|---|---|
 | Points to | Any hostname | AWS resources: ELB (Elastic Load Balancing), CloudFront, API Gateway, S3 website, Global Accelerator, VPC interface endpoint, another record in the same zone |
-| Zone apex (`example.com`) | ❌ Not allowed by the DNS standard | ✅ Allowed |
+| Zone apex (`example.com`) | ❌️ Not allowed by the DNS standard | ✅ Allowed |
 | 💰 Query cost | Charged | ✅ **Free** for alias to AWS resources |
 | ⏳ TTL | You set it | Set by Route 53 from the target (for example 60 s for ELB) |
 | 🩺 Health | Separate health check needed | **Evaluate target health** — uses the target's own health |
-| ❌ Cannot target | — | An EC2 public DNS name |
+| ❌️ Cannot target | — | An EC2 public DNS name |
 
 > 🧭 **Rule:** for AWS targets, use **alias**. It works at the apex, costs nothing per query, and follows the target's IP changes.
 
@@ -757,7 +757,7 @@ Now in exact terms:
 
 | Policy | How it chooses | 🩺 Health checks | Typical use |
 |---|---|---|---|
-| 1️⃣ **Simple** | Returns all values of one record; the client picks one at random | ❌ | One endpoint, or a basic list |
+| 1️⃣ **Simple** | Returns all values of one record; the client picks one at random | ❌️ | One endpoint, or a basic list |
 | ⚖️ **Weighted** | By weight (0–255) per record | ✅ | Canary release (5% → new stack), A/B, Region blue/green |
 | ⚡ **Latency** | The Region with the lowest **measured latency** to the user's resolver | ✅ | Active-active multi-Region API |
 | 🛡️ **Failover** | Primary while healthy, else secondary | ✅ (required on primary) | Active-passive DR, static "sorry" page on S3 |
@@ -878,8 +878,8 @@ graph LR
 | 🎲 Return up to 8 healthy records | Multivalue answer |
 
 ✅ **Pointing `example.com` at an ALB → an alias record** ([§6.2](#62-alias-vs-cname)). Two reasons:
-1. ❌ A CNAME is not allowed at the zone apex.
-2. ❌ An ALB has no static IP to put in an A record.
+1. ❌️ A CNAME is not allowed at the zone apex.
+2. ❌️ An ALB has no static IP to put in an A record.
 
 ⚖️ **Weighted routing for a canary:** send 5% to the new stack and 95% to the old one. Raise the weight step by step while the new stack stays healthy.
 
@@ -918,7 +918,7 @@ graph LR
 <details>
 <summary>Answer</summary>
 
-❌ **The problem:** Latency routing optimises **speed**, not **location**. An EU user can be sent to a non-EU Region if it measures faster, which breaks residency.
+❌️ **The problem:** Latency routing optimises **speed**, not **location**. An EU user can be sent to a non-EU Region if it measures faster, which breaks residency.
 
 ✅ **Use geolocation routing:** EU countries → the EU stack, with a **default** record for everyone else.
 

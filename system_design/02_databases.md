@@ -60,7 +60,7 @@ It is **AWS-specific**.
 - 📏 The write load fits on **one** primary instance.
 - 🧑‍💻 The team already knows SQL and the ORM (JPA/Hibernate).
 
-❌ **Do NOT use it when:**
+❌️ **Do NOT use it when:**
 - 📈 Writes must scale past one machine → Aurora Limitless (managed sharding, §3.7), DynamoDB, or Aurora DSQL (Distributed SQL). Sharding RDS by hand is the last choice.
 - ⚡ You need single-digit-ms reads at any scale with a known key → DynamoDB.
 - 📊 The workload is analytics over billions of rows → Redshift.
@@ -120,9 +120,9 @@ The branch manager has three ways to protect and help the head clerk.
 
 | | Does it **answer reads**? | Does it **take over by itself**? | Can it **lose lines**? |
 |---|---|---|---|
-| 🛡️ 1 silent backup clerk (Multi-AZ instance) | ❌ No | ✅ Yes, 1–2 min | ❌ No |
-| 🛡️📈 2 backup clerks (Multi-AZ cluster) | ✅ Yes | ✅ Yes, < 35 s | ❌ No |
-| 📈 Helpers (read replica) | ✅ Yes | ❌ No — manual promote | ⚠️ Yes, the lag |
+| 🛡️ 1 silent backup clerk (Multi-AZ instance) | ❌️ No | ✅ Yes, 1–2 min | ❌️ No |
+| 🛡️📈 2 backup clerks (Multi-AZ cluster) | ✅ Yes | ✅ Yes, < 35 s | ❌️ No |
+| 📈 Helpers (read replica) | ✅ Yes | ❌️ No — manual promote | ⚠️ Yes, the lag |
 
 > 🎯 **In one line:** Multi-AZ is **insurance** (someone ready to take over). A read replica is
 > **extra hands** (someone to answer questions). The Multi-AZ cluster gives a bit of both.
@@ -133,7 +133,7 @@ Now the same thing in exact AWS terms:
 |---|---|---|---|
 | Goal | High availability | HA + some read scale | Read scaling |
 | Replication | **Synchronous** (block-level) | Semi-synchronous (1 of 2 standbys must ack) | **Asynchronous** |
-| Can serve reads? | ❌ No — standby is idle | ✅ Yes — 2 readable standbys | ✅ Yes |
+| Can serve reads? | ❌️ No — standby is idle | ✅ Yes — 2 readable standbys | ✅ Yes |
 | Failover | Automatic, **60–120 s** typical | Automatic, **under ~35 s** typical | Manual **promote** |
 | Data loss on failover | ✅ None (sync) | ✅ None for acked writes | ⚠️ Up to the replica lag |
 | Scope | Same Region, other AZ | Same Region, 3 AZs | Same AZ, other AZ, or other Region |
@@ -202,7 +202,7 @@ Now in exact terms:
 - 📊 A long-running report query on the replica blocks replay (PostgreSQL can cancel it instead).
 - 🌍 Cross-Region network delay.
 
-❌ **What breaks — read-your-own-writes:**
+❌️ **What breaks — read-your-own-writes:**
 1. ✍️ User updates a profile → the write goes to the primary.
 2. 👀 The next page load reads from a replica → it shows the old value.
 
@@ -306,7 +306,7 @@ Replication to read replicas is asynchronous. The read after the write can hit a
 - 🔭 Monitor `ReplicaLag`. Remove a replica from rotation if it stays behind.
 - ⚡ On Aurora, lag is usually under 100 ms, so the window is smaller, but the rule is the same.
 
-> ❌ **Multi-AZ would not help.** The standby does not serve reads.
+> ❌️ **Multi-AZ would not help.** The standby does not serve reads.
 
 ---
 
@@ -331,7 +331,7 @@ Replication to read replicas is asynchronous. The read after the write can hit a
 1. 📈 Traffic jumps 30×. Lambda scales to **1,000 environments** in under a minute.
 2. 🔌 All 1,000 try to open a new connection at the same time. Each one needs a TLS handshake + a password check.
 3. 🔥 The DB spends its CPU on these logins, not on queries. Checkout gets slow.
-4. ❌ Environment number 501 gets **"too many connections"**. The customer sees an error on the payment page, in the busiest hour of the year.
+4. ❌️ Environment number 501 gets **"too many connections"**. The customer sees an error on the payment page, in the busiest hour of the year.
 
 **The waste hidden in this:** one checkout request takes about **200 ms**, but it runs SQL for only about **10 ms**. For the other 190 ms, it calls the payment service and builds the response. The connection sits **open and idle** all that time, and between requests too. So the DB is full of connections that are doing nothing.
 
@@ -363,7 +363,7 @@ Each connection costs memory on the DB. `max_connections` depends on instance me
 1. λ Each Lambda execution environment opens its own connection.
 2. 📈 A traffic spike creates 1,000 environments → 1,000 new connections in seconds.
 3. 🔥 The DB spends its CPU on connection setup (TLS + auth), or hits `max_connections`.
-4. ❌ New requests fail with "too many connections".
+4. ❌️ New requests fail with "too many connections".
 
 > ⚠️ **Trap:** A connection pool inside the app (HikariCP) does not help here. Each Lambda instance has its own tiny pool.
 
@@ -400,9 +400,9 @@ graph LR
 | ⚠️ **Connection pinning** | Session state (temp tables, `SET` variables, some prepared statements) pins a client to one DB connection. Pinned connections are not shared, so the pool stops helping. Watch `DatabaseConnectionsCurrentlySessionPinned`. |
 | ⚡ Extra hop | Adds a few ms of latency per query. |
 | ⏳ Long transactions | A connection stays busy for the whole transaction. Multiplexing only works between transactions. |
-| ❌ It is not a rate limiter | If the DB is CPU-bound, the proxy just queues requests. Requests time out at the proxy instead. |
+| ❌️ It is not a rate limiter | If the DB is CPU-bound, the proxy just queues requests. Requests time out at the proxy instead. |
 
-❌ **When NOT to use it:** a fixed fleet of long-running services with a well-sized HikariCP pool.
+❌️ **When NOT to use it:** a fixed fleet of long-running services with a well-sized HikariCP pool.
 There the app pool already does the job.
 
 🎤 **How to say it in an interview:**
@@ -497,7 +497,7 @@ graph TB
 |---|---|---|
 | 1 storage node down | ✅ 5 left ≥ 4 | ✅ |
 | Whole AZ down (2 copies) | ✅ 4 left ≥ 4 | ✅ |
-| AZ down + 1 more node (3 copies) | ❌ 3 < 4 | ✅ 3 ≥ 3 — data is safe, repair starts |
+| AZ down + 1 more node (3 copies) | ❌️ 3 < 4 | ✅ 3 ≥ 3 — data is safe, repair starts |
 
 > 🛡️ **Result:** Aurora keeps **writing** through an AZ loss, and keeps the **data** through "AZ + 1".  
 > ⚡ Repair of a 10 GB segment takes seconds over a fast network, so the window for a second failure is small.
@@ -552,7 +552,7 @@ graph TB
 - ⚠️ **Serverless v1 is end of life (31 Mar 2025).** Do not design with it.
 
 ✅ **Use it when:** load is spiky or unknown — dev/test, a new product, a multi-tenant SaaS with many small DBs.  
-❌ **Do NOT use it when:** load is steady and high. 💰 A provisioned instance is cheaper per hour.
+❌️ **Do NOT use it when:** load is steady and high. 💰 A provisioned instance is cheaper per hour.
 
 ### 3.6 Aurora vs RDS — when is Aurora worth it?
 
@@ -615,7 +615,7 @@ graph LR
 > - Check feature support and Region availability in the AWS docs before you rely on it.
 
 ✅ **Use it when:** relational data, writes really outgrow one Aurora writer, and most queries carry one clear key (`customer_id`, `tenant_id`).  
-❌ **Do NOT use it when:** one writer is still enough (most systems), or the access is pure get/put by key → DynamoDB is simpler.
+❌️ **Do NOT use it when:** one writer is still enough (most systems), or the access is pure get/put by key → DynamoDB is simpler.
 
 <details>
 <summary><strong>🤔 Doubt: If we need sharding, is RDS a good choice, or do we have to use Aurora DSQL?</strong></summary>
@@ -707,7 +707,7 @@ Shard only when **write throughput** or **data size** goes past one writer.
 - 📈 You need very high or very spiky write throughput.
 - ☁️ You want no servers, no failover events, no connection pools (HTTP API).
 
-❌ **Do NOT use it when:**
+❌️ **Do NOT use it when:**
 - 🗃️ You need ad-hoc queries, joins, or new filters every sprint → relational DB.
 - 📊 You need aggregations (`SUM`, `GROUP BY`) over many items → Redshift / Athena.
 - 🔎 You need full-text search → OpenSearch.
@@ -759,7 +759,7 @@ A **hot partition** is one key value (or a few) that gets most of the traffic.
 
 | | Examples |
 |---|---|
-| ❌ **Bad keys** | `status`, `date`, `country`, `tenant_id` when one tenant is 80% of traffic |
+| ❌️ **Bad keys** | `status`, `date`, `country`, `tenant_id` when one tenant is 80% of traffic |
 | ✅ **Good keys** | `user_id`, `order_id`, `device_id` — high cardinality, even access |
 
 ```mermaid
@@ -826,7 +826,7 @@ Now in exact terms:
 | | Reads | 💰 Cost | Verdict |
 |---|---|---|---|
 | **Query** | One PK, optional SK condition | Proportional to the items read | ✅ |
-| **Scan** | The whole table | Proportional to table size | ❌ in a request path |
+| **Scan** | The whole table | Proportional to table size | ❌️ in a request path |
 
 - 📏 Both return at most **1 MB per page**. Use `LastEvaluatedKey` to page.
 - ⚠️ A **filter expression** runs *after* the read. You still pay for every item read.
@@ -928,7 +928,7 @@ Now in exact terms:
 #### 📖 Story first — booking the last train seat
 
 - 💺 Seat 42 on a train is **empty**. Two people, Asha and Ravi, try to book it at the same moment.
-- ❌ **Without a condition:** both bookings say "put my name on seat 42". The second one quietly **overwrites** the first. Asha thinks she has the seat, but the chart shows Ravi.
+- ❌️ **Without a condition:** both bookings say "put my name on seat 42". The second one quietly **overwrites** the first. Asha thinks she has the seat, but the chart shows Ravi.
 - ✅ **With a condition:** each booking says "put my name on seat 42 **only if it is still empty**". DynamoDB checks and writes in **one step**. Asha's booking wins. Ravi's booking is **refused** with an error, so Ravi knows to pick another seat.
 
 The same idea gives you two more tools:
@@ -939,7 +939,7 @@ Now in exact terms:
 
 🧩 **How it works:**
 - ✅ A **condition expression** makes a write succeed only if a check on the current item passes.
-- ❌ If the check fails, DynamoDB returns `ConditionalCheckFailedException` and writes nothing.
+- ❌️ If the check fails, DynamoDB returns `ConditionalCheckFailedException` and writes nothing.
 - 🔒 The check and the write are **atomic** for that one item.
 
 **🆔 Pattern 1 — idempotency (insert once):**
@@ -971,12 +971,12 @@ UpdateItem  Key = { pk: "ACCOUNT#42" }
 
 - 📏 `TransactWriteItems` / `TransactGetItems`: ACID across up to **100 items** and **4 MB** total. Items can be in different tables of the same account and Region.
 - 💰 Cost: **2×** the normal capacity (prepare + commit).
-- ❌ Each action can carry its own condition. If any condition fails, nothing is written (`TransactionCanceledException`).
+- ❌️ Each action can carry its own condition. If any condition fails, nothing is written (`TransactionCanceledException`).
 - 🆔 A `ClientRequestToken` makes the call idempotent for **10 minutes**.
 - 🔁 Conflicts: two transactions on the same item → one is cancelled. Retry with backoff.
 
 ✅ **Use for:** "debit A and credit B", "create user + reserve unique email".  
-❌ **Do NOT use for:** every write. It doubles the cost and raises conflict rates on hot items.
+❌️ **Do NOT use for:** every write. It doubles the cost and raises conflict rates on hot items.
 
 ### 5.3 TTL
 
@@ -987,7 +987,7 @@ UpdateItem  Key = { pk: "ACCOUNT#42" }
 - 📨 TTL deletes appear in DynamoDB Streams, marked as deleted by the service.
 
 ✅ **Use for:** sessions, idempotency keys, OTPs, temporary locks — data where "expired" only needs to be roughly on time.  
-❌ **Not for:** anything that must disappear at an exact second. Check the time in code too.
+❌️ **Not for:** anything that must disappear at an exact second. Check the time in code too.
 
 ### 5.4 DynamoDB Streams
 
@@ -1036,7 +1036,7 @@ Now in exact terms:
 
 ✅ **Use it when:** read-heavy traffic on the same items, for example a hot product page.
 
-❌ **Do NOT use it when:**
+❌️ **Do NOT use it when:**
 - ⚖️ You need **strongly consistent** reads. DAX passes them through to DynamoDB, with no caching.
 - ✍️ The workload is write-heavy.
 - 🧠 You need caching of computed results, not raw items → ElastiCache is more flexible.
@@ -1113,7 +1113,7 @@ Now in exact terms:
 <details>
 <summary>Answer</summary>
 
-> ❌ **Avoid:** Do not write to DynamoDB and Kafka in the same request. If the second write fails, the two disagree (the **dual-write** problem).
+> ❌️ **Avoid:** Do not write to DynamoDB and Kafka in the same request. If the second write fails, the two disagree (the **dual-write** problem).
 
 ✅ **Instead, use DynamoDB Streams as the outbox:**
 - ✍️ The order write is the only write in the request path.
@@ -1208,7 +1208,7 @@ Now in exact terms:
 | | Examples |
 |---|---|
 | ✅ **Good DynamoDB fits** | Session store, user profiles, shopping carts, IoT readings (`deviceId` + timestamp), feature flags, idempotency keys |
-| ❌ **Poor DynamoDB fits** | A ledger that reports join across many tables, ad-hoc analytics (use Redshift or Athena), many-to-many data that needs joins |
+| ❌️ **Poor DynamoDB fits** | A ledger that reports join across many tables, ad-hoc analytics (use Redshift or Athena), many-to-many data that needs joins |
 
 > 💡 **The rule for DynamoDB:** design the table around the **access patterns**, not around the entities. The follow-up is always key design. 🔗 See [§4](#4-dynamodb--data-model-and-capacity) and question 6 (the order table).
 

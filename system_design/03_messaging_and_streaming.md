@@ -128,7 +128,7 @@ A bank gets thousands of deposit slips every hour.
 - 📥 **Standard way:** all slips go into one big tray. Any free clerk picks any slip. It is very fast, but slips can be done out of order. Now and then the same slip is picked twice.
 - 📁 **FIFO way:** each account number gets **its own file**. Slips in one file are done strictly in order. A clerk finishes the earlier slips before the next one in that file.
 - 👥 Different files go to different clerks **at the same time**. So account A and account B move in parallel.
-- ❌ **Bad setup:** put every slip in **one** file. Now only one clerk can work, and everyone waits in a single line.
+- ❌️ **Bad setup:** put every slip in **one** file. Now only one clerk can work, and everyone waits in a single line.
 - 🧾 **Inward register:** the front desk notes each slip number. If the **same** slip comes in again within **5 minutes**, the desk refuses it.
 - ⚠️ The register checks only at the front desk. It cannot stop a clerk from doing a slip twice later.
 
@@ -143,13 +143,13 @@ Now in exact terms:
 | ⚡ Throughput | Nearly unlimited TPS (transactions per second) per API action | 300 TPS per API action; 3,000 msg/s with batches of 10 |
 | 📈 High-throughput FIFO | — | Up to 70,000 TPS per API action in the largest regions (lower in others, e.g. 9,000 in Mumbai); **about 300 msg/s per message group** |
 | 🏷️ Queue name | Any | Must end in `.fifo` |
-| ⏱️ Per-message delay | ✅ Yes | ❌ No — only queue-level delay |
+| ⏱️ Per-message delay | ✅ Yes | ❌️ No — only queue-level delay |
 
 🔑 **Message group ID** is the ordering key. Messages with the same group ID are delivered in
 order, one batch at a time. Different groups are processed in parallel. So:
 
 - ✅ Use the **entity ID** (order ID, account ID) as the group ID. You get order per entity and parallelism across entities.
-- ❌ **Never** use one constant group ID. It turns the queue into a single-thread line.
+- ❌️ **Never** use one constant group ID. It turns the queue into a single-thread line.
 - 📏 A hot group is capped at about **300 msg/s** even in high-throughput mode.
 
 🔁 **Deduplication ID** stops duplicate **sends** within **5 minutes**. You set it yourself,
@@ -171,7 +171,7 @@ or turn on content-based dedup (SHA-256 of the body).
 
 ### When NOT to use SQS
 
-| ❌ If you need… | 🧭 Use instead |
+| ❌️ If you need… | 🧭 Use instead |
 |---|---|
 | Many independent consumers that each read **every** message | SNS→SQS fan-out, or a log |
 | 🔁 **Replay** of old messages (SQS deletes them) | Kinesis or MSK |
@@ -202,7 +202,7 @@ or turn on content-based dedup (SHA-256 of the body).
 
 - 📈 More distinct group IDs give more parallel work.
 - ✅ Use one group per entity (order ID, account ID).
-- ❌ One constant group ID makes the whole queue run one message at a time.
+- ❌️ One constant group ID makes the whole queue run one message at a time.
 
 ⚠️ **FIFO "exactly-once" covers the send, not your processing.**
 
@@ -490,7 +490,7 @@ graph LR
 <details>
 <summary>Answer</summary>
 
-❌ **Both are too small for 5 MB:**
+❌️ **Both are too small for 5 MB:**
 
 - 📢 SNS allows 256 KiB by default (1 MiB at most).
 - 📨 SQS takes 1 MiB now.
@@ -706,7 +706,7 @@ graph LR
 |---|---|---|
 | 🧩 Pattern | Queue — **one** consumer handles each message (competing consumers) | Pub/sub — **every** subscriber gets its own copy |
 | 🔄 Model | Pull — consumers poll the queue | Push — SNS calls the subscribers |
-| 💾 Storage | ✅ Yes — 4 days by default, up to 14 days | ❌ No store to read from later |
+| 💾 Storage | ✅ Yes — 4 days by default, up to 14 days | ❌️ No store to read from later |
 | 📬 Who reads | Your workers | SQS, Lambda, HTTP/S, Firehose, email, SMS, mobile push |
 | 🎯 Use | Job queues, buffering, spreading work | Fan-out, notifications, broadcast |
 
@@ -788,8 +788,8 @@ by default).
 | 🎯 Targets | 12.5M subscriptions per topic | 5 targets per rule; many rules per bus |
 | ⚡ Throughput | Very high | Lower default quota |
 | ☁️ Sources | Your code | Your code + 200+ AWS services + SaaS |
-| 🔁 Replay | ❌ No | ✅ Archive + replay |
-| 📱 Human channels | ✅ Email, SMS, mobile push | ❌ No (send to SNS for that) |
+| 🔁 Replay | ❌️ No | ✅ Archive + replay |
+| 📱 Human channels | ✅ Email, SMS, mobile push | ❌️ No (send to SNS for that) |
 | 🧭 Pick when | High-volume fan-out to a few known consumers | Many teams, many event types, routing by content |
 
 > 🎤 **In the interview:**  
@@ -809,7 +809,7 @@ by default).
 - 🔎 you route by content on any field;
 - ☁️ you need AWS service and SaaS events, archive and replay, or the schema registry.
 
-❌ **Avoid it when:**
+❌️ **Avoid it when:**
 
 - ⚡ you need very high-TPS, latency-sensitive fan-out. Its `PutEvents` quota is lower and its latency is higher than SNS;
 - 📱 you need email, SMS or mobile push.
@@ -869,7 +869,7 @@ graph LR
 
 A mobile shop sells a phone. It must also tell the courier company to deliver it.
 
-- ❌ **Two-step way:** the shopkeeper writes the sale in the ledger, then phones the courier. The power goes off in between. The sale is in the ledger, but the courier never hears of it.
+- ❌️ **Two-step way:** the shopkeeper writes the sale in the ledger, then phones the courier. The power goes off in between. The sale is in the ledger, but the courier never hears of it.
 - ✅ **Outbox way:** on the **same ledger line**, the shopkeeper writes the sale **and** ticks a "to inform" column. It is one entry, so both are written or neither is.
 - 🧑‍💼 A helper checks the "to inform" column every few minutes. They phone the courier, then mark the line "informed".
 - 🔁 **The catch:** the helper may phone and then forget to mark the line. Next round, they phone again.
@@ -1040,7 +1040,7 @@ Now in exact terms:
 - ⏱️ **Buffering:** it **buffers** by size or time, then writes in batches. So it is **near real-time** (seconds to minutes), not real-time.
 - 🔧 **Extras:** optional Lambda transform; built-in convert to **Parquet / ORC** (Optimized Row Columnar); dynamic partitioning of S3 prefixes; compression.
 - 📈 **Scaling:** fully managed, scales on its own.
-- ❌ **Missing:** **no replay, no storage, no custom consumers.**
+- ❌️ **Missing:** **no replay, no storage, no custom consumers.**
 - 🛡️ **Errors:** failed records go to an S3 backup prefix.
 
 > 🧭 **Use Firehose when** the answer to "who reads this?" is "a storage system," not "my service."
@@ -1068,7 +1068,7 @@ Now in exact terms:
 
 - 💾 A broker disk fills up.
 - 🐢 Consumer-group rebalances cause lag spikes.
-- ❌ You cannot reduce a topic's partition count.
+- ❌️ You cannot reduce a topic's partition count.
 - 🌐 MSK runs inside your **VPC** (Virtual Private Cloud), so clients need network access and the right security groups.
 
 🔗 Kafka internals are in [Kafka Interview Questions](../../system-design/iq/04_Kafka_Interview_Questions.md).
@@ -1081,13 +1081,13 @@ Now in exact terms:
 |---|---|---|---|---|---|
 | 🧩 Model | Queue (pull) | Pub/sub (push) | Event bus (push) | Log (pull or push) | Log (pull) |
 | 👥 Readers per message | One | All subscribers | All matching rules | All consumers | All consumer groups |
-| 🔢 Ordering | FIFO: per group | FIFO topic: per group | ❌ None | Per shard (partition key) | Per partition |
-| 🔁 Replay | ❌ No | ❌ No | ✅ Archive + replay | ✅ Yes, within retention | ✅ Yes, within retention |
+| 🔢 Ordering | FIFO: per group | FIFO topic: per group | ❌️ None | Per shard (partition key) | Per partition |
+| 🔁 Replay | ❌️ No | ❌️ No | ✅ Archive + replay | ✅ Yes, within retention | ✅ Yes, within retention |
 | 💾 Retention | Up to 14 days | None | Archive (optional) | 24 h – 365 days | Any (tiered storage) |
 | 📏 Max message | 1 MiB | 256 KiB default (1 MiB opt-in) | 1 MB | 1 MiB default, up to 10 MiB (§10) | 1 MB default, configurable |
 | 📈 Scaling work | None | None | None | Shards (or on-demand) | Brokers + partitions |
 | ✅ Typical use | Job queue, buffer, load levelling | Fan-out, notifications | Cross-team events, AWS events, SaaS | Clickstream, telemetry, CDC to analytics | Kafka workloads, event sourcing, CDC |
-| ❌ Avoid when | Many readers need the same message | You need storage or replay | Very high TPS, low latency | Simple job queue | Small team, simple needs |
+| ❌️ Avoid when | Many readers need the same message | You need storage or replay | Very high TPS, low latency | Simple job queue | Small team, simple needs |
 
 🧭 **One-line rules:**
 
@@ -1112,7 +1112,7 @@ A family plans a wedding. It needs a hall, a caterer and a band.
 What if a step fails? This is the **saga**:
 
 1. 🏛️ The planner books the hall, then pays the caterer, then books the band.
-2. ❌ The band cancels at the last minute.
+2. ❌️ The band cancels at the last minute.
 3. ↩️ There is no single "undo everything" button. So the planner **undoes each step in reverse**: get the caterer's refund, then release the hall.
 4. 🔁 A cancel call may be made twice. So "cancel" must be safe to repeat.
 

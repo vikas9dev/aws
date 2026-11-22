@@ -62,7 +62,7 @@ This note covers storage for system-design rounds.
 
 - 🪣 You store a blob (the object) under a key in a bucket.
 - 🌐 You get it back by key over HTTPS.
-- ❌ There is no file system, no in-place edit and no rename.
+- ❌️ There is no file system, no in-place edit and no rename.
 - 📈 It scales with no capacity planning, and it is very durable.
 
 ✅ **Use when** data is **written once and read many times**: user uploads, images, video,
@@ -78,7 +78,7 @@ backups, logs, exports, ML datasets, static web assets.
 | Single PUT max | **5 GB** | Above that, multipart upload is required |
 | Multipart | Parts 5 MiB – 5 GiB, max **10,000 parts** | Choose part size so file size ÷ part size ≤ 10,000 |
 | Request rate | **3,500 writes/s and 5,500 reads/s per prefix** | See §2 |
-| ⚡ First-byte latency | Tens to ~100–200 ms | ❌ Not a database. Put a cache or CloudFront in front of hot reads |
+| ⚡ First-byte latency | Tens to ~100–200 ms | ❌️ Not a database. Put a cache or CloudFront in front of hot reads |
 | Buckets per account | 10,000 by default (raised in 2024 from 100) | Bucket-per-tenant designs are now possible, but prefix-per-tenant is still simpler |
 
 ### 1.3 Consistency — strong read-after-write
@@ -112,7 +112,7 @@ Now in exact terms:
 
 ⚠️ **What S3 still does not give you:**
 
-- ❌ **No transactions across objects.** You cannot update two objects atomically.
+- ❌️ **No transactions across objects.** You cannot update two objects atomically.
 - ⚖️ **Last writer wins** for two concurrent `PUT`s to the same key, unless you use conditional
   writes.
 - 🔒 **Conditional writes** (added in 2024):
@@ -144,7 +144,7 @@ Now in exact terms:
 <details>
 <summary>Answer</summary>
 
-❌ **Remove the sleep.**
+❌️ **Remove the sleep.**
 
 - ✅ S3 has been **strongly consistent** for reads after writes, overwrites and lists since
   December 2020.
@@ -191,7 +191,7 @@ the prefix is `invoices/2026/10/`.
 
 | Key layout | Problem / benefit |
 |---|---|
-| `logs/2026-10-31T10:00:01-uuid` | ❌ All writes for "now" go to one key range → hot partition |
+| `logs/2026-10-31T10:00:01-uuid` | ❌️ All writes for "now" go to one key range → hot partition |
 | `logs/{hash(id)[0:2]}/2026-10-31/...` | ⚖️ Writes spread over 256 prefixes. Good for writes; listing by date is harder |
 | `tenant={id}/date=2026-10-31/...` | ✅ Spread by tenant **and** easy to query by date (data-lake style) |
 
@@ -538,7 +538,7 @@ storage time, number of AZs and retrieval fee. The full table is in
 | From day 90 | ⚡ **Glacier Instant Retrieval** — millisecond reads, low storage cost |
 | 8 years | 🗑️ **Expire** |
 
-- ❌ **Not** Glacier Flexible or Deep Archive — their restores take minutes to hours, which
+- ❌️ **Not** Glacier Flexible or Deep Archive — their restores take minutes to hours, which
   breaks "within seconds".
 - 🔒 **Object Lock** in compliance mode for the retention period, if regulation needs WORM (Write Once, Read Many).
 - ⚠️ Check object size: if statements are under 128 KB, the IA minimum charge may cancel the
@@ -591,7 +591,7 @@ Now in exact terms:
 - ✅ **Versioning must be on** in both source and destination buckets.
 - ⚠️ Only **new objects** replicate after you turn it on. For existing objects, use **S3 Batch
   Replication**. Batch Replication also retries failed replications.
-- ❌ **No chaining.** A → B → C does not copy A's objects to C. Configure A → C directly.
+- ❌️ **No chaining.** A → B → C does not copy A's objects to C. Configure A → C directly.
 - 🔒 **Deletes:** delete markers can be replicated (an option). Deleting a **specific version**
   is never replicated — this protects the copy against malicious deletes.
 - ⏱️ **Replication Time Control (RTC)**: an SLA of 99.99% of objects within **15 minutes**, with
@@ -700,7 +700,7 @@ graph LR
 - 🔁 Sometimes the **same SMS comes twice**. If you add money for each SMS, you add it twice. So you first check the transaction number.
 - 🔀 Sometimes SMS come in the **wrong order**. "Balance ₹500" arrives after "Balance ₹800", but ₹800 is newer. So you compare the sequence number, not the arrival time.
 - ⏱️ An SMS usually comes in seconds. Sometimes it takes a minute or more. Do not make a customer wait at the counter for it.
-- ❌ Very rarely, an SMS **never comes**. So once a day you match your notebook against the bank statement.
+- ❌️ Very rarely, an SMS **never comes**. So once a day you match your notebook against the bank statement.
 
 The transaction number check is an idempotent handler. The sequence number is the `sequencer` field.
 The daily match is a reconciliation job.
@@ -712,7 +712,7 @@ Now in exact terms:
 | 🔁 **At least once** | The same event can arrive twice | Handlers must be **idempotent** (key on bucket + key + version ID or `sequencer`) |
 | 🔀 **No strict ordering** | Two writes to the same key can produce events out of order | Use the `sequencer` field to find the latest one, or read the object's current state |
 | ⏱️ **Usually seconds, sometimes a minute or more** | Delivery is not instant | Do not use S3 events for user-facing real-time paths |
-| ❌ **Can be lost in rare cases** | Or fail to deliver if the destination policy is wrong | For critical flows, add a **reconciliation job** that compares S3 (or an S3 Inventory report) with the database |
+| ❌️ **Can be lost in rare cases** | Or fail to deliver if the destination policy is wrong | For critical flows, add a **reconciliation job** that compares S3 (or an S3 Inventory report) with the database |
 
 > ⚠️ **Recursion trap:** a Lambda that writes back to the same bucket and prefix triggers itself.  
 > 🛡️ Write output to another bucket or prefix.
@@ -816,7 +816,7 @@ case.
 - 💡 Avatars: upload through a presigned PUT to the avatar bucket. Use a new key per upload
   (`{userId}/{uuid}.jpg`) instead of overwriting, so the CDN (Content Delivery Network) cache never serves a stale image
   and you never need an invalidation.
-- ❌ **Not** the S3 website endpoint — it serves HTTP only, and the bucket would have to be
+- ❌️ **Not** the S3 website endpoint — it serves HTTP only, and the bucket would have to be
   public.
 
 ---
@@ -845,7 +845,7 @@ Now in exact terms:
 
 | Model | You see | Shared by many machines? | Example |
 |---|---|---|---|
-| 💽 **Block** | A raw disk. The OS puts a file system on it | ❌ Usually no (one instance) | EBS, instance store |
+| 💽 **Block** | A raw disk. The OS puts a file system on it | ❌️ Usually no (one instance) | EBS, instance store |
 | 📁 **File** | Folders and files over a network protocol (NFS: Network File System, SMB: Server Message Block) | ✅ Yes | EFS (Elastic File System), FSx |
 | 🪣 **Object** | Whole objects by key over HTTP | ✅ Yes, by any client anywhere | S3 |
 
@@ -856,7 +856,7 @@ Now in exact terms:
 | Type | Network block disk | Physical disk on the host | Managed NFS (v4.1) | Object store |
 | Scope | **One AZ** | **One host** | **Region** (multi-AZ); One Zone option | **Region** |
 | Attach to | One instance (io1/io2 Multi-Attach: up to 16 Nitro instances in one AZ) | Only its host instance | Thousands of instances, Lambda, ECS, EKS (Elastic Kubernetes Service) | Any client with permission |
-| Survives stop / terminate | ✅ Yes (unless "delete on termination") | ❌ **No** — lost on stop, terminate, hibernate or host failure. Survives reboot | ✅ Yes | ✅ Yes |
+| Survives stop / terminate | ✅ Yes (unless "delete on termination") | ❌️ **No** — lost on stop, terminate, hibernate or host failure. Survives reboot | ✅ Yes | ✅ Yes |
 | ⚡ Latency | Sub-ms (io2) to ~1 ms | Lowest (local NVMe: Non-Volatile Memory Express SSD) | ~1–few ms | Tens of ms |
 | 📏 Capacity | Provisioned in advance (pay for size) | Fixed by instance type | Elastic, pay for what you use | Elastic, unlimited |
 | 🛡️ Backup | Snapshots (incremental, stored regionally) | ⚠️ None — your job | AWS Backup, replication | Versioning, replication |
@@ -874,7 +874,7 @@ Now in exact terms:
 | **gp3** | Baseline **3,000 IOPS** (I/O operations per second) and 125 MiB/s at any size. Set IOPS and throughput **separately** from size | Default for almost everything |
 | gp2 | 3 IOPS per GB, bursts to 3,000, max 16,000 | ⚠️ Legacy. Migrate to gp3 (cheaper, and performance does not depend on size) |
 | **io2 Block Express** | Up to **256,000 IOPS**, 4,000 MiB/s, 64 TiB, 99.999% durability | Large, critical databases with steady high IOPS |
-| st1 / sc1 (HDD) | High throughput for large sequential reads, low IOPS | Big sequential data, log processing, cold data. ❌ Cannot be a boot disk |
+| st1 / sc1 (HDD) | High throughput for large sequential reads, low IOPS | Big sequential data, log processing, cold data. ❌️ Cannot be a boot disk |
 
 > ⚠️ **Source corrections.**  
 > - The exam notes give gp3 a maximum of 16,000 IOPS and 1,000 MB/s. In **September 2025**
@@ -895,7 +895,7 @@ Now in exact terms:
 
 > ⚠️ **Source correction.** The notes list EFS performance modes "General Purpose" and "Max I/O".  
 > - ✅ AWS now recommends **General Purpose** for almost all workloads.  
-> - ❌ Elastic throughput and One Zone file systems do not support Max I/O.
+> - ❌️ Elastic throughput and One Zone file systems do not support Max I/O.
 
 ### 9.5 How to choose — decision flow
 
@@ -931,7 +931,7 @@ graph TD
 <details>
 <summary>Answer</summary>
 
-❌ **No.**
+❌️ **No.**
 
 - 📏 EBS Multi-Attach works only with **io1/io2**, up to 16 Nitro instances, in **one AZ**.
 - ⚠️ It also needs a **cluster-aware file system** — a normal ext4 or XFS will corrupt.

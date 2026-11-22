@@ -150,7 +150,7 @@ Now in exact terms:
 |---|---|---|---|
 | 🌍 **Edge** | Public, one per AZ | ALB / NLB, NAT (Network Address Translation) Gateway | `0.0.0.0/0 → IGW` |
 | ⚙️ **App** | Private, one per AZ | EC2, ECS (Elastic Container Service) tasks, EKS nodes, Lambda ENIs (Elastic Network Interfaces) | `0.0.0.0/0 → NAT GW` (same AZ) |
-| 🗃️ **Data** | Private (isolated), one per AZ | RDS (Relational Database Service), Aurora, ElastiCache, MSK (Managed Streaming for Apache Kafka) | ❌ No internet route at all |
+| 🗃️ **Data** | Private (isolated), one per AZ | RDS (Relational Database Service), Aurora, ElastiCache, MSK (Managed Streaming for Apache Kafka) | ❌️ No internet route at all |
 
 📐 With 3 AZs this is **9 subnets**. That is the layout to draw in most designs.
 
@@ -196,7 +196,7 @@ graph TD
 
 🔒 **Rules:**
 - ✅ **Only load balancers and NAT Gateways go in public subnets.** App servers never get a public IP.
-- ❌ **No SSH from the internet.** Use **SSM Session Manager** (SSM = AWS Systems Manager) to reach a private instance. You need no bastion host and no open port 22.
+- ❌️ **No SSH from the internet.** Use **SSM Session Manager** (SSM = AWS Systems Manager) to reach a private instance. You need no bastion host and no open port 22.
 - 🗃️ **Data subnets have no `0.0.0.0/0` route.** If a DB needs AWS APIs, give it a VPC endpoint (§8).
 
 > 🎤 **Say it:** "Three tiers, three AZs, nine subnets. Only the ALB and the NAT Gateways are public. The database subnets have no route to the internet at all."
@@ -218,7 +218,7 @@ graph TD
 | 🚪 **Internet Gateway** | Connects the VPC to the internet, in both directions ([§4](#4-internet-gateway-igw)) | — |
 | ↗️ **NAT Gateway** | Lets private subnets start outbound connections. The internet cannot start one back ([§6](#6-nat-gateway)) | — |
 | 🛡️ **Security group** | Firewall on an **ENI** (instance, task, pod). Allow rules only | ✅ Stateful — return traffic is allowed |
-| 🧱 **NACL** (Network Access Control List) | Firewall on a **subnet**. Allow and deny rules, checked in number order | ❌ Stateless — allow both directions yourself |
+| 🧱 **NACL** (Network Access Control List) | Firewall on a **subnet**. Allow and deny rules, checked in number order | ❌️ Stateless — allow both directions yourself |
 
 🎤 **The follow-ups interviewers ask:**
 - ⚖️ **SG (Security Group) vs NACL:** the security group is the real firewall. Use a NACL only for a coarse deny on a whole subnet ([§7](#7-security-groups-vs-network-acls)).
@@ -371,7 +371,7 @@ Now in exact terms:
 
 | Setup | 🛡️ AZ failure | 💰 Cost |
 |---|---|---|
-| ❌ **One shared NAT** in AZ-a | **AZ-a failing breaks outbound traffic for every AZ** | Traffic from AZ-b to a NAT in AZ-a pays **cross-AZ transfer** on top of NAT processing |
+| ❌️ **One shared NAT** in AZ-a | **AZ-a failing breaks outbound traffic for every AZ** | Traffic from AZ-b to a NAT in AZ-a pays **cross-AZ transfer** on top of NAT processing |
 | ✅ **One NAT per AZ** | Each AZ's private route table points to its own NAT. An AZ failure takes only that AZ's NAT, and that AZ's instances are down anyway | No cross-AZ charge |
 
 ### How it fails
@@ -383,7 +383,7 @@ Now in exact terms:
 | 🛡️ Single NAT | One AZ outage breaks outbound for all AZs | One NAT per AZ |
 | 💰 Surprise bill | S3 or ECR (Elastic Container Registry) traffic goes through NAT at $0.045/GB | Gateway endpoint for S3, interface endpoints for ECR (§8) |
 
-❌ **When NOT to use it:**
+❌️ **When NOT to use it:**
 - 🔗 **For AWS services.** Use **VPC endpoints** instead (§8). It is cheaper and the traffic stays private.
 - 🔒 **For traffic that must be filtered by domain name.** NAT does not inspect traffic. Add **AWS Network Firewall** or a proxy in front if egress must be allow-listed.
 
@@ -461,7 +461,7 @@ Now in exact terms:
 | | 🛡️ **Security Group (SG)** | 🧱 **Network ACL (NACL)** |
 |---|---|---|
 | Attached to | An **ENI** (network interface) — so an instance, task, pod or endpoint | A **subnet** |
-| State | ✅ **Stateful** — return traffic is allowed automatically | ❌ **Stateless** — you must allow return traffic yourself |
+| State | ✅ **Stateful** — return traffic is allowed automatically | ❌️ **Stateless** — you must allow return traffic yourself |
 | Rule types | **Allow only** | Allow **and Deny** |
 | Order | All rules are checked together | Numbered rules, lowest first, **first match wins** |
 | Source | CIDR, prefix list, or **another security group** | CIDR only |
@@ -547,7 +547,7 @@ Map it back: the highway is NAT → IGW at $0.045/GB. The bank and records offic
 Now in exact terms:
 
 🧩 **Problem:** A private instance calls S3, DynamoDB, SQS (Simple Queue Service), KMS (Key Management Service) or Secrets Manager.
-- ❌ Without an endpoint, that traffic goes **private subnet → NAT → IGW → public AWS endpoint**.
+- ❌️ Without an endpoint, that traffic goes **private subnet → NAT → IGW → public AWS endpoint**.
 - 💰 You pay NAT per GB, and the traffic leaves your VPC.
 
 ✅ **Solution:** A **VPC endpoint** gives a private path from your VPC to the service. No NAT, no IGW, no public IP.
@@ -579,7 +579,7 @@ graph LR
 | How it works | An entry in the route table (a prefix list → endpoint) | An **ENI with a private IP** in each subnet/AZ you choose |
 | 🔒 Security | Endpoint policy | Endpoint policy **+ security group** |
 | 🔤 DNS | Normal public service name, routed privately | Private DNS makes the normal name resolve to the ENI IP |
-| Reach from on-prem / peered VPC | ❌ **No** — only from inside the VPC | ✅ **Yes** — over VPN, Direct Connect, peering, TGW (Transit Gateway) |
+| Reach from on-prem / peered VPC | ❌️ **No** — only from inside the VPC | ✅ **Yes** — over VPN, Direct Connect, peering, TGW (Transit Gateway) |
 | 💰 Cost | **Free** | About $0.01 per hour per AZ + $0.01 per GB |
 
 > 🧭 **Which to choose for S3:**  
@@ -653,7 +653,7 @@ Now in exact terms:
 <details>
 <summary>Answer</summary>
 
-- ❌ Peering and Transit Gateway are out — **overlapping CIDRs cannot be routed**.
+- ❌️ Peering and Transit Gateway are out — **overlapping CIDRs cannot be routed**.
 - ✅ Use **PrivateLink**: put the API behind an **NLB**, create a **VPC endpoint service**, and allow-list the partner's AWS account.
 - 🔌 The partner creates an **interface endpoint** in their VPC. They get a private IP in their own range.
 - 🔒 It is **one-way** (they call you, you cannot reach into their VPC), and only that one service is exposed.
@@ -686,7 +686,7 @@ Now in exact terms:
 ### 📖 Story first — gates between societies, or one bus stand
 
 - 🚪 **Peering.** Society A and society B open a private gate between them. A and C open another gate.
-- ❌ A resident of B **cannot** walk through A to reach C. A's guard lets B's people into A, and no further. B needs its **own** gate to C.
+- ❌️ A resident of B **cannot** walk through A to reach C. A's guard lets B's people into A, and no further. B needs its **own** gate to C.
 - 🔢 With 10 societies, every pair needs its own gate. That is **45 gates**, and both sides of each gate update their road boards.
 - 🚌 **Transit Gateway.** The city builds one **bus stand** in the middle. Each society builds **one** road to it. Now any society can reach any other through the stand.
 - 🎫 The bus stand charges a fee **per kg** carried. A gate between two societies has no such fee. So two societies that send a lot to each other still keep a direct gate.
@@ -710,8 +710,8 @@ Now in exact terms:
 
 | Fact | Value |
 |---|---|
-| 🔀 Transitive | ❌ **No.** A↔B and B↔C does **not** give A↔C |
-| Edge-to-edge | ❌ No. A cannot use B's IGW, NAT, VPN or Direct Connect |
+| 🔀 Transitive | ❌️ **No.** A↔B and B↔C does **not** give A↔C |
+| Edge-to-edge | ❌️ No. A cannot use B's IGW, NAT, VPN or Direct Connect |
 | CIDRs | Must not overlap |
 | 📏 Limit | 50 active peerings per VPC by default (max 125) |
 | 💰 Cost | No hourly fee. Normal data transfer: free in the same AZ, cross-AZ and cross-Region rates otherwise |
@@ -759,7 +759,7 @@ Now in exact terms:
 <details>
 <summary>Answer</summary>
 
-- ❌ 25 VPCs as a full peering mesh = 300 peerings. Not manageable.
+- ❌️ 25 VPCs as a full peering mesh = 300 peerings. Not manageable.
 - 🛰️ Use a **Transit Gateway** in a central network account, shared with **RAM**.
 - 🧱 **TGW route tables** for segmentation: prod, non-prod, and shared services. Prod and non-prod both reach shared services and on-prem, but not each other.
 - 🏢 **On-prem:** Direct Connect via a **DX Gateway** (DX = Direct Connect) into the TGW, with a Site-to-Site VPN as backup.
@@ -801,7 +801,7 @@ Now in exact terms:
 | ⚡ Bandwidth | Up to **1.25 Gbps per tunnel**; 2 tunnels per connection | Dedicated: **1, 10, 100, 400 Gbps**; hosted: 50 Mbps up to 25 Gbps |
 | 📈 More bandwidth | ECMP over several VPN connections on a Transit Gateway | Add connections; link aggregation (LAG) |
 | ⚡ Latency | Varies with internet conditions | **Consistent** and low |
-| 🔒 Encryption | ✅ **Yes**, IPsec by default | ❌ **No** by default — add MACsec (Media Access Control Security; 10/100/400 Gbps dedicated) or run IPsec VPN over DX |
+| 🔒 Encryption | ✅ **Yes**, IPsec by default | ❌️ **No** by default — add MACsec (Media Access Control Security; 10/100/400 Gbps dedicated) or run IPsec VPN over DX |
 | 💰 Cost | Low hourly fee + internet data out | Port-hours + **lower** data-out rate than the internet |
 | Attach point | Virtual private gateway (1 VPC) or Transit Gateway | Private VIF (Virtual Interface) to a VGW (Virtual Private Gateway), or **DX Gateway** → many VPCs and Regions |
 
@@ -851,7 +851,7 @@ Now in exact terms:
 | 📋 Fields | Source/destination IP and port, protocol, packets, bytes, start/end time, **ACCEPT / REJECT** |
 | 📤 Destinations | CloudWatch Logs, S3, Kinesis Data Firehose |
 | ⏱️ Delay | Aggregated over **10 minutes** (default) or **1 minute**. Not real time |
-| ❌ Not captured | Traffic to the Amazon DNS resolver, instance metadata (`169.254.169.254`), Time Sync (`169.254.169.123`), DHCP, Windows license activation |
+| ❌️ Not captured | Traffic to the Amazon DNS resolver, instance metadata (`169.254.169.254`), Time Sync (`169.254.169.123`), DHCP, Windows license activation |
 | 💰 Cost | Charged as log ingestion. To S3 is much cheaper than to CloudWatch Logs for high volume |
 
 ✅ **Uses in a design:**
@@ -863,8 +863,8 @@ Now in exact terms:
 
 | Inbound | Outbound | Who blocked it |
 |---|---|---|
-| ❌ **REJECT** | — | SG or NACL blocked the request |
-| ✅ **ACCEPT** | ❌ **REJECT** | The **NACL**. A security group is stateful and would have allowed the reply |
+| ❌️ **REJECT** | — | SG or NACL blocked the request |
+| ✅ **ACCEPT** | ❌️ **REJECT** | The **NACL**. A security group is stateful and would have allowed the reply |
 
 > 💡 **Pattern:** flow logs → S3 (Parquet, partitioned by hour) → **Athena** for queries. Cheap and enough for most teams.
 
@@ -895,7 +895,7 @@ Now in exact terms:
 5. ⚙️ **Move compute to the data.** If an on-prem app pulls 100 MB to return 50 KB, run it in AWS next to the database. You then pay egress on 50 KB, not 100 MB.
 
 > ⚖️ **The trade-off:** Putting everything in one AZ makes transfer free but removes high availability.  
-> - ❌ Do **not** trade multi-AZ for transfer cost on stateful tiers.  
+> - ❌️ Do **not** trade multi-AZ for transfer cost on stateful tiers.  
 > - ✅ Do reduce *unnecessary* cross-AZ hops.
 
 > ⚠️ **Source correction.** The SAA (AWS Solutions Architect – Associate exam) notes priced S3 access through a gateway endpoint at $0.01/GB.  
@@ -917,7 +917,7 @@ Now in exact terms:
 - 🛠️ **Fixes:**
   - 🏢 **Rack-aware consumers** (`client.rack` + KIP-392 fetch-from-follower). Consumers read from the replica in their own AZ.
   - 🗜️ Compress batches (`lz4` or `zstd`) to cut bytes.
-- ❌ **Do not** move the cluster to one AZ. That trades availability for cost on a stateful tier.
+- ❌️ **Do not** move the cluster to one AZ. That trades availability for cost on a stateful tier.
 
 ---
 

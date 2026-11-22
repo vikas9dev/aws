@@ -157,10 +157,10 @@ Now in exact terms:
 
 | Option | 💰 Discount vs on-demand | Commitment | Can AWS take it back? | Fits |
 |---|---|---|---|---|
-| **On-demand** | 0% | None | ❌ No | Spiky or unknown load, the part above your baseline |
-| **Reserved Instances / Savings Plans** | Up to ~72% | 1 or 3 years | ❌ No | The steady baseline that runs 24×7 |
+| **On-demand** | 0% | None | ❌️ No | Spiky or unknown load, the part above your baseline |
+| **Reserved Instances / Savings Plans** | Up to ~72% | 1 or 3 years | ❌️ No | The steady baseline that runs 24×7 |
 | **Spot** | Up to ~90% | None | ⚠️ **Yes — 2-minute warning** | Stateless, retryable, checkpointed work: batch jobs, CI runners, queue workers |
-| **Capacity Reservation** | 0% (combine with Savings Plans) | Any duration | ❌ No | Guarantee capacity in one AZ for a known event (a big sale) |
+| **Capacity Reservation** | 0% (combine with Savings Plans) | Any duration | ❌️ No | Guarantee capacity in one AZ for a known event (a big sale) |
 
 > ⚠️ **Source correction.** The exam notes say you lose a Spot instance when "the spot price
 > goes above your max price". That was the old model.  
@@ -196,7 +196,7 @@ graph LR
   work, finish or checkpoint the current job, and deregister from the load balancer.
 - 🎯 AWS can take back **many instances of one type in one AZ at once**. Spread across many
   instance types and all AZs. Use the `price-capacity-optimized` allocation strategy.
-- ❌ Never put state that you cannot rebuild on Spot (a single DB primary, a Kafka broker
+- ❌️ Never put state that you cannot rebuild on Spot (a single DB primary, a Kafka broker
   without replicas).
 
 > 🎤 **In the interview:**  
@@ -222,8 +222,8 @@ graph LR
 
 | Group | Problem |
 |---|---|
-| ❌ **Cluster** | Gives speed, but one failure could take out all brokers |
-| ❌ **Spread** | Limited to 7 instances per AZ |
+| ❌️ **Cluster** | Gives speed, but one failure could take out all brokers |
+| ❌️ **Spread** | Limited to 7 instances per AZ |
 
 💡 Also use `i4i`-type instances (local NVMe) or EBS (Elastic Block Store) `gp3`, and keep replication factor 3
 across 3 AZs.
@@ -260,7 +260,7 @@ across 3 AZs.
 > ⚠️ **Common mistake:** "Savings Plans are always cheaper than RIs." They are not.  
 > - The best discount is the same.  
 > - ✅ Savings Plans win on **flexibility**: you commit to a spend per hour, not to an instance type.  
-> - ❌ But you cannot cancel or resell a Savings Plan.
+> - ❌️ But you cannot cancel or resell a Savings Plan.
 
 🎤 **The answer to give:** Savings Plan for the baseline, on-demand for the daily peak, Spot for
 queue workers and batch. The diagram is in §1.4.
@@ -297,13 +297,13 @@ queue workers and batch. The diagram is in §1.4.
 |---|---|---|
 | ✅ **Target tracking** | "Keep average CPU at 50%." The ASG creates and manages the CloudWatch alarms | The default choice. Works for most web tiers |
 | **Step scaling** | Different sizes of change for different alarm levels (CPU > 70% → +2, > 85% → +4) | You need a stronger reaction to a bigger spike |
-| ❌ **Simple scaling** | One alarm → one change, then wait for the cooldown | Legacy. Avoid for new designs |
+| ❌️ **Simple scaling** | One alarm → one change, then wait for the cooldown | Legacy. Avoid for new designs |
 | **Scheduled** | Change min/desired at a fixed time | Known patterns: 9 AM login rush, month-end batch |
 | **Predictive** | ML forecast from 14 days of history; launches capacity **before** the load arrives | Strong daily or weekly cycles where boot time is long |
 
 🧭 **Which metric to scale on** — this matters more than the policy type:
 
-| Metric | ✅ Good for | ❌ Bad for |
+| Metric | ✅ Good for | ❌️ Bad for |
 |---|---|---|
 | CPU utilisation | CPU-bound APIs | I/O-bound services (CPU stays low while requests queue up) |
 | `ALBRequestCountPerTarget` | Web tiers behind an ALB (Application Load Balancer) | Requests with very different costs |
@@ -471,7 +471,7 @@ two scaling engines:
 
 - Metric: `ApproximateNumberOfMessagesVisible` ÷ running instances.
 - Target: from (acceptable delay ÷ average processing time).
-- ❌ CPU is the wrong metric.
+- ❌️ CPU is the wrong metric.
 
 ✅ **Spot:** yes — use **Spot** across many instance types and all AZs.
 
@@ -516,8 +516,8 @@ This section is about choosing and running the AWS load balancers.
 | | **L4 (transport)** | **L7 (application)** |
 |---|---|---|
 | Sees | IP, port, TCP/UDP | HTTP method, path, host, headers, cookies |
-| Can route by URL path | ❌ No | ✅ Yes |
-| Ends the TCP connection | ❌ No (passes it through) | ✅ Yes (opens a new one to the target) |
+| Can route by URL path | ❌️ No | ✅ Yes |
+| Ends the TCP connection | ❌️ No (passes it through) | ✅ Yes (opens a new one to the target) |
 | 💰 Cost per request | Very low | Higher — it parses every request |
 | AWS service | **NLB** (Network Load Balancer) | **ALB** |
 
@@ -528,7 +528,7 @@ This section is about choosing and running the AWS load balancers.
 | Layer | L7 (HTTP, HTTPS, gRPC, WebSocket) | L4 (TCP, UDP, TLS) | L3 (IP packets, GENEVE (Generic Network Virtualization Encapsulation) port 6081) |
 | Routing | Path, host, header, query string, source IP | Port only | Sends all traffic through appliances |
 | Targets | Instances, IPs, **Lambda** | Instances, IPs, **an ALB** | Instances, IPs (firewall appliances) |
-| Static IP | ❌ **No** — DNS name only, IPs change | ✅ **Yes** — one per AZ, can use Elastic IPs | n/a |
+| Static IP | ❌️ **No** — DNS name only, IPs change | ✅ **Yes** — one per AZ, can use Elastic IPs | n/a |
 | Client IP at the target | In `X-Forwarded-For` header | ✅ **Preserved** in the packet | ✅ Preserved |
 | Latency | Milliseconds | Very low (microseconds added) | Low |
 | Scale | Scales up over minutes; very sudden spikes may need pre-warming (Load Balancer Capacity Unit reservation) | Millions of requests per second | — |
@@ -566,7 +566,7 @@ Now in exact terms:
   application-based).
 - 📏 The duration is 1 second to 7 days.
 
-❌ **Why they hurt a design:**
+❌️ **Why they hurt a design:**
 
 1. ⚖️ **Uneven load.** A few heavy users stay pinned to one instance. Other instances sit idle.
 2. 📈 **Scaling does not help at once.** New instances only get *new* users.
@@ -667,7 +667,7 @@ graph TB
 
 🔗 The full comparison (with GWLB) is in [§3.2](#32-alb-vs-nlb-vs-gwlb).
 
-> ❌ AWS has a fourth type, **CLB** (Classic Load Balancer). It is legacy — do not pick it for a new design.
+> ❌️ AWS has a fourth type, **CLB** (Classic Load Balancer). It is legacy — do not pick it for a new design.
 
 Points the §3.2 table does not show:
 
@@ -702,7 +702,7 @@ Points the §3.2 table does not show:
 - 🌐 The ALB does the L7 path routing.
 - 💡 Another option is **AWS Global Accelerator**, which gives two static anycast IPs in front
   of the ALB.
-- ❌ An ALB alone cannot do it, because its IPs change.
+- ❌️ An ALB alone cannot do it, because its IPs change.
 
 ---
 
@@ -718,7 +718,7 @@ Points the §3.2 table does not show:
 
 - ⚖️ Stickiness causes uneven load.
 - 📈 New instances help only new users.
-- ❌ Any scale-in, deploy or crash still logs users out.
+- ❌️ Any scale-in, deploy or crash still logs users out.
 
 ✅ **The right fix:** move sessions to **ElastiCache (Redis)** or **DynamoDB** with a TTL, or
 use signed JWTs. Then the tier is stateless and stickiness can be turned off.
@@ -783,7 +783,7 @@ graph LR
 | API | AWS-specific (task definitions, services) | Standard Kubernetes API |
 | Learning curve | ✅ Low | ⚠️ High (pods, deployments, ingress, CRDs (Custom Resource Definitions), Helm) |
 | Ecosystem | AWS integrations only | ✅ Huge: Istio, Argo CD, KEDA (Kubernetes Event-Driven Autoscaling), Karpenter, operators |
-| Portability | ❌ Locked to AWS | ✅ Same manifests run on GKE (Google Kubernetes Engine), AKS (Azure Kubernetes Service), on-prem |
+| Portability | ❌️ Locked to AWS | ✅ Same manifests run on GKE (Google Kubernetes Engine), AKS (Azure Kubernetes Service), on-prem |
 | Ops load | ✅ Low — no control plane to run | ⚠️ Medium — you upgrade the cluster version on a schedule, manage add-ons |
 | 🧭 Pick when | Small team, AWS-only, simple services | Team already knows Kubernetes, multi-cloud, needs the ecosystem |
 
@@ -834,8 +834,8 @@ capacity choice under either of them ([§4.1](#41-the-two-questions)).
 ⚠️ **"EKS on Fargate gives the best of both" is not true.** Fargate runs one pod per
 micro-VM, so many Kubernetes features are gone:
 
-- ❌ No **DaemonSets** — the usual way to run log shippers and node agents.
-- ❌ No privileged containers, no host networking, no `hostPort`.
+- ❌️ No **DaemonSets** — the usual way to run log shippers and node agents.
+- ❌️ No privileged containers, no host networking, no `hostPort`.
 - 💰 No GPUs. Pod CPU and memory are rounded up to a fixed Fargate size, and you pay for that size.
 
 ✅ For a steady fleet, **EKS with managed node groups** is usually the better default. **EKS
@@ -1004,7 +1004,7 @@ Now in exact terms:
 
 ### 5.6 When NOT to use Lambda
 
-| ❌ Situation | Why Lambda is wrong | ✅ Use instead |
+| ❌️ Situation | Why Lambda is wrong | ✅ Use instead |
 |---|---|---|
 | Jobs longer than 15 min | Hard limit | Fargate task, AWS Batch, Step Functions to split the work |
 | Steady high traffic, 24×7 | 💰 Per-request pricing costs more than a busy container | ECS/EKS or EC2 with Savings Plans |
@@ -1112,7 +1112,7 @@ spiking function used it all, so other functions were throttled.
 <details>
 <summary>Answer</summary>
 
-❌ Not a single Lambda — the hard limit is **15 minutes**.
+❌️ Not a single Lambda — the hard limit is **15 minutes**.
 
 ✅ **Options:**
 
@@ -1158,7 +1158,7 @@ graph TD
 | Axis | ⚙️ EC2 + ASG | 📦 ECS / EKS on Fargate | 📦 ECS / EKS on EC2 | λ Lambda |
 |---|---|---|---|---|
 | ⚡ Scale-out time | Minutes (boot + app start) | ~30–60 s | Seconds if nodes have room, minutes if not | Milliseconds to seconds |
-| Scale to zero | ❌ No | ✅ Yes (desired = 0) | ⚠️ Tasks yes, nodes need care | ✅ Yes, built in |
+| Scale to zero | ❌️ No | ✅ Yes (desired = 0) | ⚠️ Tasks yes, nodes need care | ✅ Yes, built in |
 | 📏 Max run time | Unlimited | Unlimited | Unlimited | 15 min |
 | Ops work | High (AMIs, patching) | Low | Medium | Lowest |
 | 💰 Cost at steady high load | Lowest (with Savings Plans + Spot) | Medium | Low | Highest |

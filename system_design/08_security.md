@@ -255,8 +255,8 @@ Now in exact terms:
 | 🤝 Trust policy | Names the cluster's OIDC provider and the service account | Trusts `pods.eks.amazonaws.com` — the same for every cluster |
 | 🔁 Reuse a role across clusters | ⚠️ Hard — the trust policy changes per cluster | ✅ Easy — no change |
 | 📏 Limits | IAM has a limit on OIDC providers per account | No OIDC provider needed |
-| Fargate pods | ✅ Works | ❌ **Not supported** — use IRSA |
-| Session tags (ABAC: Attribute-Based Access Control) | ❌ No | ✅ Yes — cluster, namespace, service account tags |
+| Fargate pods | ✅ Works | ❌️ **Not supported** — use IRSA |
+| Session tags (ABAC: Attribute-Based Access Control) | ❌️ No | ✅ Yes — cluster, namespace, service account tags |
 
 🧭 **Choose:**
 - ✅ **Pod Identity** for new EKS clusters on EC2 nodes.
@@ -491,7 +491,7 @@ Now in exact terms:
 - ⚠️ **JWTs are stateless.** A stolen access token works until it expires. Keep it short (15–60 min). Revoking a refresh token does not kill access tokens already issued.
 - 🔒 **Lock-in.** Exporting users with password hashes is not possible. Moving off Cognito later means a reset-password flow or a lazy migration.
 - 📏 **Quotas.** User pool APIs have per-category request-rate quotas (sign-in, sign-up, token). A big login spike (e.g. a sale at 12:00) can be throttled. Check and raise them before launch.
-- ❌ **When NOT to use it:** you need a rich identity product (complex B2B (business-to-business) tenants, fine-grained admin UI). Then teams pick Auth0, Okta or Keycloak.
+- ❌️ **When NOT to use it:** you need a rich identity product (complex B2B (business-to-business) tenants, fine-grained admin UI). Then teams pick Auth0, Okta or Keycloak.
 
 > 🎤 **Say it:** "Cognito user pools handle sign-in and issue JWTs. API Gateway validates the token before the request reaches my service. I only use identity pools when the client must call AWS directly, like a mobile app uploading a photo to S3."
 
@@ -580,9 +580,9 @@ Now in exact terms:
 |---|---|---|---|
 | 💰 Cost | Free | Free (per-call fee) | **$1/month** + per-call fee |
 | 📜 Key policy | Not visible | You cannot change it | ✅ **You control it** |
-| 🤝 Cross-account use | ❌ No | ❌ **No** | ✅ **Yes** |
+| 🤝 Cross-account use | ❌️ No | ❌️ **No** | ✅ **Yes** |
 | 🔁 Rotation | AWS | Every year, automatic | Optional: yearly by default, or 90–2,560 days, or on demand |
-| 🗑️ Disable / delete | ❌ No | ❌ No | ✅ Yes — 7 to 30 day waiting period |
+| 🗑️ Disable / delete | ❌️ No | ❌️ No | ✅ Yes — 7 to 30 day waiting period |
 
 🧭 **Choose a CMK** when you need one of these:
 - 🤝 Cross-account access.
@@ -615,7 +615,7 @@ Now in exact terms:
 - 🗺️ **What:** a **primary** key and **replicas** in other Regions with the **same key ID and key material**. Each is managed separately.
 - ⚡ Data encrypted in Region A can be decrypted in Region B with no cross-Region KMS call.
 - ✅ **Use for** client-side encryption with DynamoDB global tables, or app-level encrypted data that fails over across Regions.
-- ❌ **Not needed** for S3 replication or Aurora global databases. Those re-encrypt with the destination Region's key.
+- ❌️ **Not needed** for S3 replication or Aurora global databases. Those re-encrypt with the destination Region's key.
 - ⚖️ AWS recommends single-Region keys unless you need this, because one key in many places is a larger compliance scope.
 
 <p align="center"><img src="./img/08-kms-multi-region-keys.png" alt="A multi-Region primary key in us-east-1 and replica keys in us-west-2, eu-west-1 and ap-southeast-2; every ARN ends in the same mrk- key ID" width="560"/></p>
@@ -657,10 +657,10 @@ Now in exact terms:
 | | 🔑 **Secrets Manager** | 📋 **Parameter Store** (SSM = AWS Systems Manager) |
 |---|---|---|
 | Made for | **Secrets that rotate** | Config values and simple secrets (`SecureString`) |
-| 🔁 Rotation | ✅ **Built in** — Lambda on a schedule (as often as every 4 hours); managed rotation for RDS, Aurora, Redshift, DocumentDB | ❌ **None** — you build it |
+| 🔁 Rotation | ✅ **Built in** — Lambda on a schedule (as often as every 4 hours); managed rotation for RDS, Aurora, Redshift, DocumentDB | ❌️ **None** — you build it |
 | 📏 Size | 64 KB | 4 KB standard, 8 KB advanced |
 | 📏 Count | 500,000 per Region | 10,000 standard, 100,000 advanced |
-| 🗺️ Cross-Region | ✅ **Replication** to other Regions | ❌ No |
+| 🗺️ Cross-Region | ✅ **Replication** to other Regions | ❌️ No |
 | 🤝 Cross-account | ✅ Yes (resource policy + CMK) | ⚠️ Advanced tier, via RAM |
 | ⚡ Throughput | `GetSecretValue` up to 10,000 TPS (transactions per second) | 40 TPS default, up to 10,000 TPS with the paid higher-throughput setting |
 | 💰 Cost | **$0.40 per secret per month** + $0.05 per 10,000 calls | Standard free; advanced $0.05 per parameter per month |
@@ -786,7 +786,7 @@ Now in exact terms:
 |---|---|
 | 🌍 CloudFront certificates | Must be in **us-east-1** |
 | ⚖️ ALB / API Gateway certificates | In the **same Region** as the resource |
-| ⚠️ Imported certificates | ❌ **No** auto-renewal. ACM sends expiry events to EventBridge (from 45 days before) |
+| ⚠️ Imported certificates | ❌️ **No** auto-renewal. ACM sends expiry events to EventBridge (from 45 days before) |
 | 📤 Export | Normal ACM public certs cannot be exported. Since June 2025, ACM offers **exportable** public certs for a fee, for use on your own servers |
 | 🔒 Private certs | **AWS Private CA** (Certificate Authority) for internal mTLS (mutual TLS) between services |
 
@@ -811,7 +811,7 @@ In this story:
 
 Now in exact terms:
 
-| Option | How | ✅ Gain | ❌ Lose |
+| Option | How | ✅ Gain | ❌️ Lose |
 |---|---|---|---|
 | **End at ALB** | HTTPS listener, HTTP to targets | Simple; ALB can route on path/header; WAF (Web Application Firewall) sees the request | Plain text inside the VPC |
 | **End at ALB, re-encrypt** | HTTPS listener, HTTPS to targets | Encrypted end to end; still L7 features | Two TLS handshakes; ALB does **not** validate the target cert |
@@ -857,7 +857,7 @@ Now in exact terms:
 
 ### Where you can attach it
 
-| ✅ Can attach | ❌ Cannot attach |
+| ✅ Can attach | ❌️ Cannot attach |
 |---|---|
 | **CloudFront**, **ALB**, **API Gateway REST API**, AppSync, Cognito user pool, App Runner, Verified Access, Amplify | **NLB** (layer 4), **API Gateway HTTP API**, EC2 directly |
 
@@ -991,9 +991,9 @@ Now in exact terms:
 | 💰 Cost | **Free**, on for every account | **$3,000 per month** per organization, **1-year commitment**, plus data transfer fees |
 | Protects against | Common **L3/L4** attacks: SYN floods, UDP floods, reflection | Larger and more complex L3/L4 **and L7** attacks |
 | Resources | All | CloudFront, Route 53, Global Accelerator, ELB (Elastic Load Balancing), EC2 Elastic IPs |
-| 🧑‍🚒 Response team | ❌ No | ✅ **Shield Response Team (SRT)**, 24/7 |
-| 💰 Cost protection | ❌ No | ✅ **Credits for scaling costs** caused by an attack |
-| 🧱 L7 help | ❌ No | ✅ **Automatic L7 protection** — creates WAF rules during an attack; WAF fees for protected resources included |
+| 🧑‍🚒 Response team | ❌️ No | ✅ **Shield Response Team (SRT)**, 24/7 |
+| 💰 Cost protection | ❌️ No | ✅ **Credits for scaling costs** caused by an attack |
+| 🧱 L7 help | ❌️ No | ✅ **Automatic L7 protection** — creates WAF rules during an attack; WAF fees for protected resources included |
 | 🔭 Visibility | Basic | Attack metrics and reports, health-based detection |
 
 🧭 **Choose:**

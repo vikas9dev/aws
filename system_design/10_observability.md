@@ -112,7 +112,7 @@ graph LR
 
 > 🔒 CloudTrail is **not** one of the three pillars. It is the **audit** log of AWS API calls, for security and compliance.
 
-❌ **Can CloudTrail replace application monitoring? No.**
+❌️ **Can CloudTrail replace application monitoring? No.**
 
 - 🙈 It records management (control-plane) events, and data events if you turn them on. It never sees your HTTP request handling or business errors.
 - 🐢 Delivery to S3 takes minutes ([§6](#6-cloudtrail--who-did-what)).
@@ -139,7 +139,7 @@ graph LR
 - 🏷️ Each meter has a label, like `Tower=A, Flat=101`. These labels are the **dimensions**.
 - 💰 Every new label combination means a new meter. Each meter has its own monthly rent.
 - ✅ 3 towers × 100 flats = 300 meters. That is fine.
-- ❌ Now someone adds a label `Visitor=<name>`. Every visitor creates a new meter. You get thousands of meters, each one billed, each one almost empty.
+- ❌️ Now someone adds a label `Visitor=<name>`. Every visitor creates a new meter. You get thousands of meters, each one billed, each one almost empty.
 - 🙅 That is what happens when you put a user ID or request ID in a dimension.
 
 Now in exact terms:
@@ -147,7 +147,7 @@ Now in exact terms:
 - 📈 A **metric** is a time series in a **namespace** (`AWS/ApplicationELB`, `AWS/SQS`, or your own).
 - 🏷️ **Dimensions** are name/value pairs that identify it (`LoadBalancer=…`, `QueueName=…`). Up to **30** per metric.
 - 💰 Each new combination of dimension values is a **separate metric** (and a separate cost).
-- ❌ Never put a user ID or request ID in a dimension.
+- ❌️ Never put a user ID or request ID in a dimension.
 - 🧮 **Statistics:** Average, Sum, Min, Max, SampleCount, and **percentiles** (p50, p90, p99).
 
 ### Resolution
@@ -293,7 +293,7 @@ graph LR
 
 ### What to alarm on — and what not
 
-| ✅ Alarm on (symptoms users feel) | ❌ Not alone |
+| ✅ Alarm on (symptoms users feel) | ❌️ Not alone |
 |---|---|
 | p99 latency above the SLO (service level objective) | CPU > 80% |
 | Error rate (5XX ÷ requests), not error count | A raw error **count** (it grows with traffic) |
@@ -521,7 +521,7 @@ Now in exact terms:
 | SQS → Lambda | ✅ Yes (`AWSTraceHeader` system attribute) |
 | SNS → SQS / Lambda | ✅ Yes |
 | EventBridge, Step Functions | ✅ Yes, when tracing is turned on |
-| **Kafka / MSK** (Managed Streaming for Kafka) | ❌ You must put the header into Kafka record headers yourself (OTel instrumentation does this) |
+| **Kafka / MSK** (Managed Streaming for Kafka) | ❌️ You must put the header into Kafka record headers yourself (OTel instrumentation does this) |
 | Batch jobs reading many messages | ⚠️ One span cannot have many parents — use **span links** |
 
 ### X-Ray SDK vs OpenTelemetry (ADOT)
@@ -557,7 +557,7 @@ Now in exact terms:
 🔍 **Why:** the trace context was not carried across the Kafka hop.
 
 - ✅ AWS propagates the header automatically for SQS (Simple Queue Service), SNS (Simple Notification Service) and Lambda.
-- ❌ It does not do this for Kafka / MSK.
+- ❌️ It does not do this for Kafka / MSK.
 
 🛠️ **Fix:**
 
@@ -584,7 +584,7 @@ Now in exact terms:
 - 🗄️ Should it also log every single opening of every locker in the bank vault? That is far too many lines. The society does it **only for the vault with valuables**, and pays extra.
 - 🔒 To keep pages longer, the office sends copies to a **locked archive room in another building**. A thief inside this building cannot tear them out.
 - 🐢 Copies reach the archive in batches, a few minutes late.
-- ❌ The register says **who changed a lock**. It does not say why the lift is slow.
+- ❌️ The register says **who changed a lock**. It does not say why the lift is slow.
 
 The key register holds **management events**. The locker log holds **data events**. The archive room is a **trail** to S3 in a separate account.
 
@@ -594,13 +594,13 @@ Now in exact terms:
 parameters, and the result.
 
 - ✅ **Use it for:** **audit, security and compliance**.
-- ❌ **Not for:** application monitoring — it does not see your HTTP requests or business errors.
+- ❌️ **Not for:** application monitoring — it does not see your HTTP requests or business errors.
 
 | Event type | Examples | Default |
 |---|---|---|
 | ⚙️ **Management events** | `CreateBucket`, `PutBucketPolicy`, `TerminateInstances`, `AssumeRole`, console sign-in | ✅ On. 90-day **Event history** free |
-| 🪣 **Data events** | S3 `GetObject` / `PutObject`, Lambda `Invoke`, DynamoDB item reads/writes | ❌ Off — very high volume, extra cost |
-| 🤖 **Insights events** | Unusual API call rate or error rate (e.g. a spike in `DeleteObject`) | ❌ Off |
+| 🪣 **Data events** | S3 `GetObject` / `PutObject`, Lambda `Invoke`, DynamoDB item reads/writes | ❌️ Off — very high volume, extra cost |
+| 🤖 **Insights events** | Unusual API call rate or error rate (e.g. a spike in `DeleteObject`) | ❌️ Off |
 
 ### Design points
 
@@ -694,7 +694,7 @@ Now in exact terms (photos = configuration items, checklist = rules, repair team
 |---|---|
 | ⚡ **Latency** | Time to serve a request — p50 and **p99**, and errors timed separately |
 | 🚗 **Traffic** | Demand — requests/s, messages/s |
-| ❌ **Errors** | Failed requests as a **rate** |
+| ❌️ **Errors** | Failed requests as a **rate** |
 | 🌡️ **Saturation** | How full the system is — the resource that runs out first |
 
 > 💡 **For queues, add age / lag:** how late the oldest unprocessed work is.

@@ -17,7 +17,7 @@ These notes keep only what helps in a design round. 🎯 Each service is explain
 | | Every service answers |
 |---|---|
 | 🧩 | What problem does it solve? |
-| ✅ ❌ | When to use it, and when not to |
+| ✅ ❌️ | When to use it, and when not to |
 | 📏 | Which limits and numbers change a design |
 | ⚠️ | How does it fail? |
 | ⚖️ | What are the trade-offs against the other options? |
