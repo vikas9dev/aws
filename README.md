@@ -8,7 +8,7 @@
 
 - [📚 Files](#-files)
 - [🧭 Suggested order](#-suggested-order)
-- [🔗 More notes from the same author](#-more-notes-from-the-same-author)
+- [🔗 More Similar Notes](#-more-similar-notes)
 - [🤝 Found a Mistake? Want to Contribute?](#-found-a-mistake-want-to-contribute)
 
 ---
@@ -53,11 +53,12 @@ These notes keep only what helps in a design round. 🎯 Each service is explain
 
 ---
 
-## 🔗 More notes from the same author
+## 🔗 More Similar Notes
 
 - **[DSA in Java](https://github.com/vikas9dev/dsa-algo)** — data structures & algorithms, LeetCode patterns
 - **[Java & Spring Boot](https://github.com/vikas9dev/java)** — Java and Spring interview questions, design patterns
 - **[System Design](https://github.com/vikas9dev/system-design)** — HLD, LLD, case studies, Alex Xu chapter notes
+- **[claude-job-hunt](https://github.com/vikas9dev/claude-job-hunt)** — Claude Code skills for a software-engineering job search: find roles, tailor a resume, debrief interviews
 
 ---
 
