@@ -8,6 +8,7 @@
 
 - [📚 Files](#-files)
 - [🧭 Suggested order](#-suggested-order)
+- [🔗 More notes from the same author](#-more-notes-from-the-same-author)
 - [🤝 Found a Mistake? Want to Contribute?](#-found-a-mistake-want-to-contribute)
 
 ---
@@ -49,6 +50,14 @@ These notes keep only what helps in a design round. 🎯 Each service is explain
 2. 🔥 **Then the core four** — they come up in almost every design round: 🗃️ [02 Databases](system_design/02_databases.md) → 📨 [03 Messaging](system_design/03_messaging_and_streaming.md) → ⚡ [04 Caching](system_design/04_caching_and_edge.md) → ⚙️ [05 Compute](system_design/05_compute_and_scaling.md).
 3. 📖 **Then the depth topics:** 🛡️ [06 Reliability](system_design/06_reliability_and_dr.md) → 🌐 [07 Networking](system_design/07_networking.md) → 🔐 [08 Security](system_design/08_security.md) → 🪣 [09 Storage](system_design/09_storage.md) → 🔭 [10 Observability](system_design/10_observability.md).
 
+
+---
+
+## 🔗 More notes from the same author
+
+- **[DSA in Java](https://github.com/vikas9dev/dsa-algo)** — data structures & algorithms, LeetCode patterns
+- **[Java & Spring Boot](https://github.com/vikas9dev/java)** — Java and Spring interview questions, design patterns
+- **[System Design](https://github.com/vikas9dev/system-design)** — HLD, LLD, case studies, Alex Xu chapter notes
 
 ---
 
